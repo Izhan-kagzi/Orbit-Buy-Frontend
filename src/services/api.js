@@ -2,7 +2,7 @@
 // Handles the base URL, JWT header injection, JSON parsing,
 // and ensures a consistent { success, message, ... } object.
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://orbit-buy.onrender.com/api";
 
 // The backend's origin without the trailing /api — used to resolve
 // relative image paths like "/uploads/products/shirt1.jpg".
