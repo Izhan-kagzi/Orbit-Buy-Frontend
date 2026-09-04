@@ -1,6 +1,14 @@
+
 import { useEffect, useMemo, useState } from "react";
-import { FiArrowRight } from "react-icons/fi";
+import { FiArrowRight, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
 
 import ProductCard from "./ProductCard";
 import api, { getImageUrl } from "../../services/api";
@@ -16,17 +24,16 @@ const NewArrivals = () => {
       .get("/products?newArrival=true&limit=50")
       .then((res) =>
         setProductsData(
-          res.products.map((p) => ({ ...p, image: getImageUrl(p.image) }))
+          (res.products || []).map((p) => ({
+            ...p,
+            image: getImageUrl(p.image),
+          }))
         )
       )
       .catch(() => setProductsData([]));
   }, []);
 
-  const categories = [
-    "All",
-    "Men",
-    "Women",
-  ];
+  const categories = ["All", "Men", "Women"];
 
   const filteredProducts = useMemo(() => {
     if (activeCategory === "All") {
@@ -39,15 +46,16 @@ const NewArrivals = () => {
   }, [activeCategory, productsData]);
 
   return (
-    <section className="py-24 bg-white">
-
+    <section className="py-24 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-6">
 
-        {/* Heading */}
+        {/* =====================================================
+            HEADING
+        ====================================================== */}
 
         <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
 
-          <div>
+          <div className="text-center lg:text-left">
 
             <p className="uppercase tracking-[6px] text-brand-primary font-semibold text-sm">
               New Arrivals
@@ -64,19 +72,103 @@ const NewArrivals = () => {
 
           </div>
 
-          <button
-            onClick={() => navigate("/new-arrivals")}
-            className="group flex items-center gap-3 border border-brand-primary px-7 py-3 rounded-full font-semibold hover:bg-brand-primary hover:text-white transition"
-          >
-            View All
+          {/* =====================================================
+              NAVIGATION + VIEW ALL
+          ====================================================== */}
 
-            <FiArrowRight className="group-hover:translate-x-1 transition-transform duration-300" />
+          <div className="flex items-center gap-4">
 
-          </button>
+            {/* Previous */}
+
+            <button
+              className="
+                new-arrival-prev
+                w-12
+                h-12
+                rounded-full
+                border
+                border-gray-200
+                bg-white
+                flex
+                items-center
+                justify-center
+                shadow-sm
+                hover:bg-brand-primary
+                hover:text-white
+                hover:border-brand-primary
+                transition-all
+                duration-300
+              "
+              aria-label="Previous products"
+            >
+              <FiChevronLeft className="text-xl" />
+            </button>
+
+            {/* Next */}
+
+            <button
+              className="
+                new-arrival-next
+                w-12
+                h-12
+                rounded-full
+                border
+                border-gray-200
+                bg-white
+                flex
+                items-center
+                justify-center
+                shadow-sm
+                hover:bg-brand-primary
+                hover:text-white
+                hover:border-brand-primary
+                transition-all
+                duration-300
+              "
+              aria-label="Next products"
+            >
+              <FiChevronRight className="text-xl" />
+            </button>
+
+            {/* View All */}
+
+            <button
+              onClick={() => navigate("/new-arrivals")}
+              className="
+                group
+                flex
+                items-center
+                gap-3
+                border
+                border-brand-primary
+                px-7
+                py-3
+                rounded-full
+                font-semibold
+                hover:bg-brand-primary
+                hover:text-white
+                transition-all
+                duration-300
+              "
+            >
+              View All
+
+              <FiArrowRight
+                className="
+                  group-hover:translate-x-1
+                  transition-transform
+                  duration-300
+                "
+              />
+            </button>
+
+          </div>
 
         </div>
 
-        {/* Category Filter */}
+        {/* =====================================================
+            CATEGORY FILTER
+        ====================================================== */}
 
         <div className="flex flex-wrap justify-center gap-4 mt-16">
 
@@ -85,11 +177,19 @@ const NewArrivals = () => {
             <button
               key={category}
               onClick={() => setActiveCategory(category)}
-              className={`px-7 py-3 rounded-full font-semibold transition-all duration-300 ${
-                activeCategory === category
-                  ? "bg-brand-primary text-white"
-                  : "bg-gray-100 hover:bg-brand-primary hover:text-white"
-              }`}
+              className={`
+                px-7
+                py-3
+                rounded-full
+                font-semibold
+                transition-all
+                duration-300
+                ${
+                  activeCategory === category
+                    ? "bg-brand-primary text-white shadow-lg scale-105"
+                    : "bg-gray-100 hover:bg-brand-primary hover:text-white hover:scale-105"
+                }
+              `}
             >
               {category}
             </button>
@@ -98,25 +198,84 @@ const NewArrivals = () => {
 
         </div>
 
-        {/* Products */}
+        {/* =====================================================
+            PRODUCTS SLIDER
+        ====================================================== */}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-16">
+        {filteredProducts.length > 0 ? (
 
-          {filteredProducts.map((product) => (
+          <div className="mt-16">
 
-            <ProductCard
-              key={product.id}
-              product={product}
-            />
+            <Swiper
+              key={activeCategory}
+              modules={[Navigation, Pagination, Autoplay]}
 
-          ))}
-                    
+              navigation={{
+                prevEl: ".new-arrival-prev",
+                nextEl: ".new-arrival-next",
+              }}
 
-        </div>
+              pagination={{
+                clickable: true,
+                dynamicBullets: true,
+              }}
 
-        {/* Empty State */}
+              autoplay={{
+                delay: 3500,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
 
-        {filteredProducts.length === 0 && (
+              loop={filteredProducts.length > 4}
+
+              speed={700}
+
+              spaceBetween={28}
+
+              slidesPerView={1}
+
+              breakpoints={{
+                640: {
+                  slidesPerView: 2,
+                  spaceBetween: 24,
+                },
+
+                1024: {
+                  slidesPerView: 3,
+                  spaceBetween: 28,
+                },
+
+                1280: {
+                  slidesPerView: 4,
+                  spaceBetween: 28,
+                },
+              }}
+
+              className="new-arrival-swiper !pb-14"
+            >
+
+              {filteredProducts.map((product) => (
+
+                <SwiperSlide
+                  key={product.id}
+                  className="!h-auto"
+                >
+
+                  <ProductCard product={product} />
+
+                </SwiperSlide>
+
+              ))}
+
+            </Swiper>
+
+          </div>
+
+        ) : (
+
+          /* =====================================================
+              EMPTY STATE
+          ====================================================== */
 
           <div className="py-20 text-center">
 
@@ -132,9 +291,30 @@ const NewArrivals = () => {
 
         )}
 
-        {/* Bottom Banner */}
+        {/* =====================================================
+            BOTTOM OFFER BANNER
+        ====================================================== */}
 
-        <div className="mt-24 rounded-3xl bg-gradient-to-r from-brand-dark via-gray-900 to-brand-dark text-white px-8 lg:px-16 py-16 flex flex-col lg:flex-row items-center justify-between gap-8">
+        <div
+          className="
+            mt-24
+            rounded-3xl
+            bg-gradient-to-r
+            from-brand-dark
+            via-gray-900
+            to-brand-dark
+            text-white
+            px-8
+            lg:px-16
+            py-16
+            flex
+            flex-col
+            lg:flex-row
+            items-center
+            justify-between
+            gap-8
+          "
+        >
 
           <div>
 
@@ -155,7 +335,19 @@ const NewArrivals = () => {
 
           <button
             onClick={() => navigate("/")}
-            className="bg-white text-brand-dark px-10 py-4 rounded-full font-semibold hover:bg-brand-brown hover:text-white transition duration-300"
+            className="
+              bg-white
+              text-brand-dark
+              px-10
+              py-4
+              rounded-full
+              font-semibold
+              hover:bg-brand-brown
+              hover:text-white
+              hover:scale-105
+              transition-all
+              duration-300
+            "
           >
             Shop Now
           </button>
@@ -163,7 +355,6 @@ const NewArrivals = () => {
         </div>
 
       </div>
-
     </section>
   );
 };

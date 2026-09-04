@@ -17,7 +17,7 @@ const BRANDS = [
   "Revolve",
   "Wrangler",
   "Hugo Boss",
-  "Gul Ahmed",
+  
 ];
 
 const ShopByBrand = () => {

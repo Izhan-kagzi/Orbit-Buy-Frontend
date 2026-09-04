@@ -39,7 +39,7 @@ const BRAND_OPTIONS = [
   "Revolve",
   "Wrangler",
   "Hugo Boss",
-  "Gul Ahmed",
+  
 ];
 
 const ALL_SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
