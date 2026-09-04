@@ -178,12 +178,7 @@ const collectionMenu = [
     icon: FiGrid,
     desc: "The entire catalogue",
   },
-  {
-    name: "AI Stylist",
-    path: "/ai-stylist",
-    icon: HiSparkles,
-    desc: "Get AI picks for what you need",
-  },
+  
   {
     name: "Compare Products",
     path: "/compare",
