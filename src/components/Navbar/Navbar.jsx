@@ -178,7 +178,6 @@ const collectionMenu = [
     icon: FiGrid,
     desc: "The entire catalogue",
   },
-  
   {
     name: "Compare Products",
     path: "/compare",
@@ -230,8 +229,8 @@ const aboutMenu = [
 
 const DesktopDropdown = ({ label, items }) => (
   <div className="relative group">
-
     <button
+      type="button"
       className="
         flex
         items-center
@@ -246,6 +245,7 @@ const DesktopDropdown = ({ label, items }) => (
         transition-colors
         py-2
       "
+      aria-haspopup="true"
       aria-expanded="false"
     >
       {label}
@@ -291,7 +291,6 @@ const DesktopDropdown = ({ label, items }) => (
           overflow-hidden
         "
       >
-
         <div
           className="
             h-1
@@ -304,7 +303,6 @@ const DesktopDropdown = ({ label, items }) => (
         />
 
         <div className="py-2 max-h-[80vh] overflow-y-auto">
-
           {items.map((item) => {
             const Icon = item.icon;
 
@@ -324,7 +322,6 @@ const DesktopDropdown = ({ label, items }) => (
                   duration-150
                 "
               >
-
                 {Icon && (
                   <span
                     className="
@@ -349,7 +346,6 @@ const DesktopDropdown = ({ label, items }) => (
                 )}
 
                 <div>
-
                   <span
                     className="
                       block
@@ -377,18 +373,13 @@ const DesktopDropdown = ({ label, items }) => (
                       {item.desc}
                     </span>
                   )}
-
                 </div>
-
               </Link>
             );
           })}
-
         </div>
-
       </div>
     </div>
-
   </div>
 );
 
@@ -401,8 +392,8 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
 
   return (
     <div className="border-b border-white/10 py-2">
-
       <button
+        type="button"
         onClick={() => setOpen(!open)}
         className="
           w-full
@@ -416,8 +407,8 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
           text-white
           py-2
         "
+        aria-expanded={open}
       >
-
         <span>{label}</span>
 
         <span className="text-brand-tan">
@@ -427,7 +418,6 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
             <FiChevronDown size={18} />
           )}
         </span>
-
       </button>
 
       <div
@@ -443,7 +433,6 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
           }
         `}
       >
-
         <div
           className="
             overflow-hidden
@@ -455,7 +444,6 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
             border-brand-tan/30
           "
         >
-
           {items.map((item) => {
             const Icon = item.icon;
 
@@ -476,7 +464,6 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
                   transition-colors
                 "
               >
-
                 {Icon && (
                   <Icon
                     size={16}
@@ -485,15 +472,11 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
                 )}
 
                 {item.name}
-
               </Link>
             );
           })}
-
         </div>
-
       </div>
-
     </div>
   );
 };
@@ -579,6 +562,26 @@ const Navbar = () => {
     };
   }, []);
 
+  /* ============================================================
+     CLOSE MOBILE MENU WITH ESCAPE
+  ============================================================ */
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        setSearchOpen(false);
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
   return (
     <>
       {/* ======================================================
@@ -600,9 +603,7 @@ const Navbar = () => {
           transition-all
         "
       >
-
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
           <div
             className="
               flex
@@ -620,6 +621,7 @@ const Navbar = () => {
 
             <Link
               to="/"
+              aria-label="Orbit Buy - Home"
               className="
                 flex
                 items-center
@@ -649,6 +651,7 @@ const Navbar = () => {
             =================================================== */}
 
             <nav
+              aria-label="Main navigation"
               className="
                 hidden
                 lg:flex
@@ -660,8 +663,11 @@ const Navbar = () => {
               "
             >
 
+              {/* HOME */}
+
               <NavLink
                 to="/"
+                end
                 className={({ isActive }) =>
                   `
                     uppercase
@@ -682,25 +688,35 @@ const Navbar = () => {
                 Home
               </NavLink>
 
+              {/* MEN */}
+
               <DesktopDropdown
                 label="Men"
                 items={mensMenu}
               />
+
+              {/* WOMEN */}
 
               <DesktopDropdown
                 label="Women"
                 items={womensMenu}
               />
 
+              {/* COLLECTIONS */}
+
               <DesktopDropdown
                 label="Collections"
                 items={collectionMenu}
               />
 
+              {/* ABOUT */}
+
               <DesktopDropdown
                 label="About"
                 items={aboutMenu}
               />
+
+              {/* REVIEWS */}
 
               <a
                 href="/#reviews"
@@ -719,6 +735,8 @@ const Navbar = () => {
                 Reviews
               </a>
 
+              {/* AI STYLIST */}
+
               <Link
                 to="/ai-stylist"
                 className="
@@ -736,16 +754,13 @@ const Navbar = () => {
                   py-2
                 "
               >
-
                 <HiSparkles
                   size={16}
                   className="animate-pulse"
                 />
 
                 AI Stylist
-
               </Link>
-
             </nav>
 
             {/* ==================================================
@@ -762,9 +777,10 @@ const Navbar = () => {
               "
             >
 
-              {/* Search */}
+              {/* SEARCH */}
 
               <button
+                type="button"
                 onClick={() => setSearchOpen(true)}
                 className="
                   text-white/80
@@ -774,15 +790,20 @@ const Navbar = () => {
                   p-2
                   rounded-full
                 "
-                aria-label="Search"
+                aria-label="Search Orbit Buy"
               >
                 <FiSearch size={20} />
               </button>
 
-              {/* Wishlist */}
+              {/* WISHLIST */}
 
               <Link
                 to="/wishlist"
+                aria-label={`Wishlist${
+                  wishlistItems.length
+                    ? `, ${wishlistItems.length} items`
+                    : ""
+                }`}
                 className="
                   relative
                   text-white/80
@@ -792,9 +813,7 @@ const Navbar = () => {
                   p-2
                   rounded-full
                 "
-                aria-label="Wishlist"
               >
-
                 <FiHeart size={20} />
 
                 {wishlistItems.length > 0 && (
@@ -821,13 +840,17 @@ const Navbar = () => {
                     {wishlistItems.length}
                   </span>
                 )}
-
               </Link>
 
-              {/* Cart */}
+              {/* CART */}
 
               <Link
                 to="/cart"
+                aria-label={`Shopping Cart${
+                  cartCount
+                    ? `, ${cartCount} items`
+                    : ""
+                }`}
                 className="
                   relative
                   text-white/80
@@ -837,9 +860,7 @@ const Navbar = () => {
                   p-2
                   rounded-full
                 "
-                aria-label="Shopping Cart"
               >
-
                 <FiShoppingBag size={20} />
 
                 {cartCount > 0 && (
@@ -866,7 +887,6 @@ const Navbar = () => {
                     {cartCount}
                   </span>
                 )}
-
               </Link>
 
               {/* ==================================================
@@ -877,10 +897,10 @@ const Navbar = () => {
                 className="relative hidden lg:block"
                 ref={userMenuRef}
               >
-
                 {isAuthenticated ? (
                   <>
                     <button
+                      type="button"
                       onClick={() =>
                         setUserMenuOpen(!userMenuOpen)
                       }
@@ -899,8 +919,10 @@ const Navbar = () => {
                         border-white/10
                         transition-all
                       "
+                      aria-haspopup="true"
+                      aria-expanded={userMenuOpen}
+                      aria-label="Open account menu"
                     >
-
                       <FiUser
                         size={18}
                         className="text-brand-tan"
@@ -930,7 +952,6 @@ const Navbar = () => {
                           }
                         `}
                       />
-
                     </button>
 
                     {userMenuOpen && (
@@ -954,7 +975,6 @@ const Navbar = () => {
                           duration-200
                         "
                       >
-
                         <div
                           className="
                             px-4
@@ -963,7 +983,6 @@ const Navbar = () => {
                             border-gray-100
                           "
                         >
-
                           <p
                             className="
                               text-xs
@@ -984,12 +1003,11 @@ const Navbar = () => {
                           >
                             {user?.name}
                           </p>
-
                         </div>
 
                         <div className="py-1">
 
-                          {/* Desktop Admin Dashboard */}
+                          {/* ADMIN DASHBOARD */}
 
                           {isAdmin && (
                             <Link
@@ -1016,7 +1034,7 @@ const Navbar = () => {
                             </Link>
                           )}
 
-                          {/* Orders */}
+                          {/* ORDERS */}
 
                           <Link
                             to="/orders"
@@ -1040,7 +1058,7 @@ const Navbar = () => {
                             My Orders
                           </Link>
 
-                          {/* Profile */}
+                          {/* PROFILE */}
 
                           <Link
                             to="/profile"
@@ -1063,10 +1081,9 @@ const Navbar = () => {
                             <FiUser size={16} />
                             My Profile
                           </Link>
-
                         </div>
 
-                        {/* Logout */}
+                        {/* LOGOUT */}
 
                         <div
                           className="
@@ -1075,8 +1092,8 @@ const Navbar = () => {
                             pt-1
                           "
                         >
-
                           <button
+                            type="button"
                             onClick={handleLogout}
                             className="
                               w-full
@@ -1096,15 +1113,11 @@ const Navbar = () => {
                             <FiLogOut size={16} />
                             Logout
                           </button>
-
                         </div>
-
                       </div>
                     )}
-
                   </>
                 ) : (
-
                   <Link
                     to="/login"
                     className="
@@ -1128,9 +1141,7 @@ const Navbar = () => {
                     <FiUser size={16} />
                     <span>Login</span>
                   </Link>
-
                 )}
-
               </div>
 
               {/* ==================================================
@@ -1138,6 +1149,7 @@ const Navbar = () => {
               =================================================== */}
 
               <button
+                type="button"
                 className="
                   lg:hidden
                   text-white/90
@@ -1148,17 +1160,15 @@ const Navbar = () => {
                   transition-colors
                 "
                 onClick={() => setMenuOpen(true)}
-                aria-label="Toggle Menu"
+                aria-label="Open navigation menu"
+                aria-expanded={menuOpen}
               >
                 <FiMenu size={24} />
               </button>
 
             </div>
-
           </div>
-
         </div>
-
       </header>
 
       {/* ========================================================
@@ -1168,7 +1178,7 @@ const Navbar = () => {
       {menuOpen && (
         <div className="lg:hidden fixed inset-0 z-[60]">
 
-          {/* Backdrop */}
+          {/* BACKDROP */}
 
           <div
             className="
@@ -1179,9 +1189,10 @@ const Navbar = () => {
               transition-opacity
             "
             onClick={closeMenu}
+            aria-hidden="true"
           />
 
-          {/* Drawer */}
+          {/* DRAWER */}
 
           <div
             className="
@@ -1201,6 +1212,9 @@ const Navbar = () => {
               transition-transform
               duration-300
             "
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
           >
 
             {/* ==================================================
@@ -1209,7 +1223,7 @@ const Navbar = () => {
 
             <div>
 
-              {/* Header */}
+              {/* HEADER */}
 
               <div
                 className="
@@ -1222,8 +1236,9 @@ const Navbar = () => {
                   border-white/10
                 "
               >
-
-                <span
+                <Link
+                  to="/"
+                  onClick={closeMenu}
                   className="
                     font-logo
                     text-white
@@ -1232,9 +1247,10 @@ const Navbar = () => {
                   "
                 >
                   Orbit Buy
-                </span>
+                </Link>
 
                 <button
+                  type="button"
                   onClick={closeMenu}
                   className="
                     text-gray-400
@@ -1244,16 +1260,16 @@ const Navbar = () => {
                     hover:bg-white/10
                     transition-colors
                   "
-                  aria-label="Close Menu"
+                  aria-label="Close navigation menu"
                 >
                   <FiX size={24} />
                 </button>
-
               </div>
 
-              {/* Navigation */}
+              {/* NAVIGATION */}
 
-              <div
+              <nav
+                aria-label="Mobile navigation"
                 className="
                   px-6
                   py-4
@@ -1262,7 +1278,7 @@ const Navbar = () => {
                 "
               >
 
-                {/* Home */}
+                {/* HOME */}
 
                 <Link
                   to="/"
@@ -1281,7 +1297,7 @@ const Navbar = () => {
                   Home
                 </Link>
 
-                {/* Men */}
+                {/* MEN */}
 
                 <MobileDropdown
                   label="Men"
@@ -1289,7 +1305,7 @@ const Navbar = () => {
                   onNavigate={closeMenu}
                 />
 
-                {/* Women */}
+                {/* WOMEN */}
 
                 <MobileDropdown
                   label="Women"
@@ -1297,7 +1313,7 @@ const Navbar = () => {
                   onNavigate={closeMenu}
                 />
 
-                {/* Collections */}
+                {/* COLLECTIONS */}
 
                 <MobileDropdown
                   label="Collections"
@@ -1305,7 +1321,7 @@ const Navbar = () => {
                   onNavigate={closeMenu}
                 />
 
-                {/* About */}
+                {/* ABOUT */}
 
                 <MobileDropdown
                   label="About"
@@ -1313,7 +1329,7 @@ const Navbar = () => {
                   onNavigate={closeMenu}
                 />
 
-                {/* Reviews */}
+                {/* REVIEWS */}
 
                 <a
                   href="/#reviews"
@@ -1332,7 +1348,7 @@ const Navbar = () => {
                   Reviews
                 </a>
 
-                {/* AI Stylist */}
+                {/* AI STYLIST */}
 
                 <Link
                   to="/ai-stylist"
@@ -1351,15 +1367,11 @@ const Navbar = () => {
                     gap-2
                   "
                 >
-
                   <HiSparkles size={18} />
-
                   AI Stylist
-
                 </Link>
 
-              </div>
-
+              </nav>
             </div>
 
             {/* ==================================================
@@ -1381,13 +1393,11 @@ const Navbar = () => {
               =================================================== */}
 
               {isAuthenticated ? (
-
                 <div className="space-y-4">
 
-                  {/* User Information */}
+                  {/* USER INFORMATION */}
 
                   <div className="flex items-center gap-3">
-
                     <div
                       className="
                         w-10
@@ -1405,7 +1415,6 @@ const Navbar = () => {
                     </div>
 
                     <div>
-
                       <p
                         className="
                           text-sm
@@ -1418,6 +1427,7 @@ const Navbar = () => {
                       </p>
 
                       <button
+                        type="button"
                         onClick={handleLogout}
                         className="
                           text-xs
@@ -1429,9 +1439,7 @@ const Navbar = () => {
                       >
                         Logout
                       </button>
-
                     </div>
-
                   </div>
 
                   {/* ==================================================
@@ -1463,18 +1471,65 @@ const Navbar = () => {
                         shadow-lg
                       "
                     >
-
                       <FiGrid size={18} />
 
                       <span>
                         Admin Dashboard
                       </span>
-
                     </Link>
                   )}
 
-                </div>
+                  {/* MOBILE ACCOUNT LINKS */}
 
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      to="/orders"
+                      onClick={closeMenu}
+                      className="
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                        py-2.5
+                        rounded-xl
+                        border
+                        border-white/10
+                        text-white
+                        text-xs
+                        font-semibold
+                        hover:bg-white/10
+                        transition-colors
+                      "
+                    >
+                      <FiPackage size={15} />
+                      Orders
+                    </Link>
+
+                    <Link
+                      to="/profile"
+                      onClick={closeMenu}
+                      className="
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                        py-2.5
+                        rounded-xl
+                        border
+                        border-white/10
+                        text-white
+                        text-xs
+                        font-semibold
+                        hover:bg-white/10
+                        transition-colors
+                      "
+                    >
+                      <FiUser size={15} />
+                      Profile
+                    </Link>
+                  </div>
+
+                </div>
               ) : (
 
                 /* ==================================================
@@ -1501,15 +1556,12 @@ const Navbar = () => {
                     transition-colors
                   "
                 >
-
                   <FiUser size={18} />
 
                   <span>
                     Login / Register
                   </span>
-
                 </Link>
-
               )}
 
               {/* ==================================================
@@ -1526,35 +1578,27 @@ const Navbar = () => {
                   border-white/5
                 "
               >
-
                 <p className="flex items-center gap-2">
-
                   <FiMapPin
                     size={14}
                     className="text-brand-tan"
                   />
 
                   Surat, Gujarat, India
-
                 </p>
 
                 <p className="flex items-center gap-2">
-
                   <FiClock
                     size={14}
                     className="text-brand-tan"
                   />
 
                   Mon - Sat: 10:00 AM - 8:00 PM
-
                 </p>
-
               </div>
 
             </div>
-
           </div>
-
         </div>
       )}
 
@@ -1566,7 +1610,6 @@ const Navbar = () => {
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
       />
-
     </>
   );
 };

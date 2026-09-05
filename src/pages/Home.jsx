@@ -7,64 +7,154 @@ import BestSellers from "../components/BestSellers/BestSellers";
 import FeaturedCollection from "../components/FeaturedCollection/FeaturedCollection";
 import ShopByBrand from "../components/ShopByBrand/ShopByBrand";
 import Reviews from "../components/Reviews/Reviews";
+import SEO from "../components/SEO";
 
+/*
+============================================================
+ORBIT BUY — HOMEPAGE
 
-/* ============================================================
-   Homepage section order follows the standard e-commerce
-   funnel (Baymard / NN-group pattern):
+Homepage funnel:
 
-   1. Hero            — brand statement, primary CTA
-   2. WhyChoose        — trust signals, right up front, before
-                         the visitor has to decide whether to
-                         trust the store with browsing/data
-   3. Categories       — primary navigation aid: get shoppers
-                         into a relevant product set fast
-   4. New Arrivals      — fresh discovery for returning visitors
-   5. Flash Sale        — urgency/promo, placed mid-scroll where
-                         engagement is still high
-   6. Best Sellers      — social proof ("others already chose this")
-   7. Featured          — curated/editorial storytelling
-   8. Shop by Brand     — secondary discovery path
-   9. Reviews           — final trust reinforcement right before
-                         the conversion-oriented close
-   10. Newsletter        — capture visitors who aren't ready to
-                         buy yet, right before they hit the footer
-   ============================================================ */
+1. Hero
+   → Main brand introduction + primary shopping CTA
+
+2. Why Choose Orbit Buy
+   → Trust signals
+
+3. Categories
+   → Main men's and women's shopping paths
+
+4. New Arrivals
+   → Latest products
+
+5. Flash Sale
+   → Urgency and promotional products
+
+6. Best Sellers
+   → Social proof and popular products
+
+7. Featured Collection
+   → Curated fashion collection
+
+8. Shop By Brand
+   → Brand-based discovery
+
+9. Reviews
+   → Customer trust and social proof
+
+============================================================
+*/
+
 const Home = () => {
   return (
-    <main className="bg-gray-50">
+    <>
+      {/* =====================================================
+          HOMEPAGE SEO
+      ====================================================== */}
+      <SEO
+        title="Orbit Buy | Premium Fashion for Men & Women"
+        description="Shop premium men's and women's fashion at Orbit Buy. Discover stylish shirts, t-shirts, jeans, jackets, dresses, skirts, formal wear and the latest fashion collections."
+        path="/"
+        image="https://orbitbuy.vercel.app/og-image.jpg"
+        imageAlt="Orbit Buy Premium Men's and Women's Fashion"
+      />
 
-      <Hero />
+      <main className="bg-gray-50">
 
-      
+        {/* =================================================
+            1. HERO
+        ================================================== */}
+        <section aria-label="Orbit Buy premium fashion">
+          <Hero />
+        </section>
 
-      <Categories />
+        {/* =================================================
+            2. WHY CHOOSE ORBIT BUY
+        ================================================== */}
+        <section
+          aria-labelledby="why-choose-orbit-buy"
+          id="why-choose-orbit-buy"
+        >
+          <WhyChoose />
+        </section>
 
-      <section className="py-12">
-        <NewArrivals />
-      </section>
+        {/* =================================================
+            3. CATEGORIES
+        ================================================== */}
+        <section
+          aria-labelledby="fashion-categories"
+          id="fashion-categories"
+        >
+          <Categories />
+        </section>
 
-      <section className="py-12">
-        <FlashSale />
-      </section>
+        {/* =================================================
+            4. NEW ARRIVALS
+        ================================================== */}
+        <section
+          className="py-12"
+          aria-labelledby="new-arrivals"
+          id="new-arrivals"
+        >
+          <NewArrivals />
+        </section>
 
-      <section className="py-12">
-        <BestSellers />
-      </section>
+        {/* =================================================
+            5. FLASH SALE
+        ================================================== */}
+        <section
+          className="py-12"
+          aria-labelledby="flash-sale"
+          id="flash-sale"
+        >
+          <FlashSale />
+        </section>
 
-      <section className="py-12">
-        <FeaturedCollection />
-      </section>
+        {/* =================================================
+            6. BEST SELLERS
+        ================================================== */}
+        <section
+          className="py-12"
+          aria-labelledby="best-sellers"
+          id="best-sellers"
+        >
+          <BestSellers />
+        </section>
 
-      <ShopByBrand />
+        {/* =================================================
+            7. FEATURED COLLECTION
+        ================================================== */}
+        <section
+          className="py-12"
+          aria-labelledby="featured-collection"
+          id="featured-collection"
+        >
+          <FeaturedCollection />
+        </section>
 
-      <section className="py-12 pb-16">
-        <Reviews />
-      </section>
-      <WhyChoose />
-      
+        {/* =================================================
+            8. SHOP BY BRAND
+        ================================================== */}
+        <section
+          aria-labelledby="shop-by-brand"
+          id="shop-by-brand"
+        >
+          <ShopByBrand />
+        </section>
 
-    </main>
+        {/* =================================================
+            9. CUSTOMER REVIEWS
+        ================================================== */}
+        <section
+          className="py-12 pb-16"
+          aria-labelledby="customer-reviews"
+          id="reviews"
+        >
+          <Reviews />
+        </section>
+
+      </main>
+    </>
   );
 };
 

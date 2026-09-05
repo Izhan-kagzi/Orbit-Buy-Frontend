@@ -7,37 +7,37 @@ const categoriesData = [
   {
     id: 1,
     title: "Men's Collection",
-    subtitle: "Premium Shirts, Jeans & More",
+    subtitle: "Premium Shirts, T-Shirts, Jeans & More",
     image: mens,
     link: "/mens-shirts",
-    button: "Shop Men",
+    button: "Shop Men's Fashion",
   },
 
   {
     id: 2,
     title: "Women's Collection",
-    subtitle: "Elegant Dresses & Cord Sets",
+    subtitle: "Dresses, Shirts, Jeans, Skirts & More",
     image: womens,
     link: "/women-dresses",
-    button: "Shop Women",
+    button: "Shop Women's Fashion",
   },
 
   {
     id: 3,
     title: "New Arrivals",
-    subtitle: "Latest Fashion Trends",
+    subtitle: "Discover the Latest Fashion Trends",
     image: newArrival,
     link: "/new-arrivals",
-    button: "Explore",
+    button: "Explore New Arrivals",
   },
 
   {
     id: 4,
     title: "Best Sellers",
-    subtitle: "Most Loved Products",
+    subtitle: "Shop Our Most Loved Fashion",
     image: bestSeller,
     link: "/best-sellers",
-    button: "View All",
+    button: "Shop Best Sellers",
   },
 ];
 
