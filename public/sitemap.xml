@@ -1,29 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <urlset
   xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
 >
+
+  <!-- Homepage -->
   <url>
     <loc>https://orbitbuy.vercel.app/</loc>
+    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
+  <!-- Men's Fashion -->
   <url>
-    <loc>https://orbitbuy.vercel.app/products</loc>
+    <loc>https://orbitbuy.vercel.app/mens-shirts</loc>
+    <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
+  <!-- Women's Fashion -->
   <url>
-    <loc>https://orbitbuy.vercel.app/cart</loc>
-    <priority>0.6</priority>
+    <loc>https://orbitbuy.vercel.app/women-dresses</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
 
+  <!-- New Arrivals -->
   <url>
-    <loc>https://orbitbuy.vercel.app/wishlist</loc>
-    <priority>0.6</priority>
+    <loc>https://orbitbuy.vercel.app/new-arrivals</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
 
+  <!-- Best Sellers -->
+  <url>
+    <loc>https://orbitbuy.vercel.app/best-sellers</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Sale -->
+  <url>
+    <loc>https://orbitbuy.vercel.app/sale</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Shop -->
+  <url>
+    <loc>https://orbitbuy.vercel.app/shop</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- About -->
   <url>
     <loc>https://orbitbuy.vercel.app/about</loc>
-    <priority>0.7</priority>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
+
+  <!-- Contact -->
+  <url>
+    <loc>https://orbitbuy.vercel.app/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
 </urlset>

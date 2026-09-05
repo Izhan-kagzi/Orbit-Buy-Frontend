@@ -19,6 +19,8 @@ import RouteLoader from "./components/Loader/RouteLoader";
 import AdminRoute from "./components/Admin/AdminRoute";
 import StaffRoute from "./components/Admin/StaffRoute";
 
+import SEO from "./components/SEO";
+
 /* The landing page itself is also static: it's what most visits
    render first, so it should ship in the initial bundle rather
    than triggering a lazy fetch+Suspense fallback on first load. */
@@ -84,10 +86,15 @@ function App() {
 
   return (
     <>
+      <SEO
+        title="Orbit Buy | Premium Fashion for Men & Women"
+        description="Shop premium men's and women's fashion at Orbit Buy. Discover stylish clothing, trendy collections, quality apparel and the latest fashion for every occasion."
+        path="/"
+      />
       <ScrollToTop />
       {!hideLayout && (
         <>
-         
+
           <Navbar />
         </>
       )}
@@ -111,7 +118,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                
+
                 {/* Men */}
                 <Route path="/mens-shirts" element={<MensShirts />} />
                 <Route path="/mens-tshirts" element={<MensTShirt />} />
