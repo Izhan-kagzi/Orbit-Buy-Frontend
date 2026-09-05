@@ -1,20 +1,123 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Basic -->
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#09335A" />
+
+    <!-- Primary SEO -->
+    <title>Orbit Buy - Premium Fashion for Men & Women</title>
+
+    <meta
+      name="description"
+      content="Shop premium fashion for men and women at Orbit Buy. Discover stylish clothing, wallets, belts, accessories and more with a seamless and secure online shopping experience."
+    />
+
+    <meta
+      name="keywords"
+      content="Orbit Buy, online shopping, premium fashion, men's fashion, women's fashion, wallets, belts, accessories, clothing, ecommerce, fashion store"
+    />
+
+    <meta name="author" content="Orbit Buy" />
+
+    <!-- Search Engine Instructions -->
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+
+    <meta name="googlebot" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://orbitbuy.vercel.app/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Fonts -->
     <link
       href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;0,900;1,600&family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <title>Orbit Buy - Premium Fashion for Men &amp; Women</title>
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Orbit Buy" />
+    <meta
+      property="og:title"
+      content="Orbit Buy - Premium Fashion for Men & Women"
+    />
+    <meta
+      property="og:description"
+      content="Shop premium fashion, clothing, wallets, belts and accessories at Orbit Buy. Enjoy a modern, seamless and secure shopping experience."
+    />
+    <meta property="og:url" content="https://orbitbuy.vercel.app/" />
+
+    <!-- Add your website preview image here -->
+    <meta
+      property="og:image"
+      content="https://orbitbuy.vercel.app/og-image.png"
+    />
+    <meta
+      property="og:image:alt"
+      content="Orbit Buy - Premium Fashion Store"
+    />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Orbit Buy - Premium Fashion for Men & Women"
+    />
+    <meta
+      name="twitter:description"
+      content="Discover premium fashion, accessories and a seamless online shopping experience with Orbit Buy."
+    />
+    <meta
+      name="twitter:image"
+      content="https://orbitbuy.vercel.app/og-image.png"
+    />
+
+    <!-- Structured Data / Schema.org -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Orbit Buy",
+        "url": "https://orbitbuy.vercel.app/",
+        "description": "Premium online fashion and ecommerce platform for men and women.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://orbitbuy.vercel.app/products?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      }
+    </script>
+
+    <!-- Organization Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Orbit Buy",
+        "url": "https://orbitbuy.vercel.app/",
+        "logo": "https://orbitbuy.vercel.app/favicon.svg",
+        "description": "A premium ecommerce platform offering fashion and accessories."
+      }
+    </script>
   </head>
+
   <body>
     <div id="root"></div>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
