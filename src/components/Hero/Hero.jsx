@@ -1,3 +1,4 @@
+import { useCallback, useRef } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import {
@@ -17,22 +18,121 @@ import "swiper/css/effect-fade";
 import heroData from "./heroData";
 
 const Hero = () => {
+  const videoRefs = useRef([]);
+
+  /*
+  ============================================================
+  PLAY ACTIVE VIDEO
+  ============================================================
+  */
+  const playActiveVideo = useCallback((swiper) => {
+    if (!swiper) return;
+
+    const activeIndex = swiper.realIndex;
+
+    // Pause every video first
+    videoRefs.current.forEach((video) => {
+      if (!video) return;
+
+      video.pause();
+    });
+
+    const activeVideo = videoRefs.current[activeIndex];
+
+    if (!activeVideo) return;
+
+    /*
+      Force the browser to load the active video.
+      This is especially useful when videos are hosted
+      through Vercel/Git LFS.
+    */
+    activeVideo.load();
+
+    const playPromise = activeVideo.play();
+
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        /*
+          Browser may temporarily block autoplay.
+          The video is muted, so retrying after a short
+          delay generally resolves this on mobile browsers.
+        */
+        setTimeout(() => {
+          activeVideo.play().catch(() => {});
+        }, 300);
+      });
+    }
+  }, []);
+
+  /*
+  ============================================================
+  INITIALIZE SWIPER
+  ============================================================
+  */
+  const handleSwiperInit = useCallback(
+    (swiper) => {
+      setTimeout(() => {
+        playActiveVideo(swiper);
+      }, 100);
+    },
+    [playActiveVideo]
+  );
+
+  /*
+  ============================================================
+  SLIDE CHANGE
+  ============================================================
+  */
+  const handleSlideChange = useCallback(
+    (swiper) => {
+      playActiveVideo(swiper);
+    },
+    [playActiveVideo]
+  );
+
+  /*
+  ============================================================
+  SLIDE TRANSITION END
+  ============================================================
+  */
+  const handleTransitionEnd = useCallback(
+    (swiper) => {
+      playActiveVideo(swiper);
+    },
+    [playActiveVideo]
+  );
+
+  /*
+  ============================================================
+  VIDEO ERROR
+  ============================================================
+  */
+  const handleVideoError = (event, videoPath) => {
+    console.error(
+      "Orbit Buy Hero Video Error:",
+      videoPath,
+      event.currentTarget.error
+    );
+  };
+
   return (
     <section
       className="
-    relative
-    w-full
-    h-[85vh] lg:h-[90vh]
-    min-h-[725px]
-    max-h-[975px]
-    overflow-hidden
-    pt-20 lg:pt-24
-  "
+        relative
+        w-full
+        h-[85vh]
+        lg:h-[90vh]
+        min-h-[725px]
+        max-h-[975px]
+        overflow-hidden
+        pt-20
+        lg:pt-24
+        bg-brand-dark
+      "
     >
-
       <Swiper
         modules={[
-          Autoplay, 
+          Autoplay,
           Pagination,
           Navigation,
           EffectFade,
@@ -45,36 +145,53 @@ const Hero = () => {
         autoplay={{
           delay: 5000,
           disableOnInteraction: false,
+          pauseOnMouseEnter: false,
         }}
         pagination={{
           clickable: true,
         }}
         navigation={true}
         loop={true}
+        watchSlidesProgress={true}
+        observer={true}
+        observeParents={true}
         className="w-full h-full"
+        onSwiper={handleSwiperInit}
+        onSlideChange={handleSlideChange}
+        onSlideChangeTransitionEnd={handleTransitionEnd}
       >
-
         {heroData.map((slide, index) => (
           <SwiperSlide key={slide.id}>
-
             <div className="relative w-full h-full overflow-hidden">
 
-              {/* ================= BACKGROUND ================= */}
+              {/* =====================================================
+                  BACKGROUND MEDIA
+              ===================================================== */}
 
               {slide.type === "video" ? (
                 <video
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload={index === 0 ? "auto" : "none"}
+                  ref={(element) => {
+                    videoRefs.current[index] = element;
+                  }}
                   className="
                     absolute
                     inset-0
                     w-full
                     h-full
                     object-cover
+                    object-center
                   "
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  webkit-playsinline="true"
+                  preload="metadata"
+                  controls={false}
+                  disablePictureInPicture
+                  onError={(event) =>
+                    handleVideoError(event, slide.media)
+                  }
                 >
                   <source
                     src={slide.media}
@@ -84,10 +201,19 @@ const Hero = () => {
               ) : (
                 <img
                   src={slide.media}
-                  alt={slide.title}
-                  fetchPriority={index === 0 ? "high" : "auto"}
-                  loading={index === 0 ? "eager" : "lazy"}
-                  decoding={index === 0 ? "sync" : "async"}
+                  alt={
+                    slide.title ||
+                    "Orbit Buy premium fashion collection"
+                  }
+                  fetchPriority={
+                    index === 0 ? "high" : "auto"
+                  }
+                  loading={
+                    index === 0 ? "eager" : "lazy"
+                  }
+                  decoding={
+                    index === 0 ? "sync" : "async"
+                  }
                   className="
                     absolute
                     inset-0
@@ -99,7 +225,9 @@ const Hero = () => {
                 />
               )}
 
-              {/* ================= OVERLAY ================= */}
+              {/* =====================================================
+                  DARK GRADIENT OVERLAY
+              ===================================================== */}
 
               <div
                 className="
@@ -109,18 +237,28 @@ const Hero = () => {
                   from-brand-dark/75
                   via-brand-primary/40
                   to-brand-dark/20
+                  pointer-events-none
+                  z-10
                 "
               />
+
+              {/* =====================================================
+                  SECONDARY OVERLAY
+              ===================================================== */}
 
               <div
                 className="
                   absolute
                   inset-0
                   bg-brand-primary/10
+                  pointer-events-none
+                  z-10
                 "
               />
 
-              {/* ================= CONTENT ================= */}
+              {/* =====================================================
+                  CONTENT
+              ===================================================== */}
 
               <div
                 className="
@@ -135,9 +273,9 @@ const Hero = () => {
                   items-center
                 "
               >
-
                 <div className="max-w-2xl">
 
+                  {/* TAG */}
                   {slide.tag && (
                     <p
                       className="
@@ -154,6 +292,7 @@ const Hero = () => {
                     </p>
                   )}
 
+                  {/* TITLE */}
                   {slide.title && (
                     <h1
                       className="
@@ -170,6 +309,7 @@ const Hero = () => {
                     </h1>
                   )}
 
+                  {/* SUBTITLE */}
                   {slide.subtitle && (
                     <p
                       className="
@@ -186,10 +326,11 @@ const Hero = () => {
                   )}
 
                 </div>
-
               </div>
 
-              {/* ================= SCROLL ================= */}
+              {/* =====================================================
+                  SCROLL INDICATOR
+              ===================================================== */}
 
               <div
                 className="
@@ -203,9 +344,9 @@ const Hero = () => {
                   items-center
                   text-white
                   animate-bounce
+                  pointer-events-none
                 "
               >
-
                 <span
                   className="
                     text-[9px]
@@ -219,16 +360,12 @@ const Hero = () => {
                 </span>
 
                 <FiChevronDown className="text-lg" />
-
               </div>
 
             </div>
-
           </SwiperSlide>
         ))}
-
       </Swiper>
-
     </section>
   );
 };
