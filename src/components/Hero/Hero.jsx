@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import {
@@ -18,86 +18,106 @@ import "swiper/css/effect-fade";
 import heroData from "./heroData";
 
 const Hero = () => {
-  const videoRefs = useRef([]);
-
   /*
   ============================================================
   PLAY ACTIVE VIDEO
   ============================================================
   */
+
   const playActiveVideo = useCallback((swiper) => {
-    if (!swiper) return;
+    if (!swiper || !swiper.slides) return;
 
-    const activeIndex = swiper.realIndex;
+    // Get the ACTUAL active slide.
+    // This works correctly even when loop=true creates cloned slides.
+    const activeSlide = swiper.slides[swiper.activeIndex];
 
-    // Pause every video first
-    videoRefs.current.forEach((video) => {
+    if (!activeSlide) return;
+
+    // Pause all videos inside all Swiper slides
+    swiper.slides.forEach((slide) => {
+      const video = slide.querySelector("video");
+
       if (!video) return;
 
-      video.pause();
+      if (!slide.classList.contains("swiper-slide-active")) {
+        video.pause();
+      }
     });
 
-    const activeVideo = videoRefs.current[activeIndex];
+    // Find video inside active slide
+    const activeVideo = activeSlide.querySelector("video");
 
     if (!activeVideo) return;
 
     /*
-      Force the browser to load the active video.
-      This is especially useful when videos are hosted
-      through Vercel/Git LFS.
+      IMPORTANT:
+      Do NOT call activeVideo.load() here.
+
+      Calling load() repeatedly can cause:
+      - video splash
+      - black flash
+      - video restarting
+      - double playback
     */
-    activeVideo.load();
+
+    activeVideo.muted = true;
+    activeVideo.playsInline = true;
 
     const playPromise = activeVideo.play();
 
     if (playPromise !== undefined) {
       playPromise.catch(() => {
-        /*
-          Browser may temporarily block autoplay.
-          The video is muted, so retrying after a short
-          delay generally resolves this on mobile browsers.
-        */
-        setTimeout(() => {
-          activeVideo.play().catch(() => {});
-        }, 300);
+        // Autoplay can occasionally be delayed by the browser.
+        // No forced reload is performed.
       });
     }
   }, []);
 
   /*
   ============================================================
-  INITIALIZE SWIPER
+  SLIDE TRANSITION START
   ============================================================
   */
-  const handleSwiperInit = useCallback(
-    (swiper) => {
-      setTimeout(() => {
-        playActiveVideo(swiper);
-      }, 100);
-    },
-    [playActiveVideo]
-  );
 
-  /*
-  ============================================================
-  SLIDE CHANGE
-  ============================================================
-  */
-  const handleSlideChange = useCallback(
-    (swiper) => {
-      playActiveVideo(swiper);
-    },
-    [playActiveVideo]
-  );
+  const handleTransitionStart = useCallback((swiper) => {
+    if (!swiper || !swiper.slides) return;
+
+    // Pause videos while the fade transition is happening.
+    swiper.slides.forEach((slide) => {
+      const video = slide.querySelector("video");
+
+      if (video) {
+        video.pause();
+      }
+    });
+  }, []);
 
   /*
   ============================================================
   SLIDE TRANSITION END
   ============================================================
   */
+
   const handleTransitionEnd = useCallback(
     (swiper) => {
+      // Start ONLY the video belonging to the final active slide.
       playActiveVideo(swiper);
+    },
+    [playActiveVideo]
+  );
+
+  /*
+  ============================================================
+  SWIPER INITIALIZATION
+  ============================================================
+  */
+
+  const handleSwiperInit = useCallback(
+    (swiper) => {
+      // Allow Swiper to finish mounting before starting video.
+      requestAnimationFrame(() => {
+        playActiveVideo(swiper);
+      });
     },
     [playActiveVideo]
   );
@@ -107,6 +127,7 @@ const Hero = () => {
   VIDEO ERROR
   ============================================================
   */
+
   const handleVideoError = (event, videoPath) => {
     console.error(
       "Orbit Buy Hero Video Error:",
@@ -137,27 +158,79 @@ const Hero = () => {
           Navigation,
           EffectFade,
         ]}
+
+        /*
+        ========================================================
+        SWIPER EFFECT
+        ========================================================
+        */
+
         effect="fade"
+
         fadeEffect={{
           crossFade: true,
         }}
+
         speed={1000}
+
+        /*
+        ========================================================
+        AUTOPLAY
+        ========================================================
+        */
+
         autoplay={{
           delay: 5000,
           disableOnInteraction: false,
           pauseOnMouseEnter: false,
         }}
+
+        /*
+        ========================================================
+        CONTROLS
+        ========================================================
+        */
+
         pagination={{
           clickable: true,
         }}
+
         navigation={true}
+
+        /*
+        ========================================================
+        LOOP
+        ========================================================
+        */
+
         loop={true}
+
+        /*
+        ========================================================
+        PERFORMANCE
+        ========================================================
+        */
+
         watchSlidesProgress={true}
         observer={true}
         observeParents={true}
+
         className="w-full h-full"
+
+        /*
+        ========================================================
+        EVENTS
+
+        IMPORTANT:
+        We no longer use onSlideChange + onSlideChangeTransitionEnd
+        together to start the same video.
+
+        This prevents the double splash.
+        ========================================================
+        */
+
         onSwiper={handleSwiperInit}
-        onSlideChange={handleSlideChange}
+        onSlideChangeTransitionStart={handleTransitionStart}
         onSlideChangeTransitionEnd={handleTransitionEnd}
       >
         {heroData.map((slide, index) => (
@@ -170,9 +243,6 @@ const Hero = () => {
 
               {slide.type === "video" ? (
                 <video
-                  ref={(element) => {
-                    videoRefs.current[index] = element;
-                  }}
                   className="
                     absolute
                     inset-0
@@ -182,11 +252,11 @@ const Hero = () => {
                     object-center
                   "
                   muted
-                  autoPlay
+                  autoPlay={index === 0}
                   loop
                   playsInline
                   webkit-playsinline="true"
-                  preload="metadata"
+                  preload={index === 0 ? "auto" : "metadata"}
                   controls={false}
                   disablePictureInPicture
                   onError={(event) =>
@@ -275,7 +345,10 @@ const Hero = () => {
               >
                 <div className="max-w-2xl">
 
-                  {/* TAG */}
+                  {/* =================================================
+                      TAG
+                  ================================================= */}
+
                   {slide.tag && (
                     <p
                       className="
@@ -292,7 +365,10 @@ const Hero = () => {
                     </p>
                   )}
 
-                  {/* TITLE */}
+                  {/* =================================================
+                      TITLE
+                  ================================================= */}
+
                   {slide.title && (
                     <h1
                       className="
@@ -309,7 +385,10 @@ const Hero = () => {
                     </h1>
                   )}
 
-                  {/* SUBTITLE */}
+                  {/* =================================================
+                      SUBTITLE
+                  ================================================= */}
+
                   {slide.subtitle && (
                     <p
                       className="
