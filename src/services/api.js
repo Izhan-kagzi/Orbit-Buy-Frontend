@@ -55,12 +55,15 @@ async function request(
   }
 
   if (!response.ok) {
-    // Backend error → return safe object
-    return {
-      success: false,
-      message: data?.message || `Request failed (${response.status})`,
-    };
-  }
+  const error = new Error(
+    data?.message || `Request failed (${response.status})`
+  );
+
+  error.status = response.status;
+  error.response = data;
+
+  throw error;
+}
 
   // Ensure success flag always exists
   if (data && typeof data.success === "undefined") {

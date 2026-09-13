@@ -14,9 +14,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount, if a token is saved, verify it against the backend
-  // and load the current user. This also catches expired/invalid
-  // tokens left over from a previous session.
+  // =====================================================
+  // CHECK EXISTING LOGIN
+  // =====================================================
+
   useEffect(() => {
     const token = localStorage.getItem("orbit-token");
 
@@ -27,35 +28,74 @@ export const AuthProvider = ({ children }) => {
 
     api
       .get("/auth/me")
-      .then((res) => setUser(res.user))
+      .then((res) => {
+        if (!res?.success || !res?.user) {
+          throw new Error("Session expired.");
+        }
+
+        setUser(res.user);
+        localStorage.setItem("orbit-user", JSON.stringify(res.user));
+      })
       .catch(() => {
         localStorage.removeItem("orbit-token");
         localStorage.removeItem("orbit-user");
+        setUser(null);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  // ---------------- Login ----------------
+  // =====================================================
+  // LOGIN
+  // =====================================================
 
   const login = async ({ email, password }) => {
-    if (!email || !password) {
+    const cleanEmail = String(email || "").trim().toLowerCase();
+    const cleanPassword = String(password || "");
+
+    if (!cleanEmail || !cleanPassword) {
       throw new Error("Email and password are required.");
     }
 
     const res = await api.post(
       "/auth/login",
-      { email, password },
-      { auth: false }
+      {
+        email: cleanEmail,
+        password: cleanPassword,
+      },
+      {
+        auth: false,
+      }
     );
 
+    // IMPORTANT:
+    // api.js returns { success:false, message }
+    // instead of throwing on backend errors.
+    if (!res?.success) {
+      throw new Error(res?.message || "Invalid email or password.");
+    }
+
+    if (!res.token || !res.user) {
+      throw new Error("Login response is incomplete. Please try again.");
+    }
+
+    // Clear any old session first
+    localStorage.removeItem("orbit-token");
+    localStorage.removeItem("orbit-user");
+
+    // Save new session
     localStorage.setItem("orbit-token", res.token);
     localStorage.setItem("orbit-user", JSON.stringify(res.user));
+
     setUser(res.user);
 
     return res.user;
   };
 
-  // ---------------- Register ----------------
+  // =====================================================
+  // REGISTER
+  // =====================================================
 
   const register = async (formData) => {
     const name = `${formData.firstName || ""} ${
@@ -70,17 +110,32 @@ export const AuthProvider = ({ children }) => {
         password: formData.password,
         mobile: formData.mobile,
       },
-      { auth: false }
+      {
+        auth: false,
+      }
     );
+
+    if (!res?.success) {
+      throw new Error(res?.message || "Registration failed.");
+    }
+
+    if (!res.token || !res.user) {
+      throw new Error(
+        "Registration response is incomplete. Please try again."
+      );
+    }
 
     localStorage.setItem("orbit-token", res.token);
     localStorage.setItem("orbit-user", JSON.stringify(res.user));
+
     setUser(res.user);
 
     return res.user;
   };
 
-  // ---------------- Logout ----------------
+  // =====================================================
+  // LOGOUT
+  // =====================================================
 
   const logout = () => {
     localStorage.removeItem("orbit-token");
@@ -91,23 +146,40 @@ export const AuthProvider = ({ children }) => {
     toast.success("Logged out successfully.");
   };
 
-  // ---------------- Update User ----------------
+  // =====================================================
+  // UPDATE PROFILE
+  // =====================================================
 
   const updateProfile = async (data) => {
     const res = await api.put("/auth/me", data);
 
+    if (!res?.success || !res?.user) {
+      throw new Error(res?.message || "Couldn't update profile.");
+    }
+
     setUser(res.user);
-    localStorage.setItem("orbit-user", JSON.stringify(res.user));
+
+    localStorage.setItem(
+      "orbit-user",
+      JSON.stringify(res.user)
+    );
 
     toast.success("Profile updated.");
+
     return res.user;
   };
 
-  // ---------------- Helpers ----------------
+  // =====================================================
+  // AUTH HELPERS
+  // =====================================================
 
-  const isAuthenticated = !!user;
-  const isAdmin = user?.role === "admin";
-  const isManager = user?.role === "manager";
+  const isAuthenticated = Boolean(user);
+
+  const isAdmin = user?.role?.toLowerCase() === "admin";
+
+  const isManager =
+    user?.role?.toLowerCase() === "manager";
+
   const isStaff = isAdmin || isManager;
 
   const value = {
@@ -132,7 +204,9 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// ---------------- Hook ----------------
+// =====================================================
+// HOOK
+// =====================================================
 
 export const useAuthContext = () => useContext(AuthContext);
 
