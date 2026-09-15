@@ -1,5 +1,5 @@
 // Men's Collection
-import hero3 from "../../assets/hero/hero3.png";
+
 
 /*
   Hero videos are stored in:
@@ -41,19 +41,8 @@ const heroData = [
     secondaryButton: "Explore All",
     secondaryLink: "/shop",
   },
-
   {
     id: 3,
-    type: "image",
-    media: hero3,
-    primaryButton: "Shop Men",
-    primaryLink: "/mens-shirts",
-    secondaryButton: "Explore Collection",
-    secondaryLink: "/mens-jeans",
-  },
-
-  {
-    id: 4,
     type: "video",
     media: "/hero/herovideo3.mp4",
     primaryButton: "Shop Now",
@@ -63,7 +52,7 @@ const heroData = [
   },
 
   {
-    id: 5,
+    id: 4,
     type: "video",
     media: "/hero/herovideo1.mp4",
     primaryButton: "Shop Men",
@@ -73,7 +62,7 @@ const heroData = [
   },
 
   {
-    id: 6,
+    id: 5,
     type: "video",
     media: "/hero/herovideo5.mp4",
     primaryButton: "Shop Women",

@@ -14,7 +14,7 @@ const reviews = [
     image: review1,
     rating: 5,
     review:
-      "Amazing quality! The shirt fits perfectly and the fabric feels premium. I Will shop again.",
+      "Amazing quality! The shirt fits perfectly and the fabric feels premium. I will shop again.",
   },
   {
     id: 2,
@@ -38,7 +38,7 @@ const reviews = [
     image: review4,
     rating: 5,
     review:
-      "Loved the shopping experience! URBAN BUY is best for the clothing shopping.",
+      "Loved the shopping experience! Orbit Buy is best for clothing shopping.",
   },
   {
     id: 5,
@@ -65,7 +65,7 @@ const reviews = [
       "Customer support helped me exchange my size without any hassle. Very satisfied.",
   },
   {
-    id: 7,
+    id: 8, // Fixed duplicate ID from 7 to 8
     name: "Zain Hayat",
     image: review8,
     rating: 5,

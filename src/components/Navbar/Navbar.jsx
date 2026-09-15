@@ -1,19 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
-import {
-  PiShirtFoldedDuotone,
-  PiPantsThin,
-} from "react-icons/pi";
-
-import { IoShirt } from "react-icons/io5";
-
-import {
-  GiHoodie,
-  GiArmoredPants,
-  GiLargeDress,
-  GiMonclerJacket,
-} from "react-icons/gi";
 
 import {
   FiMenu,
@@ -23,24 +10,15 @@ import {
   FiShoppingBag,
   FiUser,
   FiChevronDown,
-  FiChevronUp,
   FiLogOut,
   FiGrid,
   FiMapPin,
   FiClock,
   FiShield,
-  FiStar,
-  FiLayers,
-  FiBriefcase,
-  FiZap,
-  FiPercent,
   FiInfo,
   FiPhoneCall,
   FiHelpCircle,
   FiFileText,
-  FiTriangle,
-  FiActivity,
-  FiBarChart2,
   FiPackage,
 } from "react-icons/fi";
 
@@ -51,104 +29,103 @@ import { useWishlist } from "../../context/WishlistContext";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../hooks/useAuth";
 
-/* ============================================================
-   MEN MENU
-============================================================ */
-
 const mensMenu = [
   {
     name: "Shirts",
     path: "/mens-shirts",
-    icon: PiShirtFoldedDuotone,
+    image:
+      "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=500&q=80",
     desc: "Casual & formal shirts",
   },
   {
     name: "T-Shirts",
     path: "/mens-tshirts",
-    icon: IoShirt,
+    image:
+      "https://i.pinimg.com/736x/39/37/b7/3937b7a8cca92b69cc81e46ac1e6af5b.jpg",
     desc: "Everyday essentials",
   },
   {
     name: "Jeans",
     path: "/mens-jeans",
-    icon: PiPantsThin,
+    image:
+      "https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=500&q=80",
     desc: "Slim, straight & relaxed fits",
   },
   {
     name: "Track Pants",
     path: "/mens-trackpants",
-    icon: GiArmoredPants,
+    image:
+      "https://i.pinimg.com/736x/22/96/5c/22965c41112e9658c05b12b3efca415a.jpg",
     desc: "Comfort for active days",
   },
   {
     name: "Hoodies",
     path: "/mens-hoodies",
-    icon: GiHoodie,
+    image:
+      "https://i.pinimg.com/236x/e9/a2/06/e9a2067124c200ccc08723d50ac33ced.jpg",
     desc: "Cozy layers for the season",
   },
   {
     name: "Jackets",
     path: "/mens-jackets",
-    icon: GiMonclerJacket,
+    image:
+      "https://i.pinimg.com/736x/65/3f/b6/653fb6d7107dea352dd89441460ca993.jpg",
     desc: "Stylish outerwear",
   },
 ];
 
-/* ============================================================
-   WOMEN MENU
-============================================================ */
-
 const womensMenu = [
-  {
-    name: "Shirts",
-    path: "/women-shirts",
-    icon: PiShirtFoldedDuotone,
-    desc: "Relaxed & tailored shirts",
-  },
+  
   {
     name: "Dresses",
     path: "/women-dresses",
-    icon: GiLargeDress,
+    image:
+      "https://i.pinimg.com/1200x/69/4b/81/694b81e27e89242a0f50a304353daca2.jpg",
     desc: "Elegant everyday & evening",
   },
   {
     name: "Party Wear",
     path: "/women-partywear",
-    icon: FiStar,
+    image:
+      "https://i.pinimg.com/736x/21/68/4e/21684e5b5cb983cb04de9d797234cae0.jpg",
     desc: "Stand-out occasion pieces",
   },
   {
     name: "Jeans",
     path: "/women-jeans",
-    icon: PiPantsThin,
+    image:
+      "https://images.pexels.com/photos/17630736/pexels-photo-17630736.jpeg",
     desc: "Flattering premium denim",
   },
   {
     name: "Cord Set",
     path: "/women-cordset",
-    icon: FiLayers,
+    image:
+      "https://i.pinimg.com/736x/57/53/25/575325312e0a2e25ecf1da37274a8bf8.jpg",
     desc: "Effortlessly matched sets",
   },
   {
     name: "Skirts",
     path: "/women-skirts",
-    icon: FiTriangle,
+    image:
+      "https://i.pinimg.com/1200x/c4/a1/68/c4a1685f91c3ed4ba844c3a7c2b008e5.jpg",
     desc: "Mini, midi & maxi styles",
   },
   {
     name: "Jumpsuits",
     path: "/women-jumpsuits",
-    icon: FiActivity,
+    image:
+      "https://images.pexels.com/photos/39417903/pexels-photo-39417903.jpeg",
     desc: "One-piece, all-day looks",
   },
   {
     name: "Formals",
     path: "/women-formals",
-    icon: FiBriefcase,
+    image:
+      "https://images.pexels.com/photos/24724191/pexels-photo-24724191.jpeg",
     desc: "Sharp workplace fits",
   },
 ];
-
 /* ============================================================
    Shop MENU
 ============================================================ */
@@ -157,31 +134,36 @@ const shopMenu = [
   {
     name: "New Arrivals",
     path: "/new-arrivals",
-    icon: FiZap,
+    image:
+      "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=500&q=80",
     desc: "Freshly added this season",
   },
   {
     name: "Best Sellers",
     path: "/best-sellers",
-    icon: FiStar,
+    image:
+      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=500&q=80",
     desc: "Our most loved styles",
   },
   {
     name: "Sale",
     path: "/sale",
-    icon: FiPercent,
+    image:
+      "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=500&q=80",
     desc: "Discounted picks, while they last",
   },
   {
     name: "Shop All",
     path: "/shop",
-    icon: FiGrid,
+    image:
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=500&q=80",
     desc: "The entire catalogue",
   },
   {
     name: "Compare Products",
     path: "/compare",
-    icon: FiBarChart2,
+    image:
+      "https://plus.unsplash.com/premium_photo-1714226832576-f4356d4ab92b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     desc: "See your selections side by side",
   },
 ];
@@ -229,55 +211,48 @@ const aboutMenu = [
 
 const DesktopDropdown = ({ label, items }) => (
   <div className="relative group">
+    {/* MENU BUTTON */}
     <button
       type="button"
       className="
-        flex
-        items-center
-        gap-1.5
-        uppercase
-        text-xs
-        xl:text-sm
-        tracking-widest
-        font-semibold
-        text-white/80
-        group-hover:text-white
-        transition-colors
-        py-2
+        flex items-center gap-1.5
+        uppercase text-xs xl:text-sm
+        tracking-widest font-semibold
+        text-white/80 hover:text-white
+        transition-colors py-2
       "
       aria-haspopup="true"
-      aria-expanded="false"
     >
       {label}
 
       <FiChevronDown
         size={14}
         className="
-          transition-transform
-          duration-300
-          group-hover:rotate-180
           text-brand-tan
+          transition-transform duration-300
+          group-hover:rotate-180
         "
       />
     </button>
 
+    {/* MEGA MENU */}
     <div
       className="
         absolute
         left-1/2
         -translate-x-1/2
         top-full
-        pt-3
-        w-80
+        pt-4
+        w-[760px]
+        xl:w-[900px]
         opacity-0
         invisible
         group-hover:opacity-100
         group-hover:visible
         transition-all
         duration-200
-        transform
-        group-hover:translate-y-0
         translate-y-2
+        group-hover:translate-y-0
         z-50
       "
     >
@@ -286,11 +261,11 @@ const DesktopDropdown = ({ label, items }) => (
           bg-white
           rounded-2xl
           shadow-2xl
-          border
-          border-gray-100
+          border border-gray-100
           overflow-hidden
         "
       >
+        {/* TOP ACCENT */}
         <div
           className="
             h-1
@@ -302,81 +277,199 @@ const DesktopDropdown = ({ label, items }) => (
           "
         />
 
-        <div className="py-2 max-h-[80vh] overflow-y-auto">
-          {items.map((item) => {
-            const Icon = item.icon;
+        {/* HEADER */}
+        <div className="px-6 pt-5 pb-3">
+          <p className="text-[10px] uppercase tracking-[0.25em] text-gray-400 font-semibold">
+            Explore
+          </p>
 
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                className="
-                  group/item
-                  flex
-                  items-center
-                  gap-3.5
-                  px-5
-                  py-3
-                  hover:bg-gray-50/80
-                  transition-colors
-                  duration-150
-                "
-              >
-                {Icon && (
-                  <span
+          <h3 className="text-xl font-bold text-gray-900">
+            {label} Collection
+          </h3>
+        </div>
+
+        {/* PRODUCTS */}
+        <div className="px-5 pb-6">
+          <div
+            className={`
+              grid gap-3
+              ${
+                items.length >= 7
+                  ? "grid-cols-4"
+                  : items.length >= 4
+                  ? "grid-cols-4"
+                  : "grid-cols-3"
+              }
+            `}
+          >
+            {items.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  className="
+                    group/card
+                    rounded-xl
+                    overflow-hidden
+                    border border-gray-100
+                    bg-white
+                    hover:border-gray-200
+                    hover:shadow-lg
+                    transition-all
+                    duration-300
+                  "
+                >
+                  {/* IMAGE */}
+                  <div
                     className="
-                      w-9
-                      h-9
-                      rounded-xl
+                      relative
+                      h-32
+                      xl:h-36
                       bg-gray-100
-                      text-gray-700
-                      group-hover/item:bg-brand-primary
-                      group-hover/item:text-white
-                      flex
-                      items-center
-                      justify-center
-                      shrink-0
-                      transition-all
-                      duration-200
-                      shadow-sm
+                      overflow-hidden
                     "
                   >
-                    <Icon size={16} />
-                  </span>
-                )}
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        loading="lazy"
+                        className="
+                          w-full
+                          h-full
+                          object-cover
+                          transition-transform
+                          duration-500
+                          group-hover/card:scale-110
+                        "
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="
+                          w-full h-full
+                          flex items-center justify-center
+                          bg-gray-100
+                        "
+                      >
+                        {Icon && (
+                          <Icon
+                            size={30}
+                            className="text-gray-400"
+                          />
+                        )}
+                      </div>
+                    )}
 
-                <div>
-                  <span
-                    className="
-                      block
-                      text-sm
-                      font-semibold
-                      text-gray-800
-                      group-hover/item:text-brand-primary
-                      transition-colors
-                    "
-                  >
-                    {item.name}
-                  </span>
+                    {/* HOVER OVERLAY */}
+                    <div
+                      className="
+                        absolute inset-0
+                        bg-black/0
+                        group-hover/card:bg-black/10
+                        transition-colors
+                        duration-300
+                      "
+                    />
 
-                  {item.desc && (
+                    {/* ARROW */}
                     <span
                       className="
-                        block
-                        text-xs
-                        text-gray-400
-                        font-normal
-                        mt-0.5
-                        line-clamp-1
+                        absolute
+                        right-2
+                        bottom-2
+                        w-7
+                        h-7
+                        rounded-full
+                        bg-white/90
+                        backdrop-blur
+                        flex items-center justify-center
+                        opacity-0
+                        translate-y-2
+                        group-hover/card:opacity-100
+                        group-hover/card:translate-y-0
+                        transition-all
+                        duration-300
                       "
                     >
-                      {item.desc}
+                      <span className="text-gray-800 text-sm">
+                        →
+                      </span>
                     </span>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+                  </div>
+
+                  {/* CONTENT */}
+                  <div className="px-3 py-3">
+                    <h4
+                      className="
+                        text-sm
+                        font-bold
+                        text-gray-900
+                        group-hover/card:text-brand-primary
+                        transition-colors
+                      "
+                    >
+                      {item.name}
+                    </h4>
+
+                    {item.desc && (
+                      <p
+                        className="
+                          mt-1
+                          text-[11px]
+                          leading-4
+                          text-gray-400
+                          line-clamp-2
+                        "
+                      >
+                        {item.desc}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* FOOTER */}
+        <div
+          className="
+            px-6 py-3
+            bg-gray-50
+            border-t border-gray-100
+            flex items-center justify-between
+          "
+        >
+          <span className="text-[11px] text-gray-400">
+            Discover the latest styles
+          </span>
+
+          <Link
+  to={
+    label === "Men"
+      ? "/search?q=men"
+      : label === "Women"
+      ? "/search?q=women"
+      : "/shop"
+  }
+  className="
+    text-xs
+    font-bold
+    uppercase
+    tracking-wider
+    text-brand-primary
+    hover:text-brand-dark
+    transition-colors
+  "
+>
+  View All →
+</Link>
+
         </div>
       </div>
     </div>
@@ -392,89 +485,131 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
 
   return (
     <div className="border-b border-white/10 py-2">
+      {/* HEADER */}
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={() => setOpen((prev) => !prev)}
         className="
-          w-full
-          flex
-          items-center
-          justify-between
-          uppercase
-          text-sm
-          font-bold
-          tracking-wider
-          text-white
-          py-2
+          w-full flex items-center justify-between
+          uppercase text-sm font-bold
+          tracking-wider text-white
+          py-3
         "
         aria-expanded={open}
       >
         <span>{label}</span>
 
-        <span className="text-brand-tan">
-          {open ? (
-            <FiChevronUp size={18} />
-          ) : (
-            <FiChevronDown size={18} />
-          )}
-        </span>
+        <FiChevronDown
+          size={18}
+          className={`
+            text-brand-tan
+            transition-transform duration-300
+            ${open ? "rotate-180" : ""}
+          `}
+        />
       </button>
 
+      {/* PRODUCT GRID */}
       <div
         className={`
-          grid
-          transition-all
-          duration-300
-          ease-in-out
+          grid transition-all duration-300 ease-in-out
           ${
             open
-              ? "grid-rows-[1fr] opacity-100 mt-2 mb-3"
+              ? "grid-rows-[1fr] opacity-100 pb-3"
               : "grid-rows-[0fr] opacity-0"
           }
         `}
       >
-        <div
-          className="
-            overflow-hidden
-            flex
-            flex-col
-            gap-2
-            pl-3
-            border-l-2
-            border-brand-tan/30
-          "
-        >
-          {items.map((item) => {
-            const Icon = item.icon;
+        <div className="overflow-hidden">
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            {items.map((item) => {
+              const Icon = item.icon;
 
-            return (
-              <Link
-                key={item.name}
-                to={item.path}
-                onClick={onNavigate}
-                className="
-                  flex
-                  items-center
-                  gap-3
-                  py-1.5
-                  text-sm
-                  font-medium
-                  text-gray-300
-                  hover:text-white
-                  transition-colors
-                "
-              >
-                {Icon && (
-                  <Icon
-                    size={16}
-                    className="text-brand-tan shrink-0"
-                  />
-                )}
+              return (
+                <Link
+                  key={item.name}
+                  to={item.path}
+                  onClick={onNavigate}
+                  className="
+                    group
+                    overflow-hidden
+                    rounded-xl
+                    bg-white
+                    border border-white/10
+                    shadow-lg
+                    transition-all duration-300
+                    active:scale-[0.98]
+                  "
+                >
+                  {/* IMAGE */}
+                  <div className="relative h-28 bg-gray-100 overflow-hidden">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        loading="lazy"
+                        className="
+                          w-full h-full
+                          object-cover
+                          transition-transform duration-500
+                          group-hover:scale-105
+                        "
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="
+                          w-full h-full
+                          flex items-center justify-center
+                          bg-gray-100
+                        "
+                      >
+                        {Icon && (
+                          <Icon
+                            size={28}
+                            className="text-gray-400"
+                          />
+                        )}
+                      </div>
+                    )}
 
-                {item.name}
-              </Link>
-            );
-          })}
+                    {/* IMAGE OVERLAY */}
+                    <div className="absolute inset-0 bg-black/5" />
+                  </div>
+
+                  {/* TEXT */}
+                  <div className="p-3">
+                    <h4
+                      className="
+                        text-xs
+                        font-bold
+                        text-gray-900
+                        truncate
+                      "
+                    >
+                      {item.name}
+                    </h4>
+
+                    {item.desc && (
+                      <p
+                        className="
+                          mt-1
+                          text-[10px]
+                          leading-4
+                          text-gray-400
+                          line-clamp-2
+                        "
+                      >
+                        {item.desc}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
