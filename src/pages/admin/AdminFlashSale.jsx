@@ -20,6 +20,10 @@ const API_URL =
 
 const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
 
+/* ============================================================
+   HELPERS
+============================================================ */
+
 const getImageUrl = (path) => {
   if (!path) return "";
 
@@ -30,8 +34,14 @@ const getImageUrl = (path) => {
     return path;
   }
 
-  return `${API_ORIGIN}${path.startsWith("/") ? path : `/${path}`}`;
+  return `${API_ORIGIN}${
+    path.startsWith("/") ? path : `/${path}`
+  }`;
 };
+
+/* ------------------------------------------------------------
+   Convert backend ISO date to datetime-local value
+------------------------------------------------------------ */
 
 const toDateTimeLocal = (value) => {
   if (!value) return "";
@@ -52,11 +62,110 @@ const toDateTimeLocal = (value) => {
   )}:${pad(date.getMinutes())}`;
 };
 
+/* ------------------------------------------------------------
+   Get authentication token
+------------------------------------------------------------ */
+
 const getToken = () => {
   return localStorage.getItem("orbit-token") || "";
 };
 
-const getStatus = (sale) => {
+/* ============================================================
+   REAL COUNTDOWN
+============================================================ */
+
+const getCountdown = (
+  startTime,
+  endTime,
+  active,
+  currentTime
+) => {
+  const zero = {
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  };
+
+  if (!active || !startTime || !endTime) {
+    return zero;
+  }
+
+  const start = new Date(startTime).getTime();
+  const end = new Date(endTime).getTime();
+
+  if (
+    Number.isNaN(start) ||
+    Number.isNaN(end)
+  ) {
+    return zero;
+  }
+
+  let targetTime;
+
+  /*
+   * BEFORE SALE
+   * Count down to start.
+   */
+  if (currentTime < start) {
+    targetTime = start;
+  }
+
+  /*
+   * DURING SALE
+   * Count down to end.
+   */
+  else if (currentTime < end) {
+    targetTime = end;
+  }
+
+  /*
+   * SALE ENDED
+   */
+  else {
+    return zero;
+  }
+
+  const difference = Math.max(
+    0,
+    targetTime - currentTime
+  );
+
+  const totalSeconds = Math.floor(
+    difference / 1000
+  );
+
+  const days = Math.floor(
+    totalSeconds / 86400
+  );
+
+  const hours = Math.floor(
+    (totalSeconds % 86400) / 3600
+  );
+
+  const minutes = Math.floor(
+    (totalSeconds % 3600) / 60
+  );
+
+  const seconds =
+    totalSeconds % 60;
+
+  return {
+    days,
+    hours,
+    minutes,
+    seconds,
+  };
+};
+
+/* ============================================================
+   STATUS
+============================================================ */
+
+const getStatus = (
+  sale,
+  currentTime
+) => {
   if (!sale?.active) {
     return {
       label: "Inactive",
@@ -65,17 +174,22 @@ const getStatus = (sale) => {
     };
   }
 
-  const now = Date.now();
-
   const start = sale.startTime
-    ? new Date(sale.startTime).getTime()
+    ? new Date(
+        sale.startTime
+      ).getTime()
     : null;
 
   const end = sale.endTime
-    ? new Date(sale.endTime).getTime()
+    ? new Date(
+        sale.endTime
+      ).getTime()
     : null;
 
-  if (start && now < start) {
+  if (
+    start &&
+    currentTime < start
+  ) {
     return {
       label: "Upcoming",
       className:
@@ -83,7 +197,10 @@ const getStatus = (sale) => {
     };
   }
 
-  if (end && now >= end) {
+  if (
+    end &&
+    currentTime >= end
+  ) {
     return {
       label: "Ended",
       className:
@@ -98,6 +215,20 @@ const getStatus = (sale) => {
   };
 };
 
+/* ============================================================
+   FORMAT NUMBER
+============================================================ */
+
+const formatNumber = (value) => {
+  return String(
+    Math.max(0, Number(value) || 0)
+  ).padStart(2, "0");
+};
+
+/* ============================================================
+   COMPONENT
+============================================================ */
+
 function AdminFlashSale() {
   const [sale, setSale] = useState(null);
 
@@ -109,10 +240,14 @@ function AdminFlashSale() {
       "Up to 30% off - Limited Time Offer!"
     );
 
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [startTime, setStartTime] =
+    useState("");
 
-  const [active, setActive] = useState(false);
+  const [endTime, setEndTime] =
+    useState("");
+
+  const [active, setActive] =
+    useState(false);
 
   const [existingImages, setExistingImages] =
     useState([]);
@@ -135,8 +270,32 @@ function AdminFlashSale() {
   const [success, setSuccess] =
     useState("");
 
+  /*
+   * IMPORTANT:
+   * This state updates every second.
+   *
+   * We calculate countdown from Date.now()
+   * instead of decreasing a counter manually.
+   */
+  const [currentTime, setCurrentTime] =
+    useState(Date.now());
+
   /* ============================================================
-     LOAD
+     REAL-TIME CLOCK
+  ============================================================ */
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  /* ============================================================
+     LOAD FLASH SALE
   ============================================================ */
 
   const loadFlashSale = async () => {
@@ -148,7 +307,8 @@ function AdminFlashSale() {
         `${API_URL}/flash-sale`
       );
 
-      const data = await response.json();
+      const data =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -189,7 +349,9 @@ function AdminFlashSale() {
       );
 
       setExistingImages(
-        Array.isArray(flashSale.images)
+        Array.isArray(
+          flashSale.images
+        )
           ? flashSale.images
           : []
       );
@@ -213,33 +375,47 @@ function AdminFlashSale() {
      IMAGE SELECTION
   ============================================================ */
 
-  const handleImageChange = (event) => {
+  const handleImageChange = (
+    event
+  ) => {
     const files = Array.from(
       event.target.files || []
     );
 
     if (!files.length) return;
 
-    const availableSlots =
-      Math.max(
-        0,
-        6 -
-          existingImages.length -
-          newImages.length
-      );
+    const availableSlots = Math.max(
+      0,
+      6 -
+        existingImages.length -
+        newImages.length
+    );
 
     if (availableSlots <= 0) {
       setError(
         "You can use a maximum of 6 Flash Sale images."
       );
+
+      event.target.value = "";
       return;
     }
 
     const selected = files
       .slice(0, availableSlots)
       .filter((file) =>
-        file.type.startsWith("image/")
+        file.type.startsWith(
+          "image/"
+        )
       );
+
+    if (!selected.length) {
+      setError(
+        "Please select valid image files."
+      );
+
+      event.target.value = "";
+      return;
+    }
 
     setNewImages((previous) => [
       ...previous,
@@ -249,21 +425,27 @@ function AdminFlashSale() {
     event.target.value = "";
   };
 
-  const removeExistingImage = (index) => {
-    setExistingImages((previous) =>
-      previous.filter(
-        (_, imageIndex) =>
-          imageIndex !== index
-      )
+  const removeExistingImage = (
+    index
+  ) => {
+    setExistingImages(
+      (previous) =>
+        previous.filter(
+          (_, imageIndex) =>
+            imageIndex !== index
+        )
     );
   };
 
-  const removeNewImage = (index) => {
-    setNewImages((previous) =>
-      previous.filter(
-        (_, imageIndex) =>
-          imageIndex !== index
-      )
+  const removeNewImage = (
+    index
+  ) => {
+    setNewImages(
+      (previous) =>
+        previous.filter(
+          (_, imageIndex) =>
+            imageIndex !== index
+        )
     );
   };
 
@@ -271,7 +453,9 @@ function AdminFlashSale() {
      SAVE
   ============================================================ */
 
-  const handleSave = async (event) => {
+  const handleSave = async (
+    event
+  ) => {
     event.preventDefault();
 
     setSaving(true);
@@ -279,6 +463,21 @@ function AdminFlashSale() {
     setSuccess("");
 
     try {
+      /*
+       * Schedule validation
+       */
+      if (
+        active &&
+        (!startTime || !endTime)
+      ) {
+        throw new Error(
+          "Please select both start and end date/time when enabling the Flash Sale."
+        );
+      }
+
+      /*
+       * End must be after start
+       */
       if (
         startTime &&
         endTime &&
@@ -290,6 +489,27 @@ function AdminFlashSale() {
         );
       }
 
+      /*
+       * Title validation
+       */
+      if (!title.trim()) {
+        throw new Error(
+          "Please enter a Flash Sale title."
+        );
+      }
+
+      /*
+       * Description validation
+       */
+      if (!description.trim()) {
+        throw new Error(
+          "Please enter a Flash Sale description."
+        );
+      }
+
+      /*
+       * FormData
+       */
       const formData =
         new FormData();
 
@@ -332,18 +552,28 @@ function AdminFlashSale() {
         );
       });
 
-      const token = getToken();
+      const token =
+        getToken();
 
-      const response = await fetch(
-        `${API_URL}/flash-sale`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
+      if (!token) {
+        throw new Error(
+          "Your admin session has expired. Please log in again."
+        );
+      }
+
+      const response =
+        await fetch(
+          `${API_URL}/flash-sale`,
+          {
+            method: "PUT",
+
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+
+            body: formData,
+          }
+        );
 
       const data =
         await response.json();
@@ -355,10 +585,13 @@ function AdminFlashSale() {
         );
       }
 
-      setSale(data.flashSale);
+      const updatedSale =
+        data.flashSale || {};
+
+      setSale(updatedSale);
 
       setExistingImages(
-        data.flashSale?.images || []
+        updatedSale.images || []
       );
 
       setNewImages([]);
@@ -367,7 +600,12 @@ function AdminFlashSale() {
         "Flash Sale saved successfully."
       );
 
-      setTimeout(() => {
+      /*
+       * Immediately refresh the clock
+       */
+      setCurrentTime(Date.now());
+
+      window.setTimeout(() => {
         setSuccess("");
       }, 3000);
     } catch (err) {
@@ -397,17 +635,26 @@ function AdminFlashSale() {
     setSuccess("");
 
     try {
-      const token = getToken();
+      const token =
+        getToken();
 
-      const response = await fetch(
-        `${API_URL}/flash-sale`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      if (!token) {
+        throw new Error(
+          "Your admin session has expired. Please log in again."
+        );
+      }
+
+      const response =
+        await fetch(
+          `${API_URL}/flash-sale`,
+          {
+            method: "DELETE",
+
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
       const data =
         await response.json();
@@ -440,8 +687,11 @@ function AdminFlashSale() {
       setActive(false);
 
       setExistingImages([]);
-
       setNewImages([]);
+
+      setCurrentTime(
+        Date.now()
+      );
 
       setSuccess(
         "Flash Sale has been reset."
@@ -456,14 +706,66 @@ function AdminFlashSale() {
     }
   };
 
+  /* ============================================================
+     LIVE STATUS
+  ============================================================ */
+
   const status = useMemo(
-    () => getStatus(sale),
-    [sale]
+    () =>
+      getStatus(
+        {
+          ...sale,
+          active,
+          startTime,
+          endTime,
+        },
+        currentTime
+      ),
+    [
+      sale,
+      active,
+      startTime,
+      endTime,
+      currentTime,
+    ]
+  );
+
+  /* ============================================================
+     LIVE COUNTDOWN
+  ============================================================ */
+
+  const countdown = useMemo(
+    () =>
+      getCountdown(
+        startTime,
+        endTime,
+        active,
+        currentTime
+      ),
+    [
+      startTime,
+      endTime,
+      active,
+      currentTime,
+    ]
   );
 
   const totalImages =
     existingImages.length +
     newImages.length;
+
+  /* ============================================================
+     COUNTDOWN LABEL
+  ============================================================ */
+
+  const countdownLabel =
+    status.label === "Upcoming"
+      ? "COMING SOON"
+      : status.label === "Live"
+      ? "FLASH SALE LIVE"
+      : status.label === "Ended"
+      ? "SALE ENDED"
+      : "FLASH SALE";
 
   /* ============================================================
      LOADING
@@ -489,7 +791,10 @@ function AdminFlashSale() {
   return (
     <AdminLayout>
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* HEADER */}
+
+        {/* ======================================================
+            HEADER
+        ====================================================== */}
 
         <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -533,7 +838,9 @@ function AdminFlashSale() {
           </div>
         </div>
 
-        {/* ALERTS */}
+        {/* ======================================================
+            ALERTS
+        ====================================================== */}
 
         {error && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
@@ -553,10 +860,16 @@ function AdminFlashSale() {
 
         <form onSubmit={handleSave}>
           <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-            {/* LEFT */}
+
+            {/* ==================================================
+                LEFT
+            ================================================== */}
 
             <div className="space-y-6">
-              {/* BASIC DETAILS */}
+
+              {/* =================================================
+                  BASIC DETAILS
+              ================================================= */}
 
               <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
                 <div className="mb-6">
@@ -571,6 +884,7 @@ function AdminFlashSale() {
                 </div>
 
                 <div className="space-y-5">
+
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-gray-700">
                       Sale Title
@@ -606,12 +920,16 @@ function AdminFlashSale() {
                       className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brand-primary focus:bg-white focus:ring-2 focus:ring-brand-primary/10"
                     />
                   </div>
+
                 </div>
               </section>
 
-              {/* TIMING */}
+              {/* =================================================
+                  SALE SCHEDULE
+              ================================================= */}
 
               <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
+
                 <div className="mb-6">
                   <h2 className="text-lg font-bold text-gray-900">
                     Sale Schedule
@@ -624,6 +942,9 @@ function AdminFlashSale() {
                 </div>
 
                 <div className="grid gap-5 md:grid-cols-2">
+
+                  {/* START */}
+
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
                       <FiCalendar />
@@ -632,6 +953,7 @@ function AdminFlashSale() {
 
                     <input
                       type="datetime-local"
+                      step="1"
                       value={startTime}
                       onChange={(event) =>
                         setStartTime(
@@ -642,6 +964,8 @@ function AdminFlashSale() {
                     />
                   </div>
 
+                  {/* END */}
+
                   <div>
                     <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
                       <FiClock />
@@ -650,6 +974,8 @@ function AdminFlashSale() {
 
                     <input
                       type="datetime-local"
+                      step="1"
+                      min={startTime || undefined}
                       value={endTime}
                       onChange={(event) =>
                         setEndTime(
@@ -659,9 +985,13 @@ function AdminFlashSale() {
                       className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brand-primary focus:bg-white focus:ring-2 focus:ring-brand-primary/10"
                     />
                   </div>
+
                 </div>
 
+                {/* ENABLE */}
+
                 <div className="mt-6 flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-4">
+
                   <div>
                     <p className="font-semibold text-gray-900">
                       Enable Flash Sale
@@ -687,6 +1017,7 @@ function AdminFlashSale() {
                         : "bg-gray-300"
                     }`}
                     aria-label="Toggle Flash Sale"
+                    aria-pressed={active}
                   >
                     <span
                       className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
@@ -696,13 +1027,19 @@ function AdminFlashSale() {
                       }`}
                     />
                   </button>
+
                 </div>
+
               </section>
 
-              {/* IMAGES */}
+              {/* =================================================
+                  IMAGES
+              ================================================= */}
 
               <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
+
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
                   <div>
                     <h2 className="text-lg font-bold text-gray-900">
                       Sale Images
@@ -729,10 +1066,12 @@ function AdminFlashSale() {
                       className="hidden"
                     />
                   </label>
+
                 </div>
 
                 {totalImages === 0 ? (
                   <div className="rounded-2xl border-2 border-dashed border-gray-200 px-6 py-12 text-center">
+
                     <FiImage
                       size={34}
                       className="mx-auto mb-3 text-gray-300"
@@ -746,9 +1085,13 @@ function AdminFlashSale() {
                       Upload images to display on
                       the homepage.
                     </p>
+
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+
+                    {/* SAVED IMAGES */}
+
                     {existingImages.map(
                       (image, index) => (
                         <div
@@ -756,8 +1099,12 @@ function AdminFlashSale() {
                           className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-gray-100"
                         >
                           <img
-                            src={getImageUrl(image)}
-                            alt={`Flash Sale ${index + 1}`}
+                            src={getImageUrl(
+                              image
+                            )}
+                            alt={`Flash Sale ${
+                              index + 1
+                            }`}
                             className="aspect-[4/3] w-full object-cover"
                           />
 
@@ -781,152 +1128,254 @@ function AdminFlashSale() {
                       )
                     )}
 
+                    {/* NEW IMAGES */}
+
                     {newImages.map(
                       (file, index) => (
-                        <div
-                          key={`new-${file.name}-${index}`}
-                          className="group relative overflow-hidden rounded-2xl border border-brand-primary/20 bg-gray-100"
-                        >
-                          <img
-                            src={URL.createObjectURL(
-                              file
-                            )}
-                            alt={file.name}
-                            className="aspect-[4/3] w-full object-cover"
-                          />
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              removeNewImage(
-                                index
-                              )
-                            }
-                            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-red-600 shadow-lg transition hover:bg-red-50"
-                            aria-label="Remove image"
-                          >
-                            <FiX />
-                          </button>
-
-                          <span className="absolute bottom-2 left-2 rounded-lg bg-brand-primary px-2 py-1 text-[10px] font-semibold text-white">
-                            New
-                          </span>
-                        </div>
+                        <NewImagePreview
+                          key={`new-${file.name}-${file.size}-${index}`}
+                          file={file}
+                          index={index}
+                          onRemove={
+                            removeNewImage
+                          }
+                        />
                       )
                     )}
+
                   </div>
                 )}
 
                 <p className="mt-4 text-xs text-gray-400">
                   {totalImages}/6 images selected
                 </p>
+
               </section>
             </div>
 
-            {/* RIGHT */}
+            {/* ==================================================
+                RIGHT
+            ================================================== */}
 
             <aside className="space-y-6">
-              {/* PREVIEW */}
+
+              {/* =================================================
+                  LIVE PREVIEW
+              ================================================= */}
 
               <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
+
                 <div className="border-b border-gray-100 px-5 py-5">
                   <h2 className="font-bold text-gray-900">
-                    Preview
+                    Live Preview
                   </h2>
 
                   <p className="mt-1 text-xs text-gray-500">
-                    How the Flash Sale will appear
-                    conceptually.
+                    This countdown updates every second.
                   </p>
                 </div>
 
-                <div className="bg-gray-950 p-5 text-white">
-                  <div className="mb-5 flex items-center gap-2">
-                    <FiZap />
+                <div className="relative overflow-hidden bg-[#f8f9fa] px-5 py-8 text-[#062c57]">
 
-                    <span className="text-xs font-bold uppercase tracking-[0.2em]">
+                  {/* DOT PATTERN TOP RIGHT */}
+
+                  <div className="pointer-events-none absolute right-5 top-5 grid grid-cols-7 gap-2 opacity-60">
+                    {Array.from({
+                      length: 35,
+                    }).map((_, index) => (
+                      <span
+                        key={index}
+                        className="h-1.5 w-1.5 rounded-full bg-[#d8c39c]"
+                      />
+                    ))}
+                  </div>
+
+                  {/* DOT PATTERN BOTTOM LEFT */}
+
+                  <div className="pointer-events-none absolute bottom-5 left-5 grid grid-cols-7 gap-2 opacity-60">
+                    {Array.from({
+                      length: 35,
+                    }).map((_, index) => (
+                      <span
+                        key={index}
+                        className="h-1.5 w-1.5 rounded-full bg-[#d8c39c]"
+                      />
+                    ))}
+                  </div>
+
+                  <div className="relative z-10">
+
+                    {/* STATUS */}
+
+                    <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#07355f]">
+                      {countdownLabel}
+                    </p>
+
+                    {/* TITLE */}
+
+                    <h3 className="mt-3 font-serif text-4xl leading-none text-[#062c57]">
                       {title ||
                         "Flash Sale!"}
-                    </span>
-                  </div>
+                    </h3>
 
-                  <h3 className="text-2xl font-bold">
-                    {description ||
-                      "Limited Time Offer!"}
-                  </h3>
+                    {/* DESCRIPTION */}
 
-                  <div className="mt-6 grid grid-cols-4 gap-2">
-                    {[
-                      "00",
-                      "00",
-                      "00",
-                      "00",
-                    ].map(
-                      (value, index) => (
-                        <div
-                          key={index}
-                          className="rounded-xl bg-white/10 p-2 text-center"
-                        >
-                          <div className="text-xl font-bold">
-                            {value}
-                          </div>
+                    <p className="mt-4 text-sm leading-6 text-[#274c70]">
+                      {description ||
+                        "Up to 30% off - Limited Time Offer!"}
+                    </p>
 
-                          <div className="mt-1 text-[9px] uppercase text-white/50">
-                            {[
-                              "Days",
-                              "Hours",
-                              "Min",
-                              "Sec",
-                            ][index]}
-                          </div>
-                        </div>
-                      )
-                    )}
-                  </div>
+                    {/* COUNTDOWN */}
 
-                  {totalImages > 0 && (
-                    <div className="mt-5 grid grid-cols-2 gap-2">
-                      {[
-                        ...existingImages,
-                        ...newImages,
-                      ]
-                        .slice(0, 2)
-                        .map(
-                          (image, index) => (
-                            <div
-                              key={index}
-                              className="overflow-hidden rounded-xl"
-                            >
-                              <img
-                                src={
-                                  typeof image ===
-                                  "string"
-                                    ? getImageUrl(
-                                        image
-                                      )
-                                    : URL.createObjectURL(
-                                        image
-                                      )
-                                }
-                                alt=""
-                                className="aspect-[4/3] w-full object-cover"
-                              />
-                            </div>
-                          )
-                        )}
+                    <div className="mt-8 grid grid-cols-4 items-start">
+
+                      {/* DAYS */}
+
+                      <CountdownBox
+                        value={
+                          countdown.days
+                        }
+                        label="DAYS"
+                      />
+
+                      <CountdownSeparator />
+
+                      {/* HOURS */}
+
+                      <CountdownBox
+                        value={
+                          countdown.hours
+                        }
+                        label="HOURS"
+                      />
+
+                      <CountdownSeparator />
+
+                      {/* MINUTES */}
+
+                      <CountdownBox
+                        value={
+                          countdown.minutes
+                        }
+                        label="MINUTES"
+                      />
+
+                      <CountdownSeparator />
+
+                      {/* SECONDS */}
+
+                      <CountdownBox
+                        value={
+                          countdown.seconds
+                        }
+                        label="SECONDS"
+                      />
+
                     </div>
-                  )}
+
+                    {/* STATUS MESSAGE */}
+
+                    <div className="mt-6 text-center">
+
+                      {status.label ===
+                        "Upcoming" && (
+                        <p className="text-xs font-medium text-gray-500">
+                          The countdown is currently
+                          counting down to the sale
+                          start.
+                        </p>
+                      )}
+
+                      {status.label ===
+                        "Live" && (
+                        <p className="text-xs font-semibold text-emerald-600">
+                          Flash Sale is live now.
+                        </p>
+                      )}
+
+                      {status.label ===
+                        "Ended" && (
+                        <p className="text-xs font-semibold text-red-500">
+                          This Flash Sale has ended.
+                        </p>
+                      )}
+
+                      {status.label ===
+                        "Inactive" && (
+                        <p className="text-xs font-medium text-gray-500">
+                          Enable the Flash Sale to
+                          start the countdown.
+                        </p>
+                      )}
+
+                    </div>
+
+                    {/* IMAGES */}
+
+                    {totalImages > 0 && (
+                      <div className="mt-6 grid grid-cols-2 gap-2">
+
+                        {existingImages
+                          .slice(0, 2)
+                          .map(
+                            (
+                              image,
+                              index
+                            ) => (
+                              <div
+                                key={`preview-existing-${index}`}
+                                className="overflow-hidden rounded-xl"
+                              >
+                                <img
+                                  src={getImageUrl(
+                                    image
+                                  )}
+                                  alt=""
+                                  className="aspect-[4/3] w-full object-cover"
+                                />
+                              </div>
+                            )
+                          )}
+
+                        {existingImages.length <
+                          2 &&
+                          newImages
+                            .slice(
+                              0,
+                              2 -
+                                existingImages.length
+                            )
+                            .map(
+                              (
+                                file,
+                                index
+                              ) => (
+                                <NewImagePreviewSmall
+                                  key={`preview-new-${index}`}
+                                  file={file}
+                                />
+                              )
+                            )}
+
+                      </div>
+                    )}
+
+                  </div>
                 </div>
               </section>
 
-              {/* STATUS */}
+              {/* =================================================
+                  STATUS
+              ================================================= */}
 
               <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+
                 <h2 className="mb-4 font-bold text-gray-900">
                   Sale Status
                 </h2>
 
                 <div className="space-y-3 text-sm">
+
                   <div className="flex justify-between gap-4">
                     <span className="text-gray-500">
                       Status
@@ -960,10 +1409,27 @@ function AdminFlashSale() {
                         : "No"}
                     </span>
                   </div>
+
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-500">
+                      Countdown
+                    </span>
+
+                    <span className="font-semibold text-gray-900">
+                      {active &&
+                      startTime &&
+                      endTime
+                        ? "Running"
+                        : "Not Set"}
+                    </span>
+                  </div>
+
                 </div>
               </section>
 
-              {/* SAVE */}
+              {/* =================================================
+                  SAVE
+              ================================================= */}
 
               <button
                 type="submit"
@@ -983,18 +1449,137 @@ function AdminFlashSale() {
                 )}
               </button>
 
+              {/* =================================================
+                  TIP
+              ================================================= */}
+
               <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs leading-5 text-blue-700">
-                <strong>Tip:</strong> Set both a
-                start and end time for automatic
-                countdown control. The homepage will
-                automatically determine whether the
-                sale is upcoming, live or ended.
+                <strong>Tip:</strong>{" "}
+                Set a start and end time, enable the
+                Flash Sale, and save. The countdown
+                automatically changes every second and
+                switches from Upcoming to Live to Ended.
               </div>
+
             </aside>
           </div>
         </form>
       </div>
     </AdminLayout>
+  );
+}
+
+/* ============================================================
+   COUNTDOWN BOX
+============================================================ */
+
+function CountdownBox({
+  value,
+  label,
+}) {
+  return (
+    <div className="text-center">
+      <div className="text-3xl font-black leading-none tracking-tight text-[#062c57] sm:text-4xl">
+        {formatNumber(value)}
+      </div>
+
+      <div className="mt-2 text-[9px] font-medium uppercase tracking-wide text-[#52708e]">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   COUNTDOWN SEPARATOR
+============================================================ */
+
+function CountdownSeparator() {
+  return (
+    <div className="flex justify-center pt-1 text-2xl font-bold text-[#d8c39c]">
+      :
+    </div>
+  );
+}
+
+/* ============================================================
+   NEW IMAGE PREVIEW
+   Uses one stable object URL and cleans it up.
+============================================================ */
+
+function NewImagePreview({
+  file,
+  index,
+  onRemove,
+}) {
+  const previewUrl = useMemo(
+    () => URL.createObjectURL(file),
+    [file]
+  );
+
+  useEffect(() => {
+    return () => {
+      URL.revokeObjectURL(
+        previewUrl
+      );
+    };
+  }, [previewUrl]);
+
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-brand-primary/20 bg-gray-100">
+
+      <img
+        src={previewUrl}
+        alt={file.name}
+        className="aspect-[4/3] w-full object-cover"
+      />
+
+      <button
+        type="button"
+        onClick={() =>
+          onRemove(index)
+        }
+        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-red-600 shadow-lg transition hover:bg-red-50"
+        aria-label="Remove image"
+      >
+        <FiX />
+      </button>
+
+      <span className="absolute bottom-2 left-2 rounded-lg bg-brand-primary px-2 py-1 text-[10px] font-semibold text-white">
+        New
+      </span>
+    </div>
+  );
+}
+
+/* ============================================================
+   SMALL NEW IMAGE PREVIEW
+============================================================ */
+
+function NewImagePreviewSmall({
+  file,
+}) {
+  const previewUrl = useMemo(
+    () => URL.createObjectURL(file),
+    [file]
+  );
+
+  useEffect(() => {
+    return () => {
+      URL.revokeObjectURL(
+        previewUrl
+      );
+    };
+  }, [previewUrl]);
+
+  return (
+    <div className="overflow-hidden rounded-xl">
+      <img
+        src={previewUrl}
+        alt=""
+        className="aspect-[4/3] w-full object-cover"
+      />
+    </div>
   );
 }
 
