@@ -10,7 +10,7 @@ import {
   FiLogOut, 
   FiArrowLeft, 
 } from "react-icons/fi"; 
- 
+ import { FiZap } from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth"; 
  
 const adminNavItems = [ 
@@ -21,6 +21,11 @@ const adminNavItems = [
   { to: "/admin/cancellations", label: "Cancellations", icon: FiXCircle }, 
   { to: "/admin/coupons", label: "Coupons", icon: FiTag }, 
   { to: "/admin/managers", label: "Managers", icon: FiUsers }, 
+  {
+  to: "/admin/flash-sale",
+  label: "Flash Sale",
+  icon: FiZap,
+},
 ]; 
  
 // Managers get full control over products, inventory and orders. 

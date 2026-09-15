@@ -76,6 +76,7 @@ const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminManagers = lazy(() => import("./pages/admin/AdminManagers"));
 const AdminCancellations = lazy(() => import("./pages/admin/AdminCancellations"));
+const AdminFlashSale = lazy(() => import("./pages/admin/AdminFlashSale"));
 
 function App() {
   const location = useLocation();
@@ -179,6 +180,14 @@ function App() {
                     </StaffRoute>
                   }
                 />
+                <Route
+  path="/admin/flash-sale"
+  element={
+    <StaffRoute>
+      <AdminFlashSale />
+    </StaffRoute>
+  }
+/>
                 <Route
                   path="/admin/products"
                   element={

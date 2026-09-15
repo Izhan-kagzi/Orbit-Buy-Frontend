@@ -5,28 +5,48 @@ import { FiArrowRight } from "react-icons/fi";
 import { getImageUrl } from "../../services/api";
 
 // =====================================================
-// FLASH SALE DURATION
-// 4 Days : 14 Hours : 48 Minutes : 18 Seconds
+// API
 // =====================================================
 
-const SALE_DURATION_MS =
-  0 * 24 * 60 * 60 * 1000 +
-  0 * 60 * 60 * 1000 +
-  0 * 60 * 1000 +
-  18 * 1000;
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://orbit-buy.onrender.com/api";
 
 // =====================================================
 // GET TIME LEFT
 // =====================================================
 
 function getTimeLeft(targetTime) {
-  const diff = Math.max(0, targetTime - Date.now());
+  if (!targetTime) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    };
+  }
+
+  const diff = Math.max(
+    0,
+    new Date(targetTime).getTime() - Date.now()
+  );
 
   return {
-    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-    minutes: Math.floor((diff / (1000 * 60)) % 60),
-    seconds: Math.floor((diff / 1000) % 60),
+    days: Math.floor(
+      diff / (1000 * 60 * 60 * 24)
+    ),
+
+    hours: Math.floor(
+      (diff / (1000 * 60 * 60)) % 24
+    ),
+
+    minutes: Math.floor(
+      (diff / (1000 * 60)) % 60
+    ),
+
+    seconds: Math.floor(
+      (diff / 1000) % 60
+    ),
   };
 }
 
@@ -97,62 +117,581 @@ const FlashSale = () => {
   const navigate = useNavigate();
 
   // ===================================================
-  // CREATE NEW COUNTDOWN WHEN COMPONENT MOUNTS
+  // FLASH SALE DATA
   // ===================================================
 
-  const [targetTime] = useState(
-    () => Date.now() + SALE_DURATION_MS
-  );
+  const [sale, setSale] = useState(null);
 
-  const [timeLeft, setTimeLeft] = useState(() =>
-    getTimeLeft(targetTime)
-  );
+  const [loading, setLoading] = useState(true);
 
-  const [saleEnded, setSaleEnded] = useState(false);
+  const [saleStatus, setSaleStatus] =
+    useState("inactive");
+
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  // ===================================================
+  // FETCH FLASH SALE FROM BACKEND
+  // ===================================================
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchFlashSale = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/flash-sale`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+              "Unable to load Flash Sale."
+          );
+        }
+
+        if (!mounted) return;
+
+        const flashSale =
+          data.flashSale || null;
+
+        setSale(flashSale);
+
+        setSaleStatus(
+          flashSale?.status ||
+            "inactive"
+        );
+      } catch (error) {
+        console.error(
+          "Flash Sale loading error:",
+          error
+        );
+
+        if (!mounted) return;
+
+        setSale(null);
+        setSaleStatus("inactive");
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchFlashSale();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // ===================================================
   // COUNTDOWN
   // ===================================================
 
   useEffect(() => {
+    if (!sale || !sale.active) {
+      return undefined;
+    }
+
     const updateTimer = () => {
-      const remaining = getTimeLeft(targetTime);
+      const now = Date.now();
 
-      setTimeLeft(remaining);
+      const startTime = sale.startTime
+        ? new Date(
+            sale.startTime
+          ).getTime()
+        : null;
 
-      // ===============================================
-      // SALE ENDED
-      // ===============================================
+      const endTime = sale.endTime
+        ? new Date(
+            sale.endTime
+          ).getTime()
+        : null;
+
+      // -----------------------------------------------
+      // UPCOMING
+      // -----------------------------------------------
 
       if (
-        remaining.days === 0 &&
-        remaining.hours === 0 &&
-        remaining.minutes === 0 &&
-        remaining.seconds === 0
+        startTime &&
+        now < startTime
       ) {
-        setSaleEnded(true);
+        setSaleStatus("upcoming");
+
+        setTimeLeft(
+          getTimeLeft(
+            sale.startTime
+          )
+        );
+
+        return;
       }
+
+      // -----------------------------------------------
+      // ACTIVE
+      // -----------------------------------------------
+
+      if (
+        endTime &&
+        now < endTime
+      ) {
+        setSaleStatus("active");
+
+        setTimeLeft(
+          getTimeLeft(
+            sale.endTime
+          )
+        );
+
+        return;
+      }
+
+      // -----------------------------------------------
+      // NO END TIME
+      // -----------------------------------------------
+
+      if (!endTime) {
+        setSaleStatus("active");
+
+        setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+        });
+
+        return;
+      }
+
+      // -----------------------------------------------
+      // ENDED
+      // -----------------------------------------------
+
+      setSaleStatus("ended");
+
+      setTimeLeft({
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+      });
     };
 
-    // Update immediately
     updateTimer();
 
-    // Update every second
-    const interval = setInterval(updateTimer, 1000);
+    const interval = setInterval(
+      updateTimer,
+      1000
+    );
 
     return () => {
       clearInterval(interval);
     };
-  }, [targetTime]);
+  }, [sale]);
 
   // ===================================================
-  // RENDER
+  // LOADING
+  // Don't create layout shift while API loads.
+  // ===================================================
+
+  if (loading) {
+    return null;
+  }
+
+  // ===================================================
+  // NO ACTIVE / UPCOMING / ENDED SALE
+  // ===================================================
+
+  if (
+    !sale ||
+    !sale.active ||
+    saleStatus === "inactive"
+  ) {
+    return null;
+  }
+
+  // ===================================================
+  // SALE IMAGES
+  // ===================================================
+
+  const saleImages =
+    Array.isArray(sale.images)
+      ? sale.images
+      : [];
+
+  // ===================================================
+  // UPCOMING SALE
+  // ===================================================
+
+  if (saleStatus === "upcoming") {
+    return (
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div
+            className="
+              grid
+              lg:grid-cols-[1.1fr_0.9fr]
+              gap-8
+              items-stretch
+            "
+          >
+            {/* =================================================
+                LEFT CARD
+            ================================================= */}
+
+            <div
+              className="
+                relative
+                bg-gray-50
+                rounded-[2rem]
+                p-8
+                sm:p-10
+                lg:p-14
+                overflow-hidden
+              "
+            >
+              <DotGrid
+                className="
+                  absolute
+                  top-6
+                  right-6
+                  w-24
+                  sm:w-28
+                  opacity-70
+                "
+              />
+
+              <DotGrid
+                className="
+                  absolute
+                  bottom-6
+                  left-6
+                  w-24
+                  sm:w-28
+                  opacity-70
+                  rotate-180
+                "
+              />
+
+              <div className="relative z-10">
+                <p
+                  className="
+                    uppercase
+                    tracking-[4px]
+                    text-xs
+                    sm:text-sm
+                    font-semibold
+                    text-brand-primary
+                  "
+                >
+                  Coming Soon
+                </p>
+
+                <h2
+                  className="
+                    mt-3
+                    text-4xl
+                    sm:text-5xl
+                    font-serif
+                    text-brand-dark
+                  "
+                >
+                  {sale.title ||
+                    "Flash Sale!"}
+                </h2>
+
+                <p
+                  className="
+                    mt-4
+                    text-gray-600
+                    text-base
+                    sm:text-lg
+                  "
+                >
+                  {sale.description ||
+                    "Up to 30% off - Limited Time Offer!"}
+                </p>
+
+                <div
+                  className="
+                    mt-8
+                    sm:mt-10
+                    flex
+                    items-center
+                    justify-between
+                    sm:justify-start
+                    gap-2
+                    sm:gap-6
+                    lg:gap-10
+                  "
+                >
+                  <TimeBox
+                    value={timeLeft.days}
+                    label="Days"
+                  />
+
+                  <span
+                    className="
+                      text-2xl
+                      sm:text-3xl
+                      text-brand-tan
+                      -mt-5
+                    "
+                  >
+                    :
+                  </span>
+
+                  <TimeBox
+                    value={timeLeft.hours}
+                    label="Hours"
+                  />
+
+                  <span
+                    className="
+                      text-2xl
+                      sm:text-3xl
+                      text-brand-tan
+                      -mt-5
+                    "
+                  >
+                    :
+                  </span>
+
+                  <TimeBox
+                    value={timeLeft.minutes}
+                    label="Minutes"
+                  />
+
+                  <span
+                    className="
+                      text-2xl
+                      sm:text-3xl
+                      text-brand-tan
+                      -mt-5
+                    "
+                  >
+                    :
+                  </span>
+
+                  <TimeBox
+                    value={timeLeft.seconds}
+                    label="Seconds"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* =================================================
+                RIGHT IMAGES
+            ================================================= */}
+
+            <div
+              className="
+                hidden
+                sm:grid
+                grid-cols-2
+                gap-5
+              "
+            >
+              {saleImages
+                .slice(0, 2)
+                .map((image, index) => (
+                  <div
+                    key={`${image}-${index}`}
+                    className={`
+                      rounded-[2rem]
+                      overflow-hidden
+                      border-[6px]
+                      border-gray-50
+                      shadow-xl
+                      h-full
+                      min-h-[320px]
+                      ${
+                        index === 1
+                          ? "mt-8"
+                          : ""
+                      }
+                    `}
+                  >
+                    <img
+                      src={getImageUrl(image)}
+                      alt={`Orbit Buy Flash Sale ${
+                        index + 1
+                      }`}
+                      className="
+                        w-full
+                        h-full
+                        object-cover
+                        transition-transform
+                        duration-700
+                        hover:scale-105
+                      "
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ===================================================
+  // SALE ENDED
+  // ===================================================
+
+  if (saleStatus === "ended") {
+    return (
+      <section className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div
+            className="
+              relative
+              bg-gray-50
+              rounded-[2rem]
+              p-8
+              sm:p-10
+              lg:p-14
+              overflow-hidden
+            "
+          >
+            <DotGrid
+              className="
+                absolute
+                top-6
+                right-6
+                w-24
+                sm:w-28
+                opacity-70
+              "
+            />
+
+            <DotGrid
+              className="
+                absolute
+                bottom-6
+                left-6
+                w-24
+                sm:w-28
+                opacity-70
+                rotate-180
+              "
+            />
+
+            <div
+              className="
+                relative
+                z-10
+                min-h-[300px]
+                flex
+                flex-col
+                justify-center
+              "
+            >
+              <p
+                className="
+                  uppercase
+                  tracking-[5px]
+                  text-sm
+                  font-semibold
+                  text-brand-primary
+                "
+              >
+                Orbit Buy
+              </p>
+
+              <h2
+                className="
+                  mt-4
+                  text-4xl
+                  sm:text-5xl
+                  font-serif
+                  text-brand-dark
+                "
+              >
+                {sale.title ||
+                  "Flash Sale"}
+
+                <span className="text-brand-primary">
+                  {" "}
+                  is Ended
+                </span>
+              </h2>
+
+              <p
+                className="
+                  mt-5
+                  max-w-lg
+                  text-gray-600
+                  text-base
+                  sm:text-lg
+                  leading-7
+                "
+              >
+                This limited-time offer has
+                ended. Explore our latest
+                collections and discover new
+                styles from Orbit Buy.
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/shop")
+                }
+                className="
+                  inline-flex
+                  w-fit
+                  items-center
+                  gap-2
+                  mt-8
+                  bg-brand-primary
+                  hover:bg-brand-brown
+                  text-white
+                  px-7
+                  sm:px-8
+                  py-3.5
+                  sm:py-4
+                  rounded-full
+                  font-semibold
+                  transition-all
+                  duration-300
+                  hover:-translate-y-1
+                  hover:shadow-xl
+                "
+              >
+                Explore Collection
+
+                <FiArrowRight
+                  size={18}
+                  className="
+                    transition-transform
+                    duration-300
+                  "
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ===================================================
+  // ACTIVE SALE
   // ===================================================
 
   return (
     <section className="py-24 bg-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-
         <div
           className="
             grid
@@ -161,7 +700,6 @@ const FlashSale = () => {
             items-stretch
           "
         >
-
           {/* =================================================
               LEFT FLASH SALE CARD
           ================================================= */}
@@ -177,7 +715,6 @@ const FlashSale = () => {
               overflow-hidden
             "
           >
-
             {/* DOTS */}
 
             <DotGrid
@@ -206,249 +743,141 @@ const FlashSale = () => {
             {/* CONTENT */}
 
             <div className="relative z-10">
+              {/* TITLE */}
 
-              {/* =================================================
-                  SALE ACTIVE
-              ================================================= */}
+              <h2
+                className="
+                  text-4xl
+                  sm:text-5xl
+                  font-serif
+                  text-brand-dark
+                "
+              >
+                {sale.title ||
+                  "Flash Sale!"}
+              </h2>
 
-              {!saleEnded ? (
-                <>
-                  {/* TITLE */}
+              {/* DESCRIPTION */}
 
-                  <h2
-                    className="
-                      text-4xl
-                      sm:text-5xl
-                      font-serif
-                      text-brand-dark
-                    "
-                  >
-                    Flash{" "}
-                    <span className="text-brand-primary">
-                      Sale!
-                    </span>
-                  </h2>
+              <p
+                className="
+                  mt-4
+                  text-gray-600
+                  text-base
+                  sm:text-lg
+                "
+              >
+                {sale.description ||
+                  "Up to 30% off - Limited Time Offer!"}
+              </p>
 
-                  {/* DESCRIPTION */}
+              {/* COUNTDOWN */}
 
-                  <p
-                    className="
-                      mt-4
-                      text-gray-600
-                      text-base
-                      sm:text-lg
-                    "
-                  >
-                    Up to 30% off - Limited Time Offer!
-                  </p>
+              <div
+                className="
+                  mt-8
+                  sm:mt-10
+                  flex
+                  items-center
+                  justify-between
+                  sm:justify-start
+                  gap-2
+                  sm:gap-6
+                  lg:gap-10
+                "
+              >
+                <TimeBox
+                  value={timeLeft.days}
+                  label="Days"
+                />
 
-                  {/* =================================================
-                      COUNTDOWN
-                  ================================================= */}
-
-                  <div
-                    className="
-                      mt-8
-                      sm:mt-10
-                      flex
-                      items-center
-                      justify-between
-                      sm:justify-start
-                      gap-2
-                      sm:gap-6
-                      lg:gap-10
-                    "
-                  >
-
-                    <TimeBox
-                      value={timeLeft.days}
-                      label="Days"
-                    />
-
-                    <span
-                      className="
-                        text-2xl
-                        sm:text-3xl
-                        text-brand-tan
-                        -mt-5
-                      "
-                    >
-                      :
-                    </span>
-
-                    <TimeBox
-                      value={timeLeft.hours}
-                      label="Hours"
-                    />
-
-                    <span
-                      className="
-                        text-2xl
-                        sm:text-3xl
-                        text-brand-tan
-                        -mt-5
-                      "
-                    >
-                      :
-                    </span>
-
-                    <TimeBox
-                      value={timeLeft.minutes}
-                      label="Minutes"
-                    />
-
-                    <span
-                      className="
-                        text-2xl
-                        sm:text-3xl
-                        text-brand-tan
-                        -mt-5
-                      "
-                    >
-                      :
-                    </span>
-
-                    <TimeBox
-                      value={timeLeft.seconds}
-                      label="Seconds"
-                    />
-
-                  </div>
-
-                  {/* SHOP NOW */}
-
-                  <button
-                    type="button"
-                    onClick={() => navigate("/sale")}
-                    className="
-                      inline-flex
-                      items-center
-                      gap-2
-                      mt-10
-                      sm:mt-12
-                      bg-brand-primary
-                      hover:bg-brand-brown
-                      text-white
-                      px-7
-                      sm:px-8
-                      py-3.5
-                      sm:py-4
-                      rounded-full
-                      font-semibold
-                      transition-all
-                      duration-300
-                      hover:-translate-y-1
-                      hover:shadow-xl
-                    "
-                  >
-                    Shop Now
-
-                    <FiArrowRight
-                      size={18}
-                      className="
-                        transition-transform
-                        duration-300
-                      "
-                    />
-                  </button>
-                </>
-              ) : (
-
-                /* =================================================
-                   SALE ENDED
-                ================================================= */
-
-                <div
+                <span
                   className="
-                    min-h-[300px]
-                    flex
-                    flex-col
-                    justify-center
+                    text-2xl
+                    sm:text-3xl
+                    text-brand-tan
+                    -mt-5
                   "
                 >
+                  :
+                </span>
 
-                  <p
-                    className="
-                      uppercase
-                      tracking-[5px]
-                      text-sm
-                      font-semibold
-                      text-brand-primary
-                    "
-                  >
-                    Orbit Buy
-                  </p>
+                <TimeBox
+                  value={timeLeft.hours}
+                  label="Hours"
+                />
 
-                  <h2
-                    className="
-                      mt-4
-                      text-4xl
-                      sm:text-5xl
-                      font-serif
-                      text-brand-dark
-                    "
-                  >
-                    Flash Sale
-                    <span className="text-brand-primary">
-                      {" "}is Ended
-                    </span>
-                  </h2>
+                <span
+                  className="
+                    text-2xl
+                    sm:text-3xl
+                    text-brand-tan
+                    -mt-5
+                  "
+                >
+                  :
+                </span>
 
-                  <p
-                    className="
-                      mt-5
-                      max-w-lg
-                      text-gray-600
-                      text-base
-                      sm:text-lg
-                      leading-7
-                    "
-                  >
-                    This limited-time offer has ended. Explore our
-                    latest collections and discover new styles from
-                    Orbit Buy.
-                  </p>
+                <TimeBox
+                  value={timeLeft.minutes}
+                  label="Minutes"
+                />
 
-                  {/* SHOP COLLECTION */}
+                <span
+                  className="
+                    text-2xl
+                    sm:text-3xl
+                    text-brand-tan
+                    -mt-5
+                  "
+                >
+                  :
+                </span>
 
-                  <button
-                    type="button"
-                    onClick={() => navigate("/shop")}
-                    className="
-                      inline-flex
-                      w-fit
-                      items-center
-                      gap-2
-                      mt-8
-                      bg-brand-primary
-                      hover:bg-brand-brown
-                      text-white
-                      px-7
-                      sm:px-8
-                      py-3.5
-                      sm:py-4
-                      rounded-full
-                      font-semibold
-                      transition-all
-                      duration-300
-                      hover:-translate-y-1
-                      hover:shadow-xl
-                    "
-                  >
-                    Explore Collection
+                <TimeBox
+                  value={timeLeft.seconds}
+                  label="Seconds"
+                />
+              </div>
 
-                    <FiArrowRight
-                      size={18}
-                      className="
-                        transition-transform
-                        duration-300
-                      "
-                    />
-                  </button>
+              {/* SHOP NOW */}
 
-                </div>
-              )}
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/sale")
+                }
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  mt-10
+                  sm:mt-12
+                  bg-brand-primary
+                  hover:bg-brand-brown
+                  text-white
+                  px-7
+                  sm:px-8
+                  py-3.5
+                  sm:py-4
+                  rounded-full
+                  font-semibold
+                  transition-all
+                  duration-300
+                  hover:-translate-y-1
+                  hover:shadow-xl
+                "
+              >
+                Shop Now
 
+                <FiArrowRight
+                  size={18}
+                  className="
+                    transition-transform
+                    duration-300
+                  "
+                />
+              </button>
             </div>
           </div>
 
@@ -464,68 +893,44 @@ const FlashSale = () => {
               gap-5
             "
           >
-
-            {/* MEN'S JACKET */}
-
-            <div
-              className="
-                rounded-[2rem]
-                overflow-hidden
-                border-[6px]
-                border-gray-50
-                shadow-xl
-                h-full
-                min-h-[320px]
-              "
-            >
-              <img
-                src={getImageUrl(
-                  "/uploads/products/mensjackets/jacket1.jpg"
-                )}
-                alt="Orbit Buy men's jacket"
-                className="
-                  w-full
-                  h-full
-                  object-cover
-                  transition-transform
-                  duration-700
-                  hover:scale-105
-                "
-              />
-            </div>
-
-            {/* WOMEN'S PARTY WEAR */}
-
-            <div
-              className="
-                rounded-[2rem]
-                overflow-hidden
-                border-[6px]
-                border-gray-50
-                shadow-xl
-                h-full
-                min-h-[320px]
-                mt-8
-              "
-            >
-              <img
-                src={getImageUrl(
-                  "/uploads/products/womenpartywear/party1.jpg"
-                )}
-                alt="Orbit Buy women's party wear"
-                className="
-                  w-full
-                  h-full
-                  object-cover
-                  transition-transform
-                  duration-700
-                  hover:scale-105
-                "
-              />
-            </div>
-
+            {saleImages
+              .slice(0, 2)
+              .map((image, index) => (
+                <div
+                  key={`${image}-${index}`}
+                  className={`
+                    rounded-[2rem]
+                    overflow-hidden
+                    border-[6px]
+                    border-gray-50
+                    shadow-xl
+                    h-full
+                    min-h-[320px]
+                    ${
+                      index === 1
+                        ? "mt-8"
+                        : ""
+                    }
+                  `}
+                >
+                  <img
+                    src={getImageUrl(image)}
+                    alt={`Orbit Buy Flash Sale ${
+                      index + 1
+                    }`}
+                    className="
+                      w-full
+                      h-full
+                      object-cover
+                      transition-transform
+                      duration-700
+                      hover:scale-105
+                    "
+                    loading="lazy"
+                  />
+                </div>
+              ))}
           </div>
-
         </div>
       </div>
     </section>
