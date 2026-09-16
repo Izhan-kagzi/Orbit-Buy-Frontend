@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import { FaStar } from "react-icons/fa";
+
 import {
+  FiCheck,
   FiHeart,
+  FiShield,
   FiShoppingCart,
   FiTruck,
-  FiShield,
+  FiZap,
 } from "react-icons/fi";
+
 import toast from "react-hot-toast";
 
 import QuantitySelector from "./QuantitySelector";
@@ -22,38 +27,105 @@ const ProductInfo = ({ product }) => {
     isInWishlist,
   } = useWishlist();
 
-  const [selectedSize, setSelectedSize] = useState(
-    product.sizes?.[0] || "M"
-  );
+  const [selectedSize, setSelectedSize] =
+    useState(product?.sizes?.[0] || "M");
 
-  const [selectedColor, setSelectedColor] = useState(
-    product.colors?.[0] || "#000000"
-  );
+  const [selectedColor, setSelectedColor] =
+    useState(product?.colors?.[0] || "#000000");
 
   const [quantity, setQuantity] = useState(1);
 
-  const wishlistActive = isInWishlist(product.id);
+  const wishlistActive = isInWishlist(
+    product?.id
+  );
+
+  const rating = Number(product?.rating || 0);
+  const reviewCount = Number(
+    product?.reviews || 0
+  );
+
+  const price = Number(product?.price || 0);
+  const oldPrice = Number(
+    product?.oldPrice || 0
+  );
+
+  const stock = Number(
+    product?.stock || 0
+  );
 
   const discount =
-    product.oldPrice > product.price
+    oldPrice > price && oldPrice > 0
       ? Math.round(
-          ((product.oldPrice - product.price) /
-            product.oldPrice) *
+          ((oldPrice - price) /
+            oldPrice) *
             100
         )
       : 0;
 
+  const sizes =
+    Array.isArray(product?.sizes) &&
+    product.sizes.length > 0
+      ? product.sizes
+      : ["S", "M", "L", "XL"];
+
+  const colors =
+    Array.isArray(product?.colors) &&
+    product.colors.length > 0
+      ? product.colors
+      : [
+          "#000000",
+          "#ffffff",
+          "#2563eb",
+          "#dc2626",
+        ];
+
+  // Keep selected options valid when the product changes.
+  useEffect(() => {
+    setSelectedSize(
+      product?.sizes?.[0] || "M"
+    );
+
+    setSelectedColor(
+      product?.colors?.[0] || "#000000"
+    );
+
+    setQuantity(1);
+  }, [product?.id]);
+
+  // ------------------------------------------------------------
+  // WISHLIST
+  // ------------------------------------------------------------
+
   const handleWishlist = () => {
+    if (!product?.id) {
+      return;
+    }
+
     if (wishlistActive) {
       removeFromWishlist(product.id);
-      toast.success("Removed from Wishlist");
+      toast.success(
+        "Removed from Wishlist"
+      );
     } else {
       addToWishlist(product);
-      toast.success("Added to Wishlist");
+      toast.success(
+        "Added to Wishlist"
+      );
     }
   };
 
+  // ------------------------------------------------------------
+  // ADD TO CART
+  // ------------------------------------------------------------
+
   const handleAddToCart = () => {
+    if (stock <= 0) {
+      toast.error(
+        "This product is currently out of stock."
+      );
+      return;
+    }
+
     addToCart({
       ...product,
       quantity,
@@ -61,484 +133,673 @@ const ProductInfo = ({ product }) => {
       color: selectedColor,
     });
 
-    toast.success("Added to Cart");
+    toast.success(
+      "Added to Cart"
+    );
+  };
+
+  // ------------------------------------------------------------
+  // BUY NOW
+  // ------------------------------------------------------------
+
+  const handleBuyNow = () => {
+    if (stock <= 0) {
+      toast.error(
+        "This product is currently out of stock."
+      );
+      return;
+    }
+
+    addToCart({
+      ...product,
+      quantity,
+      size: selectedSize,
+      color: selectedColor,
+    });
+
+    toast.success(
+      "Added to Cart"
+    );
+
+    toast.success(
+      "Redirecting to Checkout..."
+    );
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7 lg:space-y-8">
+      {/* ========================================================
+          CATEGORY + BRAND
+      ======================================================== */}
 
-      {/* Category */}
-
-      <p className="uppercase tracking-[5px] text-brand-primary text-sm font-semibold">
-        {product.category}
-      </p>
-
-      {/* Product Name */}
-
-      <h1 className="text-4xl lg:text-5xl font-black leading-tight">
-        {product.name}
-      </h1>
-
-      {/* Rating */}
-
-      <div className="flex items-center gap-2">
-
-        {[...Array(5)].map((_, index) => (
-
-          <FaStar
-            key={index}
-            className={`text-lg ${
-              index < Math.round(product.rating)
-                ? "text-yellow-400"
-                : "text-gray-300"
-            }`}
-          />
-
-        ))}
-
-        <span className="font-semibold">
-          {product.rating}
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="rounded-full bg-brand-primary/10 px-4 py-2 text-xs font-bold uppercase tracking-[2px] text-brand-primary">
+          {product?.category ||
+            "Fashion"}
         </span>
 
-        <span className="text-gray-500">
-          ({product.reviews} Reviews)
-        </span>
-
-      </div>
-
-      {/* Price */}
-
-      <div className="flex items-center gap-4">
-
-        <span className="text-4xl font-black">
-          ₹{product.price}
-        </span>
-
-        {product.oldPrice > product.price && (
-
-          <span className="text-2xl text-gray-400 line-through">
-            ₹{product.oldPrice}
+        {product?.brand && (
+          <span className="rounded-full border border-gray-200 bg-white px-4 py-2 text-xs font-semibold text-gray-600">
+            {product.brand}
           </span>
-
         )}
 
         {discount > 0 && (
-
-          <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+          <span className="rounded-full bg-red-50 px-4 py-2 text-xs font-bold text-red-600">
             {discount}% OFF
           </span>
-
         )}
-
       </div>
 
-      {/* Stock */}
-
-      <div className="flex items-center gap-3">
-
-        <span
-          className={`w-3 h-3 rounded-full ${
-            product.stock > 0
-              ? "bg-green-500"
-              : "bg-red-500"
-          }`}
-        />
-
-        <span
-          className={`font-semibold ${
-            product.stock > 0
-              ? "text-green-600"
-              : "text-red-600"
-          }`}
-        >
-          {product.stock > 0
-            ? `In Stock (${product.stock} Available)`
-            : "Out of Stock"}
-        </span>
-
-      </div>
-
-      {/* Description */}
-
-      <p className="text-gray-600 leading-8">
-        {product.description ||
-          "Designed with premium craftsmanship and superior materials, this product offers exceptional comfort, durability and timeless style. Perfect for everyday wear as well as special occasions."}
-      </p>
-            {/* Size Selection */}
+      {/* ========================================================
+          PRODUCT NAME
+      ======================================================== */}
 
       <div>
+        <h1 className="max-w-3xl text-4xl font-black leading-[1.08] tracking-tight text-gray-950 sm:text-5xl lg:text-[3.5rem]">
+          {product?.name}
+        </h1>
 
-        <h3 className="text-lg font-bold mb-4">
-          Select Size
-        </h3>
+        <div className="mt-5 h-1 w-16 rounded-full bg-brand-primary" />
+      </div>
 
-        <div className="flex flex-wrap gap-3">
+      {/* ========================================================
+          RATING
+      ======================================================== */}
 
-          {(product.sizes || ["S", "M", "L", "XL"]).map((size) => (
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-1.5">
+          {[...Array(5)].map(
+            (_, index) => (
+              <FaStar
+                key={index}
+                className={`text-base sm:text-lg ${
+                  index <
+                  Math.round(rating)
+                    ? "text-yellow-400"
+                    : "text-gray-200"
+                }`}
+              />
+            )
+          )}
+        </div>
 
-            <button
-              key={size}
-              onClick={() => setSelectedSize(size)}
+        <span className="font-black text-gray-900">
+          {rating.toFixed(1)}
+        </span>
+
+        <span className="h-5 w-px bg-gray-200" />
+
+        <span className="text-sm font-medium text-gray-500">
+          {reviewCount}{" "}
+          {reviewCount === 1
+            ? "Review"
+            : "Reviews"}
+        </span>
+      </div>
+
+      {/* ========================================================
+          PRICE
+      ======================================================== */}
+
+      <div className="rounded-3xl border border-gray-100 bg-gray-50/70 p-5 sm:p-6">
+        <div className="flex flex-wrap items-end gap-3">
+          <span className="text-4xl font-black tracking-tight text-gray-950 sm:text-5xl">
+            ₹{price.toLocaleString(
+              "en-IN"
+            )}
+          </span>
+
+          {oldPrice > price && (
+            <span className="mb-1 text-xl font-medium text-gray-400 line-through">
+              ₹
+              {oldPrice.toLocaleString(
+                "en-IN"
+              )}
+            </span>
+          )}
+
+          {discount > 0 && (
+            <span className="mb-1 rounded-full bg-red-500 px-3 py-1.5 text-xs font-black text-white">
+              SAVE {discount}%
+            </span>
+          )}
+        </div>
+
+        <p className="mt-2 text-xs text-gray-500">
+          Inclusive of applicable taxes
+        </p>
+      </div>
+
+      {/* ========================================================
+          STOCK STATUS
+      ======================================================== */}
+
+      <div
+        className={`
+          flex items-center justify-between
+          rounded-2xl border p-4
+          ${
+            stock > 0
+              ? stock <= 5
+                ? "border-orange-200 bg-orange-50"
+                : "border-green-200 bg-green-50"
+              : "border-red-200 bg-red-50"
+          }
+        `}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className={`
+              h-3 w-3 rounded-full
+              ${
+                stock > 0
+                  ? stock <= 5
+                    ? "bg-orange-500"
+                    : "bg-green-500"
+                  : "bg-red-500"
+              }
+            `}
+          />
+
+          <div>
+            <p
               className={`
-                px-6
-                py-3
-                rounded-xl
-                border-2
-                font-semibold
-                transition-all
-                duration-300
-
+                text-sm font-bold
                 ${
-                  selectedSize === size
-                    ? "bg-brand-primary text-white border-brand-primary"
-                    : "border-gray-300 hover:border-brand-primary"
+                  stock > 0
+                    ? stock <= 5
+                      ? "text-orange-700"
+                      : "text-green-700"
+                    : "text-red-700"
                 }
               `}
             >
-              {size}
-            </button>
+              {stock > 0
+                ? stock <= 5
+                  ? "Limited Stock"
+                  : "In Stock"
+                : "Out of Stock"}
+            </p>
 
-          ))}
-
+            <p className="text-xs text-gray-500">
+              {stock > 0
+                ? `${stock} ${
+                    stock === 1
+                      ? "item"
+                      : "items"
+                  } available`
+                : "Currently unavailable"}
+            </p>
+          </div>
         </div>
 
+        {stock > 0 && (
+          <span className="hidden text-xs font-bold text-gray-500 sm:block">
+            Ready to ship
+          </span>
+        )}
       </div>
 
-      {/* Color Selection */}
+      {/* ========================================================
+          DESCRIPTION
+      ======================================================== */}
 
       <div>
+        <p className="text-base leading-8 text-gray-600">
+          {product?.description ||
+            "Designed with premium craftsmanship and superior materials, this product offers exceptional comfort, durability and timeless style. Perfect for everyday wear as well as special occasions."}
+        </p>
+      </div>
 
-        <h3 className="text-lg font-bold mb-4">
+      {/* ========================================================
+          SIZE
+      ======================================================== */}
+
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-black uppercase tracking-[1.5px] text-gray-900">
+            Select Size
+          </h3>
+
+          <button
+            type="button"
+            className="text-xs font-semibold text-brand-primary hover:underline"
+          >
+            Size Guide
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          {sizes.map((size) => {
+            const active =
+              selectedSize === size;
+
+            return (
+              <button
+                key={size}
+                type="button"
+                onClick={() =>
+                  setSelectedSize(size)
+                }
+                className={`
+                  min-w-[58px]
+                  rounded-xl
+                  border-2
+                  px-5
+                  py-3
+                  text-sm
+                  font-bold
+                  transition-all
+                  duration-300
+                  ${
+                    active
+                      ? "border-brand-primary bg-brand-primary text-white shadow-lg shadow-brand-primary/20"
+                      : "border-gray-200 bg-white text-gray-700 hover:-translate-y-0.5 hover:border-brand-primary hover:text-brand-primary"
+                  }
+                `}
+              >
+                {size}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ========================================================
+          COLOR
+      ======================================================== */}
+
+      <div>
+        <h3 className="mb-4 text-sm font-black uppercase tracking-[1.5px] text-gray-900">
           Select Color
         </h3>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          {colors.map(
+            (color, index) => {
+              const active =
+                selectedColor === color;
 
-          {(product.colors || [
-            "#000000",
-            "#ffffff",
-            "#2563eb",
-            "#dc2626",
-          ]).map((color, index) => (
-
-            <button
-              key={index}
-              onClick={() => setSelectedColor(color)}
-              className={`
-                relative
-                w-12
-                h-12
-                rounded-full
-                border-4
-                transition-all
-                duration-300
-                hover:scale-110
-
-                ${
-                  selectedColor === color
-                    ? "border-brand-primary scale-110"
-                    : "border-gray-200"
-                }
-              `}
-              style={{ backgroundColor: color }}
-              title={color}
-            >
-
-              {selectedColor === color && (
-                <span
-                  className="
-                    absolute
-                    inset-0
+              return (
+                <button
+                  key={`${color}-${index}`}
+                  type="button"
+                  onClick={() =>
+                    setSelectedColor(color)
+                  }
+                  aria-label={`Select color ${color}`}
+                  className={`
+                    relative h-11 w-11
                     rounded-full
                     border-2
-                    border-white
-                  "
-                />
-              )}
+                    p-1
+                    transition-all
+                    duration-300
+                    ${
+                      active
+                        ? "scale-110 border-brand-primary shadow-lg"
+                        : "border-gray-200 hover:scale-105 hover:border-gray-400"
+                    }
+                  `}
+                >
+                  <span
+                    className="block h-full w-full rounded-full border border-black/10"
+                    style={{
+                      backgroundColor:
+                        color,
+                    }}
+                  />
 
-            </button>
-
-          ))}
-
+                  {active && (
+                    <span className="absolute inset-0 flex items-center justify-center">
+                      <span
+                        className={`
+                          flex h-5 w-5
+                          items-center justify-center
+                          rounded-full
+                          ${
+                            color ===
+                              "#ffffff" ||
+                            color ===
+                              "#FFFFFF"
+                              ? "bg-gray-900 text-white"
+                              : "bg-white text-gray-900"
+                          }
+                        `}
+                      >
+                        <FiCheck className="text-xs" />
+                      </span>
+                    </span>
+                  )}
+                </button>
+              );
+            }
+          )}
         </div>
-
       </div>
 
-      {/* Quantity */}
+      {/* ========================================================
+          QUANTITY
+      ======================================================== */}
 
-      <QuantitySelector
-        quantity={quantity}
-        setQuantity={setQuantity}
-        maxStock={product.stock || 99}
-      />
-            {/* Action Buttons */}
+      <div className="border-t border-gray-100 pt-7">
+        <QuantitySelector
+          quantity={quantity}
+          setQuantity={setQuantity}
+          maxStock={stock || 99}
+        />
+      </div>
 
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* ========================================================
+          ACTION BUTTONS
+      ======================================================== */}
 
+      <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
         {/* Wishlist */}
-
         <button
+          type="button"
           onClick={handleWishlist}
           className={`
-            flex
+            flex min-h-[58px]
             items-center
             justify-center
-            gap-3
-            px-8
-            py-4
-            rounded-xl
+            gap-2.5
+            rounded-2xl
             border-2
-            font-semibold
+            px-6
+            font-bold
             transition-all
             duration-300
-
             ${
               wishlistActive
-                ? "bg-red-500 text-white border-red-500"
-                : "border-gray-300 hover:border-red-500 hover:text-red-500"
+                ? "border-red-500 bg-red-500 text-white shadow-lg shadow-red-500/20"
+                : "border-gray-200 bg-white text-gray-700 hover:-translate-y-0.5 hover:border-red-400 hover:text-red-500"
             }
           `}
         >
           <FiHeart
             className={`text-xl ${
-              wishlistActive ? "fill-white" : ""
+              wishlistActive
+                ? "fill-current"
+                : ""
             }`}
           />
 
-          {wishlistActive
-            ? "Wishlisted"
-            : "Add to Wishlist"}
+          <span className="sm:hidden lg:inline">
+            {wishlistActive
+              ? "Wishlisted"
+              : "Wishlist"}
+          </span>
         </button>
 
-        {/* Add To Cart */}
-
+        {/* Cart */}
         <button
+          type="button"
           onClick={handleAddToCart}
-          disabled={product.stock <= 0}
+          disabled={stock <= 0}
           className="
-            flex-1
-            flex
+            group
+            flex min-h-[58px]
             items-center
             justify-center
             gap-3
+            rounded-2xl
             bg-brand-primary
+            px-8
+            font-black
             text-white
-            py-4
-            rounded-xl
-            font-semibold
+            shadow-xl
+            shadow-brand-primary/20
             transition-all
             duration-300
+            hover:-translate-y-1
             hover:bg-brand-brown
-            disabled:bg-gray-400
+            hover:shadow-2xl
             disabled:cursor-not-allowed
+            disabled:bg-gray-300
+            disabled:text-gray-500
+            disabled:shadow-none
           "
         >
-          <FiShoppingCart className="text-xl" />
+          <FiShoppingCart className="text-xl transition-transform duration-300 group-hover:scale-110" />
 
-          Add To Cart
+          Add to Cart
         </button>
-
       </div>
 
-      {/* Buy Now */}
+      {/* ========================================================
+          BUY NOW
+      ======================================================== */}
 
       <button
-        onClick={() => {
-          handleAddToCart();
-          toast.success("Redirecting to Checkout...");
-        }}
-        disabled={product.stock <= 0}
+        type="button"
+        onClick={handleBuyNow}
+        disabled={stock <= 0}
         className="
+          group
+          flex min-h-[62px]
           w-full
-          bg-brand-primary
+          items-center
+          justify-center
+          gap-3
+          rounded-2xl
+          border-2
+          border-gray-900
+          bg-gray-900
+          px-8
+          text-base
+          font-black
           text-white
-          py-4
-          rounded-xl
-          text-lg
-          font-bold
           transition-all
           duration-300
-          hover:bg-brand-dark
-          disabled:bg-gray-400
+          hover:-translate-y-1
+          hover:bg-black
+          hover:shadow-xl
           disabled:cursor-not-allowed
+          disabled:border-gray-300
+          disabled:bg-gray-300
+          disabled:text-gray-500
+          disabled:shadow-none
         "
       >
+        <FiZap className="text-lg transition-transform duration-300 group-hover:scale-110" />
+
         Buy Now
       </button>
 
-      {/* Delivery & Security */}
+      {/* ========================================================
+          DELIVERY + SECURITY
+      ======================================================== */}
 
-      <div className="grid sm:grid-cols-2 gap-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Delivery */}
+        <div className="group rounded-3xl border border-gray-100 bg-gray-50/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-lg">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-primary/10 text-brand-primary">
+              <FiTruck className="text-xl" />
+            </span>
 
-        <div
-          className="
-            p-5
-            rounded-2xl
-            bg-gray-50
-            border
-            border-gray-200
-          "
-        >
-          <div className="flex items-center gap-3 mb-3">
+            <div>
+              <h4 className="font-black text-gray-900">
+                Free Delivery
+              </h4>
 
-            <FiTruck className="text-2xl text-brand-primary" />
-
-            <h4 className="font-bold">
-              Free Delivery
-            </h4>
-
+              <p className="text-xs text-gray-500">
+                Across India
+              </p>
+            </div>
           </div>
 
-          <p className="text-gray-600 text-sm leading-7">
-            Free shipping across India on eligible orders.
-            Estimated delivery within 3–7 business days.
+          <p className="text-sm leading-7 text-gray-600">
+            Free shipping on eligible
+            orders with estimated
+            delivery within 3–7
+            business days.
           </p>
-
         </div>
 
-        <div
-          className="
-            p-5
-            rounded-2xl
-            bg-gray-50
-            border
-            border-gray-200
-          "
-        >
-          <div className="flex items-center gap-3 mb-3">
+        {/* Security */}
+        <div className="group rounded-3xl border border-gray-100 bg-gray-50/70 p-5 transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-lg">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-100 text-green-600">
+              <FiShield className="text-xl" />
+            </span>
 
-            <FiShield className="text-2xl text-green-600" />
+            <div>
+              <h4 className="font-black text-gray-900">
+                Secure Payments
+              </h4>
 
-            <h4 className="font-bold">
-              Secure Payments
-            </h4>
-
+              <p className="text-xs text-gray-500">
+                Protected checkout
+              </p>
+            </div>
           </div>
 
-          <p className="text-gray-600 text-sm leading-7">
-            All transactions are protected with industry-standard
-            encryption and secure payment gateways.
+          <p className="text-sm leading-7 text-gray-600">
+            Your transactions are
+            protected with secure
+            payment processing and
+            industry-standard security.
           </p>
-
         </div>
-
       </div>
-            {/* Product Information */}
 
-      <div className="border-t border-gray-200 pt-8">
+      {/* ========================================================
+          PRODUCT DETAILS
+      ======================================================== */}
 
-        <h3 className="text-xl font-bold mb-5">
+      <div className="rounded-3xl border border-gray-100 bg-white p-6 shadow-sm sm:p-7">
+        <h3 className="mb-6 text-xl font-black text-gray-900">
           Product Details
         </h3>
 
-        <div className="grid grid-cols-2 gap-y-4 text-sm">
-
-          <span className="text-gray-500">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-5 text-sm">
+          <span className="text-gray-400">
             Brand
           </span>
 
-          <span className="font-semibold">
-            {product.brand || "Orbit Buy"}
+          <span className="font-bold text-gray-800">
+            {product?.brand ||
+              "Orbit Buy"}
           </span>
 
-          <span className="text-gray-500">
+          <span className="text-gray-400">
             Category
           </span>
 
-          <span className="font-semibold">
-            {product.category}
+          <span className="font-bold text-gray-800">
+            {product?.category ||
+              "Fashion"}
           </span>
 
-          <span className="text-gray-500">
+          <span className="text-gray-400">
             Type
           </span>
 
-          <span className="font-semibold">
-            {product.type || "Fashion"}
+          <span className="font-bold text-gray-800">
+            {product?.type ||
+              "Fashion"}
           </span>
 
-          <span className="text-gray-500">
+          <span className="text-gray-400">
             SKU
           </span>
 
-          <span className="font-semibold">
-            ORB-{product.id}
+          <span className="break-all font-bold text-gray-800">
+            ORB-{product?.id}
           </span>
 
-          <span className="text-gray-500">
+          <span className="text-gray-400">
             Material
           </span>
 
-          <span className="font-semibold">
-            {product.material || "Premium Cotton"}
+          <span className="font-bold text-gray-800">
+            {product?.material ||
+              "Premium Cotton"}
           </span>
 
-          <span className="text-gray-500">
+          <span className="text-gray-400">
             Fit
           </span>
 
-          <span className="font-semibold">
-            {product.fit || "Regular Fit"}
+          <span className="font-bold text-gray-800">
+            {product?.fit ||
+              "Regular Fit"}
+          </span>
+        </div>
+      </div>
+
+      {/* ========================================================
+          RETURN POLICY
+      ======================================================== */}
+
+      <div className="overflow-hidden rounded-3xl border border-brand-tan/40 bg-gradient-to-br from-brand-tan/20 to-white p-6">
+        <div className="mb-5 flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-tan/40 text-brand-brown">
+            <FiCheck className="text-xl" />
           </span>
 
+          <div>
+            <h3 className="font-black text-gray-900">
+              Return & Exchange
+            </h3>
+
+            <p className="text-xs text-gray-500">
+              Shop with confidence
+            </p>
+          </div>
         </div>
 
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            "7-Day Easy Returns",
+            "Free Size Exchange",
+            "Secure Packaging",
+            "100% Genuine Products",
+          ].map((item) => (
+            <div
+              key={item}
+              className="flex items-center gap-2 text-sm font-medium text-gray-700"
+            >
+              <FiCheck className="shrink-0 text-green-600" />
+              {item}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Return Policy */}
+      {/* ========================================================
+          ORBIT BUY PROMISE
+      ======================================================== */}
 
-      <div
-        className="
-          rounded-2xl
-          bg-brand-tan/20
-          border
-          border-brand-tan/40
-          p-6
-        "
-      >
+      <div className="relative overflow-hidden rounded-3xl border border-green-200 bg-green-50 p-6">
+        <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-green-200/30 blur-2xl" />
 
-        <h3 className="text-lg font-bold mb-3">
-          Return & Exchange
-        </h3>
+        <div className="relative">
+          <div className="mb-3 flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600">
+              <FiShield />
+            </span>
 
-        <ul className="space-y-2 text-gray-700 text-sm">
+            <h3 className="text-lg font-black text-green-700">
+              Orbit Buy Promise
+            </h3>
+          </div>
 
-          <li>✓ 7-Day Easy Returns</li>
-
-          <li>✓ Free Size Exchange</li>
-
-          <li>✓ Secure Packaging</li>
-
-          <li>✓ 100% Genuine Products</li>
-
-        </ul>
-
+          <p className="text-sm leading-7 text-gray-700">
+            Every product available on
+            Orbit Buy is quality checked
+            before dispatch. We ensure
+            premium craftsmanship, secure
+            packaging, fast shipping, and
+            dedicated customer support for
+            a worry-free shopping
+            experience.
+          </p>
+        </div>
       </div>
-
-      {/* Guarantee */}
-
-      <div
-        className="
-          rounded-2xl
-          border
-          border-green-200
-          bg-green-50
-          p-6
-        "
-      >
-
-        <h3 className="text-lg font-bold text-green-700 mb-2">
-          Orbit Buy Promise
-        </h3>
-
-        <p className="text-sm text-gray-700 leading-7">
-          Every product available on Orbit Buy is quality checked before dispatch.
-          We ensure premium craftsmanship, secure packaging, fast shipping, and
-          dedicated customer support for a worry-free shopping experience.
-        </p>
-
-      </div>
-
     </div>
   );
 };
