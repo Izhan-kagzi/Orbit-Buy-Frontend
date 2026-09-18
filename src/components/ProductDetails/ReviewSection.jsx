@@ -8,6 +8,20 @@ import {
 
 import api from "../../services/api";
 
+const formatDate = (value) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+};
+
 const ReviewSection = ({ product }) => {
   const [reviews, setReviews] = useState([]);
 
@@ -25,25 +39,42 @@ const ReviewSection = ({ product }) => {
 
   const [hoverRating, setHoverRating] = useState(0);
 
+  // The backend computes the average and the 1-5 star breakdown
+  // across ALL approved reviews, which is more accurate than
+  // recomputing from the page's current list.
+  const [summary, setSummary] = useState({
+    averageRating: 0,
+    breakdown: null,
+  });
+
   const loadReviews = async () => {
     if (!product?.id) return;
 
     setLoading(true);
 
-    const response = await api.get(
-      `/reviews/product/${product.id}`,
-      {
-        auth: false,
-      }
-    );
+    try {
+      // Sent without the auth header on purpose — this endpoint is
+      // public, and a stale token would only add noise.
+      const response = await api.get(
+        `/reviews/product/${product.id}`,
+        {
+          auth: false,
+        }
+      );
 
-    if (response?.success) {
-      setReviews(response.reviews || []);
-    } else {
+      setReviews(response?.reviews || []);
+
+      setSummary({
+        averageRating: Number(response?.averageRating) || 0,
+        breakdown: response?.breakdown || null,
+      });
+    } catch (err) {
+      // A failed load shouldn't blank out the product page.
       setReviews([]);
+      setSummary({ averageRating: 0, breakdown: null });
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -51,6 +82,10 @@ const ReviewSection = ({ product }) => {
   }, [product?.id]);
 
   const averageRating = useMemo(() => {
+    if (summary.averageRating) {
+      return summary.averageRating.toFixed(1);
+    }
+
     if (!reviews.length) return "0.0";
 
     const total = reviews.reduce(
@@ -60,13 +95,18 @@ const ReviewSection = ({ product }) => {
     );
 
     return (total / reviews.length).toFixed(1);
-  }, [reviews]);
+  }, [reviews, summary.averageRating]);
 
-  const ratingCount = (star) =>
-    reviews.filter(
+  const ratingCount = (star) => {
+    if (summary.breakdown) {
+      return Number(summary.breakdown[star]) || 0;
+    }
+
+    return reviews.filter(
       (review) =>
         Number(review.rating) === star
     ).length;
+  };
 
   const submitReview = async (event) => {
     event.preventDefault();
@@ -86,18 +126,18 @@ const ReviewSection = ({ product }) => {
 
     setSubmitting(true);
 
-    const response = await api.post(
-      "/reviews",
-      {
-        productId: product.id,
-        rating,
-        comment: comment.trim(),
-      }
-    );
+    try {
+      const response = await api.post(
+        "/reviews",
+        {
+          productId: product.id,
+          rating,
+          comment: comment.trim(),
+        }
+      );
 
-    if (response?.success) {
       setMessage(
-        response.message ||
+        response?.message ||
           "Review submitted successfully."
       );
 
@@ -106,14 +146,21 @@ const ReviewSection = ({ product }) => {
       setComment("");
 
       await loadReviews();
-    } else {
-      setError(
-        response?.message ||
-          "Unable to submit your review."
-      );
+    } catch (err) {
+      // 401 = not logged in, 409 = already reviewed this product.
+      if (err.status === 401) {
+        setError(
+          "Please log in to write a review."
+        );
+      } else {
+        setError(
+          err.message ||
+            "Unable to submit your review."
+        );
+      }
+    } finally {
+      setSubmitting(false);
     }
-
-    setSubmitting(false);
   };
 
   return (
@@ -266,7 +313,7 @@ const ReviewSection = ({ product }) => {
                           "Orbit Buy Customer"}
                       </h3>
 
-                      {review.verified && (
+                      {review.verifiedPurchase && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
                           <FiCheckCircle size={13} />
                           Verified Purchase
@@ -275,7 +322,7 @@ const ReviewSection = ({ product }) => {
                     </div>
 
                     <p className="mt-1 text-sm text-gray-500">
-                      {review.date}
+                      {formatDate(review.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -304,7 +351,7 @@ const ReviewSection = ({ product }) => {
               </p>
 
               {/* STAFF REPLY */}
-              {review.reply?.text && (
+              {review.reply?.message && (
                 <div className="mt-7 rounded-2xl border border-brand-primary/10 bg-brand-primary/[0.04] p-6">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary text-sm font-bold text-white">
@@ -317,33 +364,21 @@ const ReviewSection = ({ product }) => {
                       </p>
 
                       <p className="text-xs uppercase tracking-wider text-gray-400">
-                        {review.reply.authorRole ===
-                        "admin"
-                          ? "Admin"
-                          : "Manager"}
+                        {review.reply.repliedByName ||
+                          (review.reply.repliedByRole ===
+                          "admin"
+                            ? "Admin"
+                            : "Manager")}
                       </p>
                     </div>
                   </div>
 
                   <p className="mt-4 leading-7 text-gray-600">
-                    {review.reply.text}
+                    {review.reply.message}
                   </p>
                 </div>
               )}
 
-              {/* FOOTER */}
-              <div className="mt-8 flex items-center justify-between">
-                <button
-                  type="button"
-                  className="rounded-full border border-gray-300 px-5 py-2 text-sm font-semibold transition-all duration-300 hover:bg-brand-primary hover:text-white"
-                >
-                  👍 Helpful ({review.helpful || 0})
-                </button>
-
-                <span className="text-sm text-gray-400">
-                  Orbit Buy Customer
-                </span>
-              </div>
             </article>
           ))
         )}
