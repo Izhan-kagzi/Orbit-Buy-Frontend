@@ -627,105 +627,10 @@ const ProductGallery = ({ product }) => {
 
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Quality */}
-          <div
-            className="
-              group
-              rounded-[1.5rem]
-              border border-gray-100
-              bg-gradient-to-br
-              from-gray-50
-              to-white
-              p-5
-              transition-all
-              duration-300
-              hover:-translate-y-1
-              hover:shadow-lg
-            "
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <div
-                className="
-                  flex h-11 w-11
-                  items-center justify-center
-                  rounded-2xl
-                  bg-brand-primary/10
-                  text-brand-primary
-                  transition-transform
-                  duration-300
-                  group-hover:scale-110
-                "
-              >
-                <FiCheck className="text-xl" />
-              </div>
-
-              <div>
-                <h4 className="font-black text-gray-900">
-                  Premium Quality
-                </h4>
-
-                <p className="text-xs text-gray-400">
-                  Crafted with care
-                </p>
-              </div>
-            </div>
-
-            <p className="text-sm leading-6 text-gray-500">
-              Carefully crafted using
-              premium materials with
-              attention to detail and
-              lasting comfort.
-            </p>
-          </div>
+         
 
           {/* Delivery */}
-          <div
-            className="
-              group
-              rounded-[1.5rem]
-              border border-gray-100
-              bg-gradient-to-br
-              from-gray-50
-              to-white
-              p-5
-              transition-all
-              duration-300
-              hover:-translate-y-1
-              hover:shadow-lg
-            "
-          >
-            <div className="mb-4 flex items-center gap-3">
-              <div
-                className="
-                  flex h-11 w-11
-                  items-center justify-center
-                  rounded-2xl
-                  bg-green-100
-                  text-green-600
-                  transition-transform
-                  duration-300
-                  group-hover:scale-110
-                "
-              >
-                <FiCheck className="text-xl" />
-              </div>
-
-              <div>
-                <h4 className="font-black text-gray-900">
-                  Fast Delivery
-                </h4>
-
-                <p className="text-xs text-gray-400">
-                  Secure packaging
-                </p>
-              </div>
-            </div>
-
-            <p className="text-sm leading-6 text-gray-500">
-              Delivered across India
-              with secure packaging and
-              reliable shipping.
-            </p>
-          </div>
+          
         </div>
       </div>
 

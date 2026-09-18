@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import { Link } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 
 import {
@@ -362,12 +362,12 @@ const ProductInfo = ({ product }) => {
             Select Size
           </h3>
 
-          <button
-            type="button"
-            className="text-xs font-semibold text-brand-primary hover:underline"
-          >
-            Size Guide
-          </button>
+        <Link
+  to="/ai-stylist"
+  className="inline-block bg-brand-primary text-white text-lg font-bold px-6 py-3 rounded-md shadow-md hover:bg-brand-primary/90 hover:scale-105 transition-transform duration-200"
+>
+  Ask Ai-Stylist
+</Link>
         </div>
 
         <div className="flex flex-wrap gap-3">

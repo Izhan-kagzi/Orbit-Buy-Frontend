@@ -1,9 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   FiCalendar,
-  FiCheck,
   FiClock,
+  FiEdit2,
   FiImage,
+  FiPercent,
+  FiPlus,
   FiRefreshCw,
   FiSave,
   FiTrash2,
@@ -13,44 +19,21 @@ import {
 } from "react-icons/fi";
 
 import AdminLayout from "../../components/Admin/AdminLayout";
-
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://orbit-buy.onrender.com/api";
-
-const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
+import api, {
+  getImageUrl,
+} from "../../services/api";
 
 /* ============================================================
    HELPERS
 ============================================================ */
 
-const getImageUrl = (path) => {
-  if (!path) return "";
-
-  if (
-    path.startsWith("http://") ||
-    path.startsWith("https://")
-  ) {
-    return path;
-  }
-
-  return `${API_ORIGIN}${
-    path.startsWith("/") ? path : `/${path}`
-  }`;
-};
-
-/* ------------------------------------------------------------
-   Convert backend ISO date to datetime-local value
------------------------------------------------------------- */
-
+/* Backend ISO date -> value a <input type="datetime-local"> accepts. */
 const toDateTimeLocal = (value) => {
   if (!value) return "";
 
   const date = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
+  if (Number.isNaN(date.getTime())) return "";
 
   const pad = (number) =>
     String(number).padStart(2, "0");
@@ -62,24 +45,33 @@ const toDateTimeLocal = (value) => {
   )}:${pad(date.getMinutes())}`;
 };
 
-/* ------------------------------------------------------------
-   Get authentication token
------------------------------------------------------------- */
+const formatDateTime = (value) => {
+  if (!value) return "—";
 
-const getToken = () => {
-  return localStorage.getItem("orbit-token") || "";
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "—";
+
+  return date.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
-/* ============================================================
-   REAL COUNTDOWN
-============================================================ */
+const formatNumber = (value) =>
+  String(Math.max(0, Number(value) || 0)).padStart(2, "0");
 
-const getCountdown = (
-  startTime,
-  endTime,
-  active,
-  currentTime
-) => {
+/*
+ * Countdown for a single sale.
+ *
+ * Before it starts  -> counts down to the start time.
+ * While it runs     -> counts down to the end time.
+ * After it ends     -> zeroes.
+ */
+const getCountdown = (sale, currentTime) => {
   const zero = {
     days: 0,
     hours: 0,
@@ -87,142 +79,83 @@ const getCountdown = (
     seconds: 0,
   };
 
-  if (!active || !startTime || !endTime) {
+  if (!sale?.active || !sale.startTime || !sale.endTime) {
     return zero;
   }
 
-  const start = new Date(startTime).getTime();
-  const end = new Date(endTime).getTime();
+  const start = new Date(sale.startTime).getTime();
+  const end = new Date(sale.endTime).getTime();
 
-  if (
-    Number.isNaN(start) ||
-    Number.isNaN(end)
-  ) {
-    return zero;
-  }
+  if (Number.isNaN(start) || Number.isNaN(end)) return zero;
 
-  let targetTime;
+  const target =
+    currentTime < start
+      ? start
+      : currentTime < end
+      ? end
+      : null;
 
-  /*
-   * BEFORE SALE
-   * Count down to start.
-   */
-  if (currentTime < start) {
-    targetTime = start;
-  }
+  if (!target) return zero;
 
-  /*
-   * DURING SALE
-   * Count down to end.
-   */
-  else if (currentTime < end) {
-    targetTime = end;
-  }
-
-  /*
-   * SALE ENDED
-   */
-  else {
-    return zero;
-  }
-
-  const difference = Math.max(
-    0,
-    targetTime - currentTime
-  );
-
-  const totalSeconds = Math.floor(
-    difference / 1000
-  );
-
-  const days = Math.floor(
-    totalSeconds / 86400
-  );
-
-  const hours = Math.floor(
-    (totalSeconds % 86400) / 3600
-  );
-
-  const minutes = Math.floor(
-    (totalSeconds % 3600) / 60
-  );
-
-  const seconds =
-    totalSeconds % 60;
+  const diff = Math.max(0, target - currentTime);
 
   return {
-    days,
-    hours,
-    minutes,
-    seconds,
+    days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+    hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((diff / (1000 * 60)) % 60),
+    seconds: Math.floor((diff / 1000) % 60),
   };
 };
 
-/* ============================================================
-   STATUS
-============================================================ */
-
-const getStatus = (
-  sale,
-  currentTime
-) => {
+/*
+ * The backend already returns a computed `status`, but recomputing
+ * it locally keeps the badge ticking between refetches.
+ */
+const getStatus = (sale, currentTime) => {
   if (!sale?.active) {
     return {
       label: "Inactive",
-      className:
-        "bg-gray-100 text-gray-600",
+      className: "bg-gray-100 text-gray-600",
     };
   }
 
   const start = sale.startTime
-    ? new Date(
-        sale.startTime
-      ).getTime()
+    ? new Date(sale.startTime).getTime()
     : null;
 
   const end = sale.endTime
-    ? new Date(
-        sale.endTime
-      ).getTime()
+    ? new Date(sale.endTime).getTime()
     : null;
 
-  if (
-    start &&
-    currentTime < start
-  ) {
+  if (start && currentTime < start) {
     return {
       label: "Upcoming",
-      className:
-        "bg-amber-100 text-amber-700",
+      className: "bg-amber-100 text-amber-700",
     };
   }
 
-  if (
-    end &&
-    currentTime >= end
-  ) {
+  if (end && currentTime >= end) {
     return {
       label: "Ended",
-      className:
-        "bg-red-100 text-red-700",
+      className: "bg-red-100 text-red-700",
     };
   }
 
   return {
     label: "Live",
-    className:
-      "bg-emerald-100 text-emerald-700",
+    className: "bg-emerald-100 text-emerald-700",
   };
 };
 
-/* ============================================================
-   FORMAT NUMBER
-============================================================ */
+const MAX_IMAGES = 6;
 
-const formatNumber = (value) => {
-  return String(
-    Math.max(0, Number(value) || 0)
-  ).padStart(2, "0");
+const emptyForm = {
+  title: "Flash Sale!",
+  description: "Up to 30% off - Limited Time Offer!",
+  discountPercent: "",
+  startTime: "",
+  endTime: "",
+  active: true,
 };
 
 /* ============================================================
@@ -230,137 +163,52 @@ const formatNumber = (value) => {
 ============================================================ */
 
 function AdminFlashSale() {
-  const [sale, setSale] = useState(null);
+  const [sales, setSales] = useState([]);
 
-  const [title, setTitle] =
-    useState("Flash Sale!");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
-  const [description, setDescription] =
-    useState(
-      "Up to 30% off - Limited Time Offer!"
-    );
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-  const [startTime, setStartTime] =
-    useState("");
+  /* null = the "add a new sale" form, otherwise the id being edited */
+  const [editingId, setEditingId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
-  const [endTime, setEndTime] =
-    useState("");
+  const [form, setForm] = useState(emptyForm);
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImages, setNewImages] = useState([]);
 
-  const [active, setActive] =
-    useState(false);
-
-  const [existingImages, setExistingImages] =
-    useState([]);
-
-  const [newImages, setNewImages] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [saving, setSaving] =
-    useState(false);
-
-  const [resetting, setResetting] =
-    useState(false);
-
-  const [error, setError] =
-    useState("");
-
-  const [success, setSuccess] =
-    useState("");
-
-  /*
-   * IMPORTANT:
-   * This state updates every second.
-   *
-   * We calculate countdown from Date.now()
-   * instead of decreasing a counter manually.
-   */
-  const [currentTime, setCurrentTime] =
-    useState(Date.now());
-
-  /* ============================================================
-     REAL-TIME CLOCK
-  ============================================================ */
+  /* Updates every second so the countdowns and badges stay live. */
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setCurrentTime(Date.now());
     }, 1000);
 
-    return () => {
-      window.clearInterval(intervalId);
-    };
+    return () => window.clearInterval(intervalId);
   }, []);
 
   /* ============================================================
-     LOAD FLASH SALE
+     LOAD
   ============================================================ */
 
-  const loadFlashSale = async () => {
+  const loadSales = async () => {
+    setLoading(true);
+    setError("");
+
     try {
-      setLoading(true);
-      setError("");
+      const data = await api.get("/flash-sale/all", {
+        auth: false,
+      });
 
-      const response = await fetch(
-        `${API_URL}/flash-sale`
-      );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to load Flash Sale."
-        );
-      }
-
-      const flashSale =
-        data.flashSale || {};
-
-      setSale(flashSale);
-
-      setTitle(
-        flashSale.title ||
-          "Flash Sale!"
-      );
-
-      setDescription(
-        flashSale.description ||
-          "Up to 30% off - Limited Time Offer!"
-      );
-
-      setStartTime(
-        toDateTimeLocal(
-          flashSale.startTime
-        )
-      );
-
-      setEndTime(
-        toDateTimeLocal(
-          flashSale.endTime
-        )
-      );
-
-      setActive(
-        Boolean(flashSale.active)
-      );
-
-      setExistingImages(
-        Array.isArray(
-          flashSale.images
-        )
-          ? flashSale.images
-          : []
-      );
-
-      setNewImages([]);
+      setSales(data?.flashSales || []);
     } catch (err) {
+      setSales([]);
       setError(
-        err.message ||
-          "Unable to load Flash Sale."
+        err.message || "Unable to load flash sales."
       );
     } finally {
       setLoading(false);
@@ -368,250 +216,240 @@ function AdminFlashSale() {
   };
 
   useEffect(() => {
-    loadFlashSale();
+    loadSales();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const showSuccess = (text) => {
+    setSuccess(text);
+    window.setTimeout(() => setSuccess(""), 3000);
+  };
+
   /* ============================================================
-     IMAGE SELECTION
+     FORM HELPERS
   ============================================================ */
 
-  const handleImageChange = (
-    event
-  ) => {
-    const files = Array.from(
-      event.target.files || []
+  const updateField = (field, value) => {
+    setForm((previous) => ({
+      ...previous,
+      [field]: value,
+    }));
+  };
+
+  const resetForm = () => {
+    setForm(emptyForm);
+    setExistingImages([]);
+    setNewImages([]);
+    setEditingId(null);
+    setError("");
+  };
+
+  const openAddForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const openEditForm = (sale) => {
+    setEditingId(sale.id);
+
+    setForm({
+      title: sale.title || "",
+      description: sale.description || "",
+      discountPercent:
+        sale.discountPercent === null ||
+        sale.discountPercent === undefined
+          ? ""
+          : String(sale.discountPercent),
+      startTime: toDateTimeLocal(sale.startTime),
+      endTime: toDateTimeLocal(sale.endTime),
+      active: Boolean(sale.active),
+    });
+
+    setExistingImages(
+      Array.isArray(sale.images) ? sale.images : []
     );
+
+    setNewImages([]);
+    setError("");
+    setShowForm(true);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const closeForm = () => {
+    resetForm();
+    setShowForm(false);
+  };
+
+  /* ============================================================
+     IMAGES
+  ============================================================ */
+
+  const handleImageChange = (event) => {
+    const files = Array.from(event.target.files || []);
 
     if (!files.length) return;
 
     const availableSlots = Math.max(
       0,
-      6 -
-        existingImages.length -
-        newImages.length
+      MAX_IMAGES - existingImages.length - newImages.length
     );
 
     if (availableSlots <= 0) {
       setError(
-        "You can use a maximum of 6 Flash Sale images."
+        `You can use a maximum of ${MAX_IMAGES} flash sale images.`
       );
-
       event.target.value = "";
       return;
     }
 
     const selected = files
       .slice(0, availableSlots)
-      .filter((file) =>
-        file.type.startsWith(
-          "image/"
-        )
-      );
+      .filter((file) => file.type.startsWith("image/"));
 
     if (!selected.length) {
-      setError(
-        "Please select valid image files."
-      );
-
+      setError("Please select valid image files.");
       event.target.value = "";
       return;
     }
 
     setNewImages((previous) => [
       ...previous,
-      ...selected,
+      ...selected.map((file) => ({
+        file,
+        preview: URL.createObjectURL(file),
+      })),
     ]);
 
+    setError("");
     event.target.value = "";
   };
 
-  const removeExistingImage = (
-    index
-  ) => {
-    setExistingImages(
-      (previous) =>
-        previous.filter(
-          (_, imageIndex) =>
-            imageIndex !== index
-        )
+  const removeExistingImage = (path) => {
+    setExistingImages((previous) =>
+      previous.filter((image) => image !== path)
     );
   };
 
-  const removeNewImage = (
-    index
-  ) => {
-    setNewImages(
-      (previous) =>
-        previous.filter(
-          (_, imageIndex) =>
-            imageIndex !== index
-        )
-    );
+  const removeNewImage = (index) => {
+    setNewImages((previous) => {
+      const target = previous[index];
+
+      if (target?.preview) {
+        URL.revokeObjectURL(target.preview);
+      }
+
+      return previous.filter((_, i) => i !== index);
+    });
   };
+
+  /* Release object URLs when the component goes away. */
+  useEffect(() => {
+    return () => {
+      newImages.forEach((item) => {
+        if (item?.preview) URL.revokeObjectURL(item.preview);
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ============================================================
-     SAVE
+     SAVE  (POST to add, PUT to edit)
   ============================================================ */
 
-  const handleSave = async (
-    event
-  ) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    setSaving(true);
     setError("");
     setSuccess("");
 
+    if (!form.title.trim()) {
+      setError("Please enter a flash sale title.");
+      return;
+    }
+
+    if (!form.startTime || !form.endTime) {
+      setError(
+        "Please choose both a start and an end date & time."
+      );
+      return;
+    }
+
+    if (
+      new Date(form.startTime) >= new Date(form.endTime)
+    ) {
+      setError("End time must be after start time.");
+      return;
+    }
+
+    if (form.discountPercent !== "") {
+      const percent = Number(form.discountPercent);
+
+      if (
+        !Number.isFinite(percent) ||
+        percent < 0 ||
+        percent > 100
+      ) {
+        setError("Discount must be between 0 and 100.");
+        return;
+      }
+    }
+
+    setSaving(true);
+
     try {
       /*
-       * Schedule validation
+       * Sent as FormData because banner images ride along with the
+       * text fields. The backend accepts both FormData and JSON.
        */
-      if (
-        active &&
-        (!startTime || !endTime)
-      ) {
-        throw new Error(
-          "Please select both start and end date/time when enabling the Flash Sale."
-        );
-      }
+      const formData = new FormData();
 
-      /*
-       * End must be after start
-       */
-      if (
-        startTime &&
-        endTime &&
-        new Date(startTime) >=
-          new Date(endTime)
-      ) {
-        throw new Error(
-          "End time must be after start time."
-        );
-      }
-
-      /*
-       * Title validation
-       */
-      if (!title.trim()) {
-        throw new Error(
-          "Please enter a Flash Sale title."
-        );
-      }
-
-      /*
-       * Description validation
-       */
-      if (!description.trim()) {
-        throw new Error(
-          "Please enter a Flash Sale description."
-        );
-      }
-
-      /*
-       * FormData
-       */
-      const formData =
-        new FormData();
-
-      formData.append(
-        "title",
-        title.trim()
-      );
-
+      formData.append("title", form.title.trim());
       formData.append(
         "description",
-        description.trim()
+        form.description.trim()
       );
-
+      formData.append("startTime", form.startTime);
+      formData.append("endTime", form.endTime);
+      formData.append("active", String(form.active));
       formData.append(
-        "startTime",
-        startTime
+        "discountPercent",
+        form.discountPercent
       );
-
-      formData.append(
-        "endTime",
-        endTime
-      );
-
-      formData.append(
-        "active",
-        String(active)
-      );
-
       formData.append(
         "existingImages",
-        JSON.stringify(
-          existingImages
-        )
+        JSON.stringify(existingImages)
       );
 
-      newImages.forEach((file) => {
-        formData.append(
-          "images",
-          file
-        );
+      newImages.forEach((item) => {
+        formData.append("images", item.file);
       });
 
-      const token =
-        getToken();
+      const data = editingId
+        ? await api.put(
+            `/flash-sale/${editingId}`,
+            formData,
+            { isFormData: true }
+          )
+        : await api.post("/flash-sale", formData, {
+            isFormData: true,
+          });
 
-      if (!token) {
-        throw new Error(
-          "Your admin session has expired. Please log in again."
-        );
-      }
-
-      const response =
-        await fetch(
-          `${API_URL}/flash-sale`,
-          {
-            method: "PUT",
-
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-
-            body: formData,
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to save Flash Sale."
-        );
-      }
-
-      const updatedSale =
-        data.flashSale || {};
-
-      setSale(updatedSale);
-
-      setExistingImages(
-        updatedSale.images || []
+      showSuccess(
+        data?.message ||
+          (editingId
+            ? "Flash sale updated successfully."
+            : "Flash sale added successfully.")
       );
 
-      setNewImages([]);
-
-      setSuccess(
-        "Flash Sale saved successfully."
-      );
-
-      /*
-       * Immediately refresh the clock
-       */
+      closeForm();
+      await loadSales();
       setCurrentTime(Date.now());
-
-      window.setTimeout(() => {
-        setSuccess("");
-      }, 3000);
     } catch (err) {
       setError(
-        err.message ||
-          "Unable to save Flash Sale."
+        err.status === 401
+          ? "Your session has expired. Please log in again."
+          : err.message || "Unable to save the flash sale."
       );
     } finally {
       setSaving(false);
@@ -619,967 +457,659 @@ function AdminFlashSale() {
   };
 
   /* ============================================================
-     RESET
+     DELETE ONE SALE
   ============================================================ */
 
-  const handleReset = async () => {
-    const confirmed =
-      window.confirm(
-        "Reset the Flash Sale? This will remove the sale images and timing."
-      );
+  const handleDelete = async (sale) => {
+    const confirmed = window.confirm(
+      `Delete "${sale.title}"?\n\nThis cannot be undone.`
+    );
 
     if (!confirmed) return;
 
-    setResetting(true);
+    setDeletingId(sale.id);
     setError("");
-    setSuccess("");
 
     try {
-      const token =
-        getToken();
+      await api.delete(`/flash-sale/${sale.id}`);
 
-      if (!token) {
-        throw new Error(
-          "Your admin session has expired. Please log in again."
-        );
-      }
-
-      const response =
-        await fetch(
-          `${API_URL}/flash-sale`,
-          {
-            method: "DELETE",
-
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-      const data =
-        await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Unable to reset Flash Sale."
-        );
-      }
-
-      const flashSale =
-        data.flashSale || {};
-
-      setSale(flashSale);
-
-      setTitle(
-        flashSale.title ||
-          "Flash Sale!"
+      // Drop it locally straight away so the card disappears
+      // without waiting on the refetch.
+      setSales((previous) =>
+        previous.filter((item) => item.id !== sale.id)
       );
 
-      setDescription(
-        flashSale.description ||
-          "Up to 30% off - Limited Time Offer!"
-      );
+      showSuccess("Flash sale deleted successfully.");
 
-      setStartTime("");
-      setEndTime("");
+      if (editingId === sale.id) closeForm();
 
-      setActive(false);
-
-      setExistingImages([]);
-      setNewImages([]);
-
-      setCurrentTime(
-        Date.now()
-      );
-
-      setSuccess(
-        "Flash Sale has been reset."
-      );
+      await loadSales();
     } catch (err) {
       setError(
-        err.message ||
-          "Unable to reset Flash Sale."
+        err.message || "Unable to delete the flash sale."
       );
     } finally {
-      setResetting(false);
+      setDeletingId(null);
     }
   };
 
   /* ============================================================
-     LIVE STATUS
+     QUICK ACTIVE TOGGLE
   ============================================================ */
 
-  const status = useMemo(
-    () =>
-      getStatus(
-        {
-          ...sale,
-          active,
-          startTime,
-          endTime,
-        },
-        currentTime
-      ),
-    [
-      sale,
-      active,
-      startTime,
-      endTime,
-      currentTime,
-    ]
-  );
+  const toggleActive = async (sale) => {
+    setError("");
+
+    try {
+      await api.put(`/flash-sale/${sale.id}`, {
+        active: !sale.active,
+      });
+
+      showSuccess(
+        sale.active
+          ? "Flash sale switched off."
+          : "Flash sale switched on."
+      );
+
+      await loadSales();
+    } catch (err) {
+      setError(
+        err.message || "Unable to update the flash sale."
+      );
+    }
+  };
 
   /* ============================================================
-     LIVE COUNTDOWN
+     DERIVED
   ============================================================ */
 
-  const countdown = useMemo(
+  const liveCount = useMemo(
     () =>
-      getCountdown(
-        startTime,
-        endTime,
-        active,
-        currentTime
-      ),
-    [
-      startTime,
-      endTime,
-      active,
-      currentTime,
-    ]
+      sales.filter(
+        (sale) =>
+          getStatus(sale, currentTime).label === "Live"
+      ).length,
+    [sales, currentTime]
+  );
+
+  const upcomingCount = useMemo(
+    () =>
+      sales.filter(
+        (sale) =>
+          getStatus(sale, currentTime).label === "Upcoming"
+      ).length,
+    [sales, currentTime]
   );
 
   const totalImages =
-    existingImages.length +
-    newImages.length;
+    existingImages.length + newImages.length;
 
   /* ============================================================
-     COUNTDOWN LABEL
-  ============================================================ */
-
-  const countdownLabel =
-    status.label === "Upcoming"
-      ? "COMING SOON"
-      : status.label === "Live"
-      ? "FLASH SALE LIVE"
-      : status.label === "Ended"
-      ? "SALE ENDED"
-      : "FLASH SALE";
-
-  /* ============================================================
-     LOADING
-  ============================================================ */
-
-  if (loading) {
-    return (
-      <AdminLayout>
-        <div className="flex min-h-[60vh] items-center justify-center">
-          <div className="flex items-center gap-3 text-gray-500">
-            <FiRefreshCw className="animate-spin" />
-            Loading Flash Sale...
-          </div>
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  /* ============================================================
-     UI
+     RENDER
   ============================================================ */
 
   return (
     <AdminLayout>
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
-        {/* ======================================================
+      <div className="space-y-8">
+        {/* ==================================================
             HEADER
-        ====================================================== */}
+        ================================================== */}
 
-        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="mb-2 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-primary text-white shadow-lg">
-                <FiZap size={21} />
-              </div>
+            <p className="text-xs font-bold uppercase tracking-[4px] text-brand-primary">
+              Promotions
+            </p>
 
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-                  Flash Sale
-                </h1>
+            <h1 className="mt-2 font-serif text-4xl font-bold text-brand-dark">
+              Flash Sales
+            </h1>
 
-                <p className="mt-1 text-sm text-gray-500">
-                  Manage your homepage Flash Sale,
-                  images and countdown.
-                </p>
-              </div>
-            </div>
+            <p className="mt-2 text-gray-500">
+              Schedule as many sales as you like — each with
+              its own start and end date &amp; time.
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${status.className}`}
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={loadSales}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-3 font-semibold text-brand-dark shadow-sm transition hover:border-brand-primary hover:text-brand-primary"
             >
-              {status.label}
-            </span>
+              <FiRefreshCw
+                className={loading ? "animate-spin" : ""}
+              />
+              Refresh
+            </button>
 
             <button
               type="button"
-              onClick={handleReset}
-              disabled={resetting}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={
+                showForm && !editingId
+                  ? closeForm
+                  : openAddForm
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-5 py-3 font-semibold text-white transition hover:bg-brand-dark"
             >
-              <FiTrash2 />
-
-              {resetting
-                ? "Resetting..."
-                : "Reset"}
+              {showForm && !editingId ? (
+                <>
+                  <FiX />
+                  Close
+                </>
+              ) : (
+                <>
+                  <FiPlus />
+                  Add Flash Sale
+                </>
+              )}
             </button>
           </div>
         </div>
 
-        {/* ======================================================
+        {/* ==================================================
             ALERTS
-        ====================================================== */}
+        ================================================== */}
 
         {error && (
-          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
-            <FiX className="mt-0.5 shrink-0" />
-
+          <div className="flex items-start justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
             <span>{error}</span>
+
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="font-bold"
+            >
+              ×
+            </button>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-700">
-            <FiCheck className="mt-0.5 shrink-0" />
-
-            <span>{success}</span>
+          <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-sm font-medium text-green-700">
+            {success}
           </div>
         )}
 
-        <form onSubmit={handleSave}>
-          <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-
-            {/* ==================================================
-                LEFT
-            ================================================== */}
-
-            <div className="space-y-6">
-
-              {/* =================================================
-                  BASIC DETAILS
-              ================================================= */}
-
-              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-                <div className="mb-6">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Sale Details
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Configure the content displayed
-                    on the Flash Sale section.
-                  </p>
-                </div>
-
-                <div className="space-y-5">
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700">
-                      Sale Title
-                    </label>
-
-                    <input
-                      type="text"
-                      value={title}
-                      onChange={(event) =>
-                        setTitle(
-                          event.target.value
-                        )
-                      }
-                      placeholder="Flash Sale!"
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brand-primary focus:bg-white focus:ring-2 focus:ring-brand-primary/10"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-semibold text-gray-700">
-                      Description
-                    </label>
-
-                    <textarea
-                      value={description}
-                      onChange={(event) =>
-                        setDescription(
-                          event.target.value
-                        )
-                      }
-                      rows={4}
-                      placeholder="Up to 30% off - Limited Time Offer!"
-                      className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brand-primary focus:bg-white focus:ring-2 focus:ring-brand-primary/10"
-                    />
-                  </div>
-
-                </div>
-              </section>
-
-              {/* =================================================
-                  SALE SCHEDULE
-              ================================================= */}
-
-              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-
-                <div className="mb-6">
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Sale Schedule
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Set when the Flash Sale should
-                    start and end.
-                  </p>
-                </div>
-
-                <div className="grid gap-5 md:grid-cols-2">
-
-                  {/* START */}
-
-                  <div>
-                    <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <FiCalendar />
-                      Start Date & Time
-                    </label>
-
-                    <input
-                      type="datetime-local"
-                      step="1"
-                      value={startTime}
-                      onChange={(event) =>
-                        setStartTime(
-                          event.target.value
-                        )
-                      }
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brand-primary focus:bg-white focus:ring-2 focus:ring-brand-primary/10"
-                    />
-                  </div>
-
-                  {/* END */}
-
-                  <div>
-                    <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-gray-700">
-                      <FiClock />
-                      End Date & Time
-                    </label>
-
-                    <input
-                      type="datetime-local"
-                      step="1"
-                      min={startTime || undefined}
-                      value={endTime}
-                      onChange={(event) =>
-                        setEndTime(
-                          event.target.value
-                        )
-                      }
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brand-primary focus:bg-white focus:ring-2 focus:ring-brand-primary/10"
-                    />
-                  </div>
-
-                </div>
-
-                {/* ENABLE */}
-
-                <div className="mt-6 flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-4">
-
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      Enable Flash Sale
-                    </p>
-
-                    <p className="mt-1 text-xs text-gray-500">
-                      The sale follows the schedule
-                      above.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setActive(
-                        (previous) =>
-                          !previous
-                      )
-                    }
-                    className={`relative h-7 w-12 rounded-full transition ${
-                      active
-                        ? "bg-brand-primary"
-                        : "bg-gray-300"
-                    }`}
-                    aria-label="Toggle Flash Sale"
-                    aria-pressed={active}
-                  >
-                    <span
-                      className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${
-                        active
-                          ? "left-6"
-                          : "left-1"
-                      }`}
-                    />
-                  </button>
-
-                </div>
-
-              </section>
-
-              {/* =================================================
-                  IMAGES
-              ================================================= */}
-
-              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7">
-
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900">
-                      Sale Images
-                    </h2>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      Upload up to 6 images for the
-                      Flash Sale section.
-                    </p>
-                  </div>
-
-                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90">
-                    <FiUpload />
-
-                    Add Images
-
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg,image/webp"
-                      multiple
-                      onChange={
-                        handleImageChange
-                      }
-                      className="hidden"
-                    />
-                  </label>
-
-                </div>
-
-                {totalImages === 0 ? (
-                  <div className="rounded-2xl border-2 border-dashed border-gray-200 px-6 py-12 text-center">
-
-                    <FiImage
-                      size={34}
-                      className="mx-auto mb-3 text-gray-300"
-                    />
-
-                    <p className="font-semibold text-gray-700">
-                      No Flash Sale images
-                    </p>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      Upload images to display on
-                      the homepage.
-                    </p>
-
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-
-                    {/* SAVED IMAGES */}
-
-                    {existingImages.map(
-                      (image, index) => (
-                        <div
-                          key={`existing-${image}-${index}`}
-                          className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-gray-100"
-                        >
-                          <img
-                            src={getImageUrl(
-                              image
-                            )}
-                            alt={`Flash Sale ${
-                              index + 1
-                            }`}
-                            className="aspect-[4/3] w-full object-cover"
-                          />
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              removeExistingImage(
-                                index
-                              )
-                            }
-                            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-red-600 shadow-lg transition hover:bg-red-50"
-                            aria-label="Remove image"
-                          >
-                            <FiX />
-                          </button>
-
-                          <span className="absolute bottom-2 left-2 rounded-lg bg-black/60 px-2 py-1 text-[10px] font-semibold text-white">
-                            Saved
-                          </span>
-                        </div>
-                      )
-                    )}
-
-                    {/* NEW IMAGES */}
-
-                    {newImages.map(
-                      (file, index) => (
-                        <NewImagePreview
-                          key={`new-${file.name}-${file.size}-${index}`}
-                          file={file}
-                          index={index}
-                          onRemove={
-                            removeNewImage
-                          }
-                        />
-                      )
-                    )}
-
-                  </div>
-                )}
-
-                <p className="mt-4 text-xs text-gray-400">
-                  {totalImages}/6 images selected
-                </p>
-
-              </section>
-            </div>
-
-            {/* ==================================================
-                RIGHT
-            ================================================== */}
-
-            <aside className="space-y-6">
-
-              {/* =================================================
-                  LIVE PREVIEW
-              ================================================= */}
-
-              <section className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm">
-
-                <div className="border-b border-gray-100 px-5 py-5">
-                  <h2 className="font-bold text-gray-900">
-                    Live Preview
-                  </h2>
-
-                  <p className="mt-1 text-xs text-gray-500">
-                    This countdown updates every second.
-                  </p>
-                </div>
-
-                <div className="relative overflow-hidden bg-[#f8f9fa] px-5 py-8 text-[#062c57]">
-
-                  {/* DOT PATTERN TOP RIGHT */}
-
-                  <div className="pointer-events-none absolute right-5 top-5 grid grid-cols-7 gap-2 opacity-60">
-                    {Array.from({
-                      length: 35,
-                    }).map((_, index) => (
-                      <span
-                        key={index}
-                        className="h-1.5 w-1.5 rounded-full bg-[#d8c39c]"
-                      />
-                    ))}
-                  </div>
-
-                  {/* DOT PATTERN BOTTOM LEFT */}
-
-                  <div className="pointer-events-none absolute bottom-5 left-5 grid grid-cols-7 gap-2 opacity-60">
-                    {Array.from({
-                      length: 35,
-                    }).map((_, index) => (
-                      <span
-                        key={index}
-                        className="h-1.5 w-1.5 rounded-full bg-[#d8c39c]"
-                      />
-                    ))}
-                  </div>
-
-                  <div className="relative z-10">
-
-                    {/* STATUS */}
-
-                    <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#07355f]">
-                      {countdownLabel}
-                    </p>
-
-                    {/* TITLE */}
-
-                    <h3 className="mt-3 font-serif text-4xl leading-none text-[#062c57]">
-                      {title ||
-                        "Flash Sale!"}
-                    </h3>
-
-                    {/* DESCRIPTION */}
-
-                    <p className="mt-4 text-sm leading-6 text-[#274c70]">
-                      {description ||
-                        "Up to 30% off - Limited Time Offer!"}
-                    </p>
-
-                    {/* COUNTDOWN */}
-
-                    <div className="mt-8 grid grid-cols-4 items-start">
-
-                      {/* DAYS */}
-
-                      <CountdownBox
-                        value={
-                          countdown.days
-                        }
-                        label="DAYS"
-                      />
-
-                      <CountdownSeparator />
-
-                      {/* HOURS */}
-
-                      <CountdownBox
-                        value={
-                          countdown.hours
-                        }
-                        label="HOURS"
-                      />
-
-                      <CountdownSeparator />
-
-                      {/* MINUTES */}
-
-                      <CountdownBox
-                        value={
-                          countdown.minutes
-                        }
-                        label="MINUTES"
-                      />
-
-                      <CountdownSeparator />
-
-                      {/* SECONDS */}
-
-                      <CountdownBox
-                        value={
-                          countdown.seconds
-                        }
-                        label="SECONDS"
-                      />
-
-                    </div>
-
-                    {/* STATUS MESSAGE */}
-
-                    <div className="mt-6 text-center">
-
-                      {status.label ===
-                        "Upcoming" && (
-                        <p className="text-xs font-medium text-gray-500">
-                          The countdown is currently
-                          counting down to the sale
-                          start.
-                        </p>
-                      )}
-
-                      {status.label ===
-                        "Live" && (
-                        <p className="text-xs font-semibold text-emerald-600">
-                          Flash Sale is live now.
-                        </p>
-                      )}
-
-                      {status.label ===
-                        "Ended" && (
-                        <p className="text-xs font-semibold text-red-500">
-                          This Flash Sale has ended.
-                        </p>
-                      )}
-
-                      {status.label ===
-                        "Inactive" && (
-                        <p className="text-xs font-medium text-gray-500">
-                          Enable the Flash Sale to
-                          start the countdown.
-                        </p>
-                      )}
-
-                    </div>
-
-                    {/* IMAGES */}
-
-                    {totalImages > 0 && (
-                      <div className="mt-6 grid grid-cols-2 gap-2">
-
-                        {existingImages
-                          .slice(0, 2)
-                          .map(
-                            (
-                              image,
-                              index
-                            ) => (
-                              <div
-                                key={`preview-existing-${index}`}
-                                className="overflow-hidden rounded-xl"
-                              >
-                                <img
-                                  src={getImageUrl(
-                                    image
-                                  )}
-                                  alt=""
-                                  className="aspect-[4/3] w-full object-cover"
-                                />
-                              </div>
-                            )
-                          )}
-
-                        {existingImages.length <
-                          2 &&
-                          newImages
-                            .slice(
-                              0,
-                              2 -
-                                existingImages.length
-                            )
-                            .map(
-                              (
-                                file,
-                                index
-                              ) => (
-                                <NewImagePreviewSmall
-                                  key={`preview-new-${index}`}
-                                  file={file}
-                                />
-                              )
-                            )}
-
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-              </section>
-
-              {/* =================================================
-                  STATUS
-              ================================================= */}
-
-              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-
-                <h2 className="mb-4 font-bold text-gray-900">
-                  Sale Status
+        {/* ==================================================
+            SUMMARY
+        ================================================== */}
+
+        <div className="grid gap-5 sm:grid-cols-3">
+          <div className="rounded-3xl border border-gray-200 bg-white p-6">
+            <p className="text-sm text-gray-500">
+              Total Sales
+            </p>
+            <p className="mt-2 text-3xl font-black text-brand-dark">
+              {sales.length}
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-gray-200 bg-white p-6">
+            <p className="text-sm text-gray-500">
+              Live Now
+            </p>
+            <p className="mt-2 text-3xl font-black text-emerald-600">
+              {liveCount}
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-gray-200 bg-white p-6">
+            <p className="text-sm text-gray-500">
+              Scheduled
+            </p>
+            <p className="mt-2 text-3xl font-black text-amber-600">
+              {upcomingCount}
+            </p>
+          </div>
+        </div>
+
+        {/* ==================================================
+            ADD / EDIT FORM
+        ================================================== */}
+
+        {showForm && (
+          <form
+            onSubmit={handleSubmit}
+            className="rounded-3xl border border-gray-200 bg-white p-7 shadow-sm"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-primary text-white">
+                <FiZap />
+              </div>
+
+              <div>
+                <h2 className="text-xl font-bold text-brand-dark">
+                  {editingId
+                    ? "Edit Flash Sale"
+                    : "New Flash Sale"}
                 </h2>
 
-                <div className="space-y-3 text-sm">
+                <p className="text-sm text-gray-500">
+                  Set the banner copy and the exact window
+                  it should run for.
+                </p>
+              </div>
+            </div>
 
-                  <div className="flex justify-between gap-4">
-                    <span className="text-gray-500">
-                      Status
-                    </span>
+            <div className="mt-7 grid gap-6 lg:grid-cols-2">
+              {/* TITLE */}
+              <div className="lg:col-span-2">
+                <label className="mb-2 block text-sm font-semibold text-brand-dark">
+                  Title
+                </label>
 
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${status.className}`}
+                <input
+                  value={form.title}
+                  onChange={(event) =>
+                    updateField("title", event.target.value)
+                  }
+                  maxLength={120}
+                  placeholder="Weekend Flash Sale"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brand-primary"
+                />
+              </div>
+
+              {/* DESCRIPTION */}
+              <div className="lg:col-span-2">
+                <label className="mb-2 block text-sm font-semibold text-brand-dark">
+                  Description
+                </label>
+
+                <textarea
+                  value={form.description}
+                  onChange={(event) =>
+                    updateField(
+                      "description",
+                      event.target.value
+                    )
+                  }
+                  rows={3}
+                  maxLength={500}
+                  placeholder="Up to 40% off across the store."
+                  className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brand-primary"
+                />
+              </div>
+
+              {/* START */}
+              <div>
+                <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-brand-dark">
+                  <FiCalendar className="text-brand-primary" />
+                  Starts on (date &amp; time)
+                </label>
+
+                <input
+                  type="datetime-local"
+                  value={form.startTime}
+                  onChange={(event) =>
+                    updateField(
+                      "startTime",
+                      event.target.value
+                    )
+                  }
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brand-primary"
+                />
+              </div>
+
+              {/* END */}
+              <div>
+                <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-brand-dark">
+                  <FiClock className="text-brand-primary" />
+                  Ends on (date &amp; time)
+                </label>
+
+                <input
+                  type="datetime-local"
+                  value={form.endTime}
+                  onChange={(event) =>
+                    updateField(
+                      "endTime",
+                      event.target.value
+                    )
+                  }
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brand-primary"
+                />
+              </div>
+
+              {/* DISCOUNT */}
+              <div>
+                <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-brand-dark">
+                  <FiPercent className="text-brand-primary" />
+                  Discount shown on the banner (optional)
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={form.discountPercent}
+                  onChange={(event) =>
+                    updateField(
+                      "discountPercent",
+                      event.target.value
+                    )
+                  }
+                  placeholder="30"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brand-primary"
+                />
+              </div>
+
+              {/* ACTIVE */}
+              <div className="flex items-end">
+                <label className="flex w-full cursor-pointer items-center justify-between rounded-xl border border-gray-200 px-4 py-3">
+                  <span className="text-sm font-semibold text-brand-dark">
+                    Active
+                  </span>
+
+                  <input
+                    type="checkbox"
+                    checked={form.active}
+                    onChange={(event) =>
+                      updateField(
+                        "active",
+                        event.target.checked
+                      )
+                    }
+                    className="h-5 w-5 accent-brand-primary"
+                  />
+                </label>
+              </div>
+
+              {/* IMAGES */}
+              <div className="lg:col-span-2">
+                <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-brand-dark">
+                  <FiImage className="text-brand-primary" />
+                  Banner images ({totalImages}/{MAX_IMAGES})
+                </label>
+
+                <div className="flex flex-wrap gap-4">
+                  {existingImages.map((path) => (
+                    <div
+                      key={path}
+                      className="relative h-28 w-28 overflow-hidden rounded-2xl border border-gray-200"
                     >
-                      {status.label}
-                    </span>
-                  </div>
+                      <img
+                        src={getImageUrl(path)}
+                        alt="Flash sale banner"
+                        className="h-full w-full object-cover"
+                      />
 
-                  <div className="flex justify-between gap-4">
-                    <span className="text-gray-500">
-                      Images
-                    </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          removeExistingImage(path)
+                        }
+                        className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-red-600 shadow"
+                        title="Remove image"
+                      >
+                        <FiX size={14} />
+                      </button>
+                    </div>
+                  ))}
 
-                    <span className="font-semibold text-gray-900">
-                      {totalImages}/6
-                    </span>
-                  </div>
+                  {newImages.map((item, index) => (
+                    <div
+                      key={item.preview}
+                      className="relative h-28 w-28 overflow-hidden rounded-2xl border border-brand-primary/40"
+                    >
+                      <img
+                        src={item.preview}
+                        alt="New banner"
+                        className="h-full w-full object-cover"
+                      />
 
-                  <div className="flex justify-between gap-4">
-                    <span className="text-gray-500">
-                      Enabled
-                    </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          removeNewImage(index)
+                        }
+                        className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-red-600 shadow"
+                        title="Remove image"
+                      >
+                        <FiX size={14} />
+                      </button>
+                    </div>
+                  ))}
 
-                    <span className="font-semibold text-gray-900">
-                      {active
-                        ? "Yes"
-                        : "No"}
-                    </span>
-                  </div>
+                  {totalImages < MAX_IMAGES && (
+                    <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 text-gray-400 transition hover:border-brand-primary hover:text-brand-primary">
+                      <FiUpload size={20} />
+                      <span className="text-xs font-semibold">
+                        Upload
+                      </span>
 
-                  <div className="flex justify-between gap-4">
-                    <span className="text-gray-500">
-                      Countdown
-                    </span>
-
-                    <span className="font-semibold text-gray-900">
-                      {active &&
-                      startTime &&
-                      endTime
-                        ? "Running"
-                        : "Not Set"}
-                    </span>
-                  </div>
-
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
                 </div>
-              </section>
+              </div>
+            </div>
 
-              {/* =================================================
-                  SAVE
-              ================================================= */}
-
+            {/* ACTIONS */}
+            <div className="mt-8 flex flex-wrap gap-3">
               <button
                 type="submit"
                 disabled={saving}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-primary px-5 py-4 font-bold text-white shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-6 py-3 font-semibold text-white transition hover:bg-brand-dark disabled:opacity-60"
               >
-                {saving ? (
-                  <>
-                    <FiRefreshCw className="animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <FiSave />
-                    Save Flash Sale
-                  </>
-                )}
+                <FiSave />
+                {saving
+                  ? "Saving..."
+                  : editingId
+                  ? "Save Changes"
+                  : "Add Flash Sale"}
               </button>
 
-              {/* =================================================
-                  TIP
-              ================================================= */}
+              <button
+                type="button"
+                onClick={closeForm}
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 font-semibold text-brand-dark transition hover:border-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
 
-              <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs leading-5 text-blue-700">
-                <strong>Tip:</strong>{" "}
-                Set a start and end time, enable the
-                Flash Sale, and save. The countdown
-                automatically changes every second and
-                switches from Upcoming to Live to Ended.
-              </div>
+        {/* ==================================================
+            SALES LIST
+        ================================================== */}
 
-            </aside>
+        {loading ? (
+          <div className="space-y-5">
+            {[1, 2].map((item) => (
+              <div
+                key={item}
+                className="h-44 animate-pulse rounded-3xl border border-gray-200 bg-gray-100"
+              />
+            ))}
           </div>
-        </form>
+        ) : sales.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-14 text-center">
+            <FiZap
+              className="mx-auto text-gray-300"
+              size={45}
+            />
+
+            <h2 className="mt-5 text-2xl font-bold text-brand-dark">
+              No flash sales yet
+            </h2>
+
+            <p className="mt-2 text-gray-500">
+              Add one and it will appear on the storefront
+              as soon as its start time arrives.
+            </p>
+
+            <button
+              type="button"
+              onClick={openAddForm}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-primary px-6 py-3 font-semibold text-white transition hover:bg-brand-dark"
+            >
+              <FiPlus />
+              Add Flash Sale
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {sales.map((sale) => {
+              const status = getStatus(sale, currentTime);
+              const countdown = getCountdown(
+                sale,
+                currentTime
+              );
+
+              const isCounting =
+                status.label === "Live" ||
+                status.label === "Upcoming";
+
+              return (
+                <article
+                  key={sale.id}
+                  className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
+                >
+                  <div className="flex flex-col gap-6 p-7 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h2 className="text-xl font-bold text-brand-dark">
+                          {sale.title}
+                        </h2>
+
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${status.className}`}
+                        >
+                          {status.label}
+                        </span>
+
+                        {sale.discountPercent !== null &&
+                          sale.discountPercent !==
+                            undefined && (
+                            <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-bold text-brand-primary">
+                              {sale.discountPercent}% OFF
+                            </span>
+                          )}
+                      </div>
+
+                      {sale.description && (
+                        <p className="mt-2 text-gray-500">
+                          {sale.description}
+                        </p>
+                      )}
+
+                      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <div className="rounded-2xl bg-gray-50 px-4 py-3">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                            Starts
+                          </p>
+                          <p className="mt-1 font-semibold text-brand-dark">
+                            {formatDateTime(
+                              sale.startTime
+                            )}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-gray-50 px-4 py-3">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                            Ends
+                          </p>
+                          <p className="mt-1 font-semibold text-brand-dark">
+                            {formatDateTime(sale.endTime)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isCounting && (
+                        <div className="mt-5">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                            {status.label === "Upcoming"
+                              ? "Starts in"
+                              : "Ends in"}
+                          </p>
+
+                          <div className="mt-2 flex gap-3">
+                            {[
+                              ["Days", countdown.days],
+                              ["Hrs", countdown.hours],
+                              ["Min", countdown.minutes],
+                              ["Sec", countdown.seconds],
+                            ].map(([label, value]) => (
+                              <div
+                                key={label}
+                                className="rounded-xl bg-brand-dark px-3 py-2 text-center text-white"
+                              >
+                                <p className="text-lg font-black leading-none">
+                                  {formatNumber(value)}
+                                </p>
+                                <p className="mt-1 text-[10px] uppercase tracking-wider text-white/60">
+                                  {label}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {Array.isArray(sale.images) &&
+                        sale.images.length > 0 && (
+                          <div className="mt-5 flex flex-wrap gap-3">
+                            {sale.images.map((path) => (
+                              <img
+                                key={path}
+                                src={getImageUrl(path)}
+                                alt={sale.title}
+                                className="h-20 w-20 rounded-xl border border-gray-200 object-cover"
+                              />
+                            ))}
+                          </div>
+                        )}
+                    </div>
+
+                    {/* ACTIONS */}
+                    <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col">
+                      <button
+                        type="button"
+                        onClick={() => toggleActive(sale)}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-brand-dark transition hover:border-brand-primary hover:text-brand-primary"
+                      >
+                        {sale.active
+                          ? "Switch Off"
+                          : "Switch On"}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => openEditForm(sale)}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark"
+                      >
+                        <FiEdit2 />
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={deletingId === sale.id}
+                        onClick={() => handleDelete(sale)}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-60"
+                      >
+                        <FiTrash2 />
+                        {deletingId === sale.id
+                          ? "Deleting..."
+                          : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
     </AdminLayout>
-  );
-}
-
-/* ============================================================
-   COUNTDOWN BOX
-============================================================ */
-
-function CountdownBox({
-  value,
-  label,
-}) {
-  return (
-    <div className="text-center">
-      <div className="text-3xl font-black leading-none tracking-tight text-[#062c57] sm:text-4xl">
-        {formatNumber(value)}
-      </div>
-
-      <div className="mt-2 text-[9px] font-medium uppercase tracking-wide text-[#52708e]">
-        {label}
-      </div>
-    </div>
-  );
-}
-
-/* ============================================================
-   COUNTDOWN SEPARATOR
-============================================================ */
-
-function CountdownSeparator() {
-  return (
-    <div className="flex justify-center pt-1 text-2xl font-bold text-[#d8c39c]">
-      :
-    </div>
-  );
-}
-
-/* ============================================================
-   NEW IMAGE PREVIEW
-   Uses one stable object URL and cleans it up.
-============================================================ */
-
-function NewImagePreview({
-  file,
-  index,
-  onRemove,
-}) {
-  const previewUrl = useMemo(
-    () => URL.createObjectURL(file),
-    [file]
-  );
-
-  useEffect(() => {
-    return () => {
-      URL.revokeObjectURL(
-        previewUrl
-      );
-    };
-  }, [previewUrl]);
-
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-brand-primary/20 bg-gray-100">
-
-      <img
-        src={previewUrl}
-        alt={file.name}
-        className="aspect-[4/3] w-full object-cover"
-      />
-
-      <button
-        type="button"
-        onClick={() =>
-          onRemove(index)
-        }
-        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-red-600 shadow-lg transition hover:bg-red-50"
-        aria-label="Remove image"
-      >
-        <FiX />
-      </button>
-
-      <span className="absolute bottom-2 left-2 rounded-lg bg-brand-primary px-2 py-1 text-[10px] font-semibold text-white">
-        New
-      </span>
-    </div>
-  );
-}
-
-/* ============================================================
-   SMALL NEW IMAGE PREVIEW
-============================================================ */
-
-function NewImagePreviewSmall({
-  file,
-}) {
-  const previewUrl = useMemo(
-    () => URL.createObjectURL(file),
-    [file]
-  );
-
-  useEffect(() => {
-    return () => {
-      URL.revokeObjectURL(
-        previewUrl
-      );
-    };
-  }, [previewUrl]);
-
-  return (
-    <div className="overflow-hidden rounded-xl">
-      <img
-        src={previewUrl}
-        alt=""
-        className="aspect-[4/3] w-full object-cover"
-      />
-    </div>
   );
 }
 

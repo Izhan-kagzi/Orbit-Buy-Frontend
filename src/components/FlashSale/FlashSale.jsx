@@ -2,15 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiArrowRight } from "react-icons/fi";
 
-import { getImageUrl } from "../../services/api";
-
-// =====================================================
-// API
-// =====================================================
-
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "https://orbit-buy.onrender.com/api";
+import api, { getImageUrl } from "../../services/api";
 
 // =====================================================
 // GET TIME LEFT
@@ -143,23 +135,16 @@ const FlashSale = () => {
 
     const fetchFlashSale = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/flash-sale`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              "Unable to load Flash Sale."
-          );
-        }
+        // Public endpoint — returns the sale running right now,
+        // or the next upcoming one, or null when none is set up.
+        const data = await api.get("/flash-sale", {
+          auth: false,
+        });
 
         if (!mounted) return;
 
         const flashSale =
-          data.flashSale || null;
+          data?.flashSale || null;
 
         setSale(flashSale);
 

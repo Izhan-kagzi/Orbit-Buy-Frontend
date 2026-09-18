@@ -1,12 +1,20 @@
 // Central fetch wrapper for talking to the Orbit Buy backend.
 // Handles the base URL, JWT header injection, JSON parsing,
-// and ensures a consistent { success, message, ... } object.
+// and turns backend failures into thrown Errors carrying the
+// backend's own { success, message } payload.
 
-const API_URL = import.meta.env.VITE_API_URL || "https://orbit-buy.onrender.com/api";
+const DEFAULT_DEV_URL = "http://localhost:5000/api";
+const DEFAULT_PROD_URL = "https://orbit-buy.onrender.com/api";
+
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? DEFAULT_DEV_URL : DEFAULT_PROD_URL);
 
 // The backend's origin without the trailing /api — used to resolve
 // relative image paths like "/uploads/products/shirt1.jpg".
 export const API_ORIGIN = API_URL.replace(/\/api\/?$/, "");
+
+export { API_URL };
 
 export function getImageUrl(path) {
   if (!path) return "";
@@ -26,7 +34,7 @@ async function request(
 ) {
   const headers = {};
 
-  if (!isFormData) {
+  if (!isFormData && body !== undefined) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -43,8 +51,12 @@ async function request(
       body: isFormData ? body : body ? JSON.stringify(body) : undefined,
     });
   } catch (networkError) {
-    // Network failure → return safe object
-    return { success: false, message: "Couldn't reach the server. Is the backend running?" };
+    const error = new Error(
+      "Couldn't reach the server. Is the backend running?"
+    );
+    error.status = 0;
+    error.success = false;
+    throw error;
   }
 
   let data = null;
@@ -55,29 +67,40 @@ async function request(
   }
 
   if (!response.ok) {
-  const error = new Error(
-    data?.message || `Request failed (${response.status})`
-  );
+    const error = new Error(
+      data?.message || `Request failed (${response.status})`
+    );
 
-  error.status = response.status;
-  error.response = data;
+    error.status = response.status;
+    error.success = false;
+    error.response = data;
 
-  throw error;
-}
+    // A dead or expired session should not leave stale credentials
+    // behind — every later request would fail the same way.
+    if (response.status === 401 && auth) {
+      localStorage.removeItem("orbit-token");
+      localStorage.removeItem("orbit-user");
+    }
+
+    throw error;
+  }
 
   // Ensure success flag always exists
   if (data && typeof data.success === "undefined") {
     return { success: true, ...data };
   }
 
-  return data;
+  return data ?? { success: true };
 }
 
 export const api = {
   get: (path, opts) => request(path, { ...opts, method: "GET" }),
   post: (path, body, opts) => request(path, { ...opts, method: "POST", body }),
   put: (path, body, opts) => request(path, { ...opts, method: "PUT", body }),
-  delete: (path, opts) => request(path, { ...opts, method: "DELETE" }),
+  patch: (path, body, opts) =>
+    request(path, { ...opts, method: "PATCH", body }),
+  delete: (path, body, opts) =>
+    request(path, { ...opts, method: "DELETE", body }),
 };
 
 export default api;

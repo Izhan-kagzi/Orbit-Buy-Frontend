@@ -118,6 +118,14 @@ const managerNavItems = [
     label: "Reviews",
     icon: FiMessageCircle,
   },
+
+  // Managers manage flash sales too — the route already allows
+  // staff through, so the link belongs here as well.
+  {
+    to: "/admin/flash-sale",
+    label: "Flash Sale",
+    icon: FiZap,
+  },
 ];
 
 const AdminLayout = ({ children }) => {

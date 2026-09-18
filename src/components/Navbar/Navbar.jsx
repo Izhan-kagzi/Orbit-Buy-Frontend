@@ -335,7 +335,7 @@ const DesktopDropdown = ({ label, items }) => (
                       <img
                         src={item.image}
                         alt={item.name}
-                        loading="lazy"
+                        loading="eager"
                         className="
                           w-full
                           h-full
@@ -547,7 +547,7 @@ const MobileDropdown = ({ label, items, onNavigate }) => {
                       <img
                         src={item.image}
                         alt={item.name}
-                        loading="lazy"
+                        loading="eager"
                         className="
                           w-full h-full
                           object-cover

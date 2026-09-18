@@ -15,6 +15,22 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
+const formatDate = (value) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  return date.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const AdminReviews = () => {
   const [reviews, setReviews] = useState([]);
 
@@ -45,40 +61,65 @@ const AdminReviews = () => {
   const [success, setSuccess] =
     useState("");
 
+  const [counts, setCounts] = useState({
+    pending: 0,
+    unanswered: 0,
+  });
+
   const loadReviews = async () => {
     setLoading(true);
     setError("");
 
     const params = new URLSearchParams();
 
+    // The backend filters on `q`, `rating` and `approved`.
     if (search.trim()) {
-      params.set("search", search.trim());
+      params.set("q", search.trim());
     }
 
     if (ratingFilter !== "all") {
       params.set("rating", ratingFilter);
     }
 
-    if (statusFilter !== "all") {
-      params.set("status", statusFilter);
+    if (statusFilter === "approved") {
+      params.set("approved", "true");
+    }
+
+    if (statusFilter === "pending") {
+      params.set("approved", "false");
+    }
+
+    if (statusFilter === "replied") {
+      params.set("replied", "true");
+    }
+
+    if (statusFilter === "unanswered") {
+      params.set("replied", "false");
     }
 
     const query = params.toString();
 
-    const response = await api.get(
-      `/reviews${query ? `?${query}` : ""}`
-    );
+    try {
+      const response = await api.get(
+        `/reviews${query ? `?${query}` : ""}`
+      );
 
-    if (response?.success) {
-      setReviews(response.reviews || []);
-    } else {
+      setReviews(response?.reviews || []);
+
+      setCounts({
+        pending: Number(response?.pending) || 0,
+        unanswered: Number(response?.unanswered) || 0,
+      });
+    } catch (err) {
+      setReviews([]);
+
       setError(
-        response?.message ||
+        err.message ||
           "Unable to load reviews."
       );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -121,7 +162,7 @@ const AdminReviews = () => {
     setReplyingId(review.id);
 
     setReplyText(
-      review.reply?.text || ""
+      review.reply?.message || ""
     );
 
     setError("");
@@ -141,30 +182,30 @@ const AdminReviews = () => {
     setSavingReply(true);
     setError("");
 
-    const response = await api.put(
-      `/reviews/${reviewId}/reply`,
-      {
-        reply: replyText.trim(),
-      }
-    );
+    try {
+      const response = await api.put(
+        `/reviews/${reviewId}/reply`,
+        {
+          reply: replyText.trim(),
+        }
+      );
 
-    if (response?.success) {
       showSuccess(
-        response.message ||
+        response?.message ||
           "Reply saved successfully."
       );
 
       cancelReply();
 
       await loadReviews();
-    } else {
+    } catch (err) {
       setError(
-        response?.message ||
+        err.message ||
           "Unable to save reply."
       );
+    } finally {
+      setSavingReply(false);
     }
-
-    setSavingReply(false);
   };
 
   const deleteReply = async (reviewId) => {
@@ -178,24 +219,24 @@ const AdminReviews = () => {
       `reply-delete-${reviewId}`
     );
 
-    const response = await api.delete(
-      `/reviews/${reviewId}/reply`
-    );
+    try {
+      await api.delete(
+        `/reviews/${reviewId}/reply`
+      );
 
-    if (response?.success) {
       showSuccess(
         "Reply deleted successfully."
       );
 
       await loadReviews();
-    } else {
+    } catch (err) {
       setError(
-        response?.message ||
+        err.message ||
           "Unable to delete reply."
       );
+    } finally {
+      setActionLoading(null);
     }
-
-    setActionLoading(null);
   };
 
   const deleteReview = async (review) => {
@@ -212,49 +253,64 @@ const AdminReviews = () => {
       `review-delete-${review.id}`
     );
 
-    const response = await api.delete(
-      `/reviews/${review.id}`
-    );
+    try {
+      await api.delete(
+        `/reviews/${review.id}`
+      );
 
-    if (response?.success) {
       showSuccess(
         "Customer review deleted successfully."
       );
 
+      // Drop it locally straight away so the row disappears even
+      // if the refetch is slow.
+      setReviews((previous) =>
+        previous.filter(
+          (item) => item.id !== review.id
+        )
+      );
+
       await loadReviews();
-    } else {
+    } catch (err) {
       setError(
-        response?.message ||
+        err.message ||
           "Unable to delete review."
       );
+    } finally {
+      setActionLoading(null);
     }
-
-    setActionLoading(null);
   };
 
-  const approveReview = async (reviewId) => {
+  const approveReview = async (
+    reviewId,
+    approved = true
+  ) => {
     setActionLoading(
       `approve-${reviewId}`
     );
 
-    const response = await api.put(
-      `/reviews/${reviewId}/approve`
-    );
+    try {
+      const response = await api.put(
+        `/reviews/${reviewId}/approve`,
+        { approved }
+      );
 
-    if (response?.success) {
       showSuccess(
-        "Review approved successfully."
+        response?.message ||
+          (approved
+            ? "Review approved successfully."
+            : "Review hidden from the storefront.")
       );
 
       await loadReviews();
-    } else {
+    } catch (err) {
       setError(
-        response?.message ||
-          "Unable to approve review."
+        err.message ||
+          "Unable to update review."
       );
+    } finally {
+      setActionLoading(null);
     }
-
-    setActionLoading(null);
   };
 
   return (
@@ -397,6 +453,12 @@ const AdminReviews = () => {
               <option value="pending">
                 Pending
               </option>
+              <option value="replied">
+                Replied
+              </option>
+              <option value="unanswered">
+                Not replied
+              </option>
             </select>
           </div>
         </div>
@@ -442,10 +504,16 @@ const AdminReviews = () => {
               {
                 filteredReviews.filter(
                   (review) =>
-                    review.reply?.text
+                    review.reply?.message
                 ).length
               }
             </p>
+
+            {counts.unanswered > 0 && (
+              <p className="mt-1 text-xs font-semibold text-amber-600">
+                {counts.unanswered} awaiting a reply
+              </p>
+            )}
           </div>
         </div>
 
@@ -517,7 +585,7 @@ const AdminReviews = () => {
                           </div>
 
                           <p className="mt-1 text-sm text-gray-400">
-                            {review.date}
+                            {formatDate(review.createdAt)}
                           </p>
 
                           <div className="mt-3 flex gap-1">
@@ -541,8 +609,7 @@ const AdminReviews = () => {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        {review.status ===
-                          "pending" && (
+                        {review.approved ? (
                           <button
                             type="button"
                             disabled={
@@ -551,7 +618,28 @@ const AdminReviews = () => {
                             }
                             onClick={() =>
                               approveReview(
-                                review.id
+                                review.id,
+                                false
+                              )
+                            }
+                            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-amber-400 hover:text-amber-600 disabled:opacity-60"
+                            title="Hide this review from the storefront"
+                          >
+                            <FiX />
+
+                            Hide
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={
+                              actionLoading ===
+                              `approve-${review.id}`
+                            }
+                            onClick={() =>
+                              approveReview(
+                                review.id,
+                                true
                               )
                             }
                             className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700 disabled:opacity-60"
@@ -714,7 +802,7 @@ const AdminReviews = () => {
                       </div>
                     </div>
                   ) : (
-                    review.reply?.text && (
+                    review.reply?.message && (
                       <div className="border-t border-gray-100 bg-gray-50 p-7">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                           <div>
@@ -723,22 +811,20 @@ const AdminReviews = () => {
                             </p>
 
                             <p className="mt-3 leading-7 text-gray-600">
-                              {review.reply.text}
+                              {review.reply.message}
                             </p>
 
                             <p className="mt-3 text-xs text-gray-400">
                               Replied by{" "}
                               <strong>
-                                {
-                                  review.reply
-                                    .authorName
-                                }
+                                {review.reply
+                                  .repliedByName ||
+                                  "Orbit Buy"}
                               </strong>{" "}
                               (
-                              {
-                                review.reply
-                                  .authorRole
-                              }
+                              {review.reply
+                                .repliedByRole ||
+                                "staff"}
                               )
                             </p>
                           </div>
