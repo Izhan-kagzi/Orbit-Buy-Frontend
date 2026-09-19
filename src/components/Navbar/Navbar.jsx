@@ -177,6 +177,7 @@ const aboutMenu = [
     name: "About Us",
     path: "/about",
     icon: FiInfo,
+    image:"",
     desc: "Our story & mission",
   },
   {

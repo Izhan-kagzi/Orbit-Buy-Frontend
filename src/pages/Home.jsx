@@ -10,8 +10,7 @@ import Reviews from "../components/Reviews/Reviews";
 import Instagram  from "../components/Instagram/Instagram";
 import SEO from "../components/SEO";
 
-import men_banner from "../assets/featured/men_banner.png";
-import women_banner from "../assets/featured/women_banner.png";
+
 
 import { Link } from "react-router-dom";
 
@@ -50,33 +49,7 @@ const Home = () => {
           <Categories />
         </section>
 
-        {/* =====================================================
-            MEN'S BANNER
-        ====================================================== */}
-        <section aria-label="Men's fashion collection">
-          <Link to="/search?q=men" className="block">
-            <img
-              src={men_banner}
-              alt="Shop Men's Fashion at Orbit Buy"
-              className="block h-auto w-full object-cover"
-              loading="eager"
-            />
-          </Link>
-        </section>
-
-        {/* =====================================================
-            WOMEN'S BANNER
-        ====================================================== */}
-        <section aria-label="Women's fashion collection">
-          <Link to="/search?q=women" className="block">
-            <img
-              src={women_banner}
-              alt="Shop Women's Fashion at Orbit Buy"
-              className="block h-auto w-full object-cover"
-              loading="eager"
-            />
-          </Link>
-        </section>
+        
 
         {/* =====================================================
             4. NEW ARRIVALS

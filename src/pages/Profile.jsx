@@ -10,7 +10,7 @@ import {
   FiHeart,
   FiHome,
   FiSettings,
-  FiLogOut,
+  FiCheck,
   FiChevronRight,
   FiCamera,
   FiTrash2,
@@ -26,11 +26,37 @@ const Profile = () => {
 
   const { cartItems = [] } = useCart();
   const { wishlistItems = [] } = useWishlist();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const [recentOrders, setRecentOrders] = useState([]);
   const [profilePicture, setProfilePicture] = useState(null);
   const [uploadError, setUploadError] = useState("");
+
+  // Account settings
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [profilePrivate, setProfilePrivate] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [activeSetting, setActiveSetting] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [editedEmail, setEditedEmail] = useState("");
+  const [editedMobile, setEditedMobile] = useState("");
+  const [savedProfile, setSavedProfile] = useState({
+    name: "",
+    email: "",
+    mobile: "",
+  });
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    window.clearTimeout(window.__orbitToastTimer);
+    window.__orbitToastTimer = window.setTimeout(() => {
+      setToast(null);
+    }, 2800);
+  };
 
   /* =========================================================
      AUTH + ORDERS
@@ -63,6 +89,122 @@ const Profile = () => {
       address: "Add your saved addresses here.",
     },
   ]);
+
+  /* =========================================================
+     LOAD SAVED ACCOUNT SETTINGS
+  ========================================================== */
+  useEffect(() => {
+    if (!user) return;
+
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(`orbit-account-settings-${user.id || user._id || user.email || "user"}`) || "{}"
+      );
+
+      if (typeof saved.notificationsEnabled === "boolean") {
+        setNotificationsEnabled(saved.notificationsEnabled);
+      }
+      if (typeof saved.profilePrivate === "boolean") {
+        setProfilePrivate(saved.profilePrivate);
+      }
+      if (saved.paymentMethod) {
+        setPaymentMethod(saved.paymentMethod);
+      }
+    } catch (error) {
+      console.error("Failed to load account settings:", error);
+    }
+  }, [user]);
+
+  /* =========================================================
+     LOAD SAVED PROFILE DETAILS
+  ========================================================== */
+  useEffect(() => {
+    if (!user) return;
+
+    const fallbackProfile = {
+      name:
+        user.name ||
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+        "Orbit Buy User",
+      email: user.email || "",
+      mobile: user.mobile || "",
+    };
+
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(
+          `orbit-profile-${user.id || user._id || user.email || "user"}`
+        ) || "null"
+      );
+
+      const profile =
+        saved && typeof saved === "object"
+          ? { ...fallbackProfile, ...saved }
+          : fallbackProfile;
+
+      setSavedProfile(profile);
+      setEditedName(profile.name);
+      setEditedEmail(profile.email);
+      setEditedMobile(profile.mobile);
+    } catch (error) {
+      console.error("Failed to load profile details:", error);
+      setSavedProfile(fallbackProfile);
+      setEditedName(fallbackProfile.name);
+      setEditedEmail(fallbackProfile.email);
+      setEditedMobile(fallbackProfile.mobile);
+    }
+  }, [user]);
+
+  const getProfileDetailsKey = () => {
+    if (!user) return "orbit-profile-user";
+    return `orbit-profile-${user.id || user._id || user.email || "user"}`;
+  };
+
+  const getAccountSettingsKey = () => {
+    if (!user) return "orbit-account-settings";
+    return `orbit-account-settings-${user.id || user._id || user.email || "user"}`;
+  };
+
+  const handleSaveSettings = () => {
+    if (newPassword || confirmPassword) {
+      if (newPassword.length < 8) {
+        showToast("New password must be at least 8 characters.", "error");
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showToast("New password and confirmation do not match.", "error");
+        return;
+      }
+
+      // Never store passwords in localStorage. A real password change
+      // should be sent securely to your backend/authentication API.
+    }
+
+    try {
+      localStorage.setItem(
+        getAccountSettingsKey(),
+        JSON.stringify({
+          notificationsEnabled,
+          profilePrivate,
+          paymentMethod,
+          updatedAt: new Date().toISOString(),
+        })
+      );
+
+      setNewPassword("");
+      setConfirmPassword("");
+
+      showToast(
+        newPassword
+          ? "Settings saved. Password is ready to be updated through your secure backend."
+          : "Your account settings have been saved."
+      );
+    } catch (error) {
+      console.error("Failed to save account settings:", error);
+      showToast("Could not save your changes. Please try again.", "error");
+    }
+  };
 
   /* =========================================================
      PROFILE PICTURE STORAGE KEY
@@ -187,18 +329,48 @@ const Profile = () => {
   };
 
   /* =========================================================
-     LOGOUT
-  ========================================================== */
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  /* =========================================================
      EDIT PROFILE
   ========================================================== */
   const handleEditProfile = () => {
-    alert("Edit Profile Coming Soon!");
+    setEditedName(savedProfile.name);
+    setEditedEmail(savedProfile.email);
+    setEditedMobile(savedProfile.mobile);
+    setIsEditingProfile(true);
+  };
+
+  const handleCancelEditProfile = () => {
+    setEditedName(savedProfile.name);
+    setEditedEmail(savedProfile.email);
+    setEditedMobile(savedProfile.mobile);
+    setIsEditingProfile(false);
+  };
+
+  const handleSaveProfile = () => {
+    const name = editedName.trim();
+    const email = editedEmail.trim();
+    const mobile = editedMobile.trim();
+
+    if (!name) {
+      showToast("Please enter your name.", "error");
+      return;
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showToast("Please enter a valid email address.", "error");
+      return;
+    }
+
+    const profile = { name, email, mobile };
+
+    try {
+      localStorage.setItem(getProfileDetailsKey(), JSON.stringify(profile));
+      setSavedProfile(profile);
+      setIsEditingProfile(false);
+      showToast("Profile updated successfully.");
+    } catch (error) {
+      console.error("Failed to save profile details:", error);
+      showToast("Could not save your profile. Please try again.", "error");
+    }
   };
 
   /* =========================================================
@@ -212,9 +384,13 @@ const Profile = () => {
      USER NAME
   ========================================================== */
   const displayName =
+    savedProfile.name ||
     user.name ||
     `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
     "Orbit Buy User";
+
+  const displayEmail = savedProfile.email || user.email || "";
+  const displayMobile = savedProfile.mobile || user.mobile || "";
 
   /* =========================================================
      FALLBACK AVATAR
@@ -297,62 +473,105 @@ const Profile = () => {
             {/* =================================================
                 USER INFORMATION
             ================================================== */}
-            <div className="min-w-0">
-
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-brand-primary mb-1">
                 Welcome back
               </p>
 
-              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 truncate">
-                {displayName}
-              </h1>
+              {isEditingProfile ? (
+                <div className="space-y-3 max-w-xl">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    placeholder="Full name"
+                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xl sm:text-2xl font-bold text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                  />
 
-              <div className="mt-3 space-y-1.5 text-gray-500">
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <input
+                      type="email"
+                      value={editedEmail}
+                      onChange={(e) => setEditedEmail(e.target.value)}
+                      placeholder="Email address"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                    />
+                    <input
+                      type="tel"
+                      value={editedMobile}
+                      onChange={(e) => setEditedMobile(e.target.value)}
+                      placeholder="Mobile number"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                    />
+                  </div>
 
-                {user.email && (
-                  <p className="flex items-center gap-2 text-sm sm:text-base">
-                    <FiMail className="shrink-0" />
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleSaveProfile}
+                      className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition"
+                    >
+                      <FiCheck />
+                      Save Profile
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEditProfile}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 truncate">
+                    {displayName}
+                  </h1>
 
-                    <span className="truncate">
-                      {user.email}
-                    </span>
-                  </p>
-                )}
+                  <div className="mt-3 space-y-1.5 text-gray-500">
+                    {displayEmail && (
+                      <p className="flex items-center gap-2 text-sm sm:text-base">
+                        <FiMail className="shrink-0" />
+                        <span className="truncate">{displayEmail}</span>
+                      </p>
+                    )}
 
-                {user.mobile && (
-                  <p className="flex items-center gap-2 text-sm sm:text-base">
-                    <FiPhone className="shrink-0" />
-                    {user.mobile}
-                  </p>
-                )}
+                    {displayMobile && (
+                      <p className="flex items-center gap-2 text-sm sm:text-base">
+                        <FiPhone className="shrink-0" />
+                        {displayMobile}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
 
-              </div>
-
-              {/* Upload Hint */}
               <p className="text-xs text-gray-400 mt-2">
                 Click your photo to change it • PNG, JPG, JPEG
               </p>
 
-              {/* Upload Error */}
               {uploadError && (
                 <p className="text-xs text-red-500 font-medium mt-1">
                   {uploadError}
                 </p>
               )}
-
             </div>
           </div>
 
           {/* =================================================
               EDIT PROFILE BUTTON
           ================================================== */}
-          <button
-            onClick={handleEditProfile}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-dark text-white px-6 py-3.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300"
-          >
-            <FiEdit2 />
-            Edit Profile
-          </button>
+          {!isEditingProfile && (
+            <button
+              type="button"
+              onClick={handleEditProfile}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-800 text-white px-6 py-3.5 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              <FiEdit2 />
+              Edit Profile
+            </button>
+          )}
 
         </div>
 
@@ -623,89 +842,218 @@ const Profile = () => {
             </div>
 
             {/* Account Settings */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-[0_18px_60px_-30px_rgba(15,23,42,0.35)]">
+              {/* Premium accent */}
+              <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-slate-900 via-indigo-600 to-violet-500" />
 
-              <div className="px-6 py-5 border-b border-gray-200">
-
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-3">
-
-                  <span className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
-                    <FiSettings className="text-gray-700" />
+              <div className="px-6 pt-7 pb-5 border-b border-slate-100">
+                <div className="flex items-center gap-4">
+                  <span className="w-12 h-12 rounded-2xl bg-slate-950 text-white flex items-center justify-center shadow-lg shadow-slate-900/15">
+                    <FiSettings className="text-xl" />
                   </span>
 
-                  Account Settings
-
-                </h2>
-
+                  <div>
+                    <h2 className="text-xl font-bold tracking-tight text-slate-950">
+                      Account Settings
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Manage your preferences
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="p-3">
-
+                {/* Change Password */}
                 <button
+                  type="button"
                   onClick={() =>
-                    alert("Change Password Coming Soon!")
+                    setActiveSetting(
+                      activeSetting === "password" ? null : "password"
+                    )
                   }
-                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-gray-50 transition"
+                  className="w-full group flex items-center justify-between px-4 py-4 rounded-2xl hover:bg-slate-50 transition-all duration-200"
                 >
-                  <span className="text-gray-800">
-                    Change Password
+                  <span className="flex items-center gap-3">
+                    <span className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 text-sm font-bold">
+                      •••
+                    </span>
+                    <span className="text-[15px] font-medium text-slate-800">
+                      Change Password
+                    </span>
                   </span>
-
-                  <FiChevronRight className="text-gray-400" />
+                  <FiChevronRight
+                    className={`text-slate-400 transition-transform ${
+                      activeSetting === "password" ? "rotate-90" : ""
+                    }`}
+                  />
                 </button>
 
+                {activeSetting === "password" && (
+                  <div className="mx-2 mb-2 rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-3">
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="New password"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                    />
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                    />
+                    <p className="text-[11px] leading-relaxed text-slate-500">
+                      Password changes should be sent to your authentication
+                      backend rather than stored in the browser.
+                    </p>
+                  </div>
+                )}
+
+                {/* Notifications */}
                 <button
+                  type="button"
                   onClick={() =>
-                    alert("Notifications Coming Soon!")
+                    setNotificationsEnabled((value) => !value)
                   }
-                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-gray-50 transition"
+                  className="w-full flex items-center justify-between px-4 py-4 rounded-2xl hover:bg-slate-50 transition-all duration-200"
                 >
-                  <span className="text-gray-800">
-                    Notifications
+                  <span className="flex items-center gap-3">
+                    <span className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                      <span className="text-sm">✦</span>
+                    </span>
+                    <span className="text-[15px] font-medium text-slate-800">
+                      Notifications
+                    </span>
                   </span>
 
-                  <FiChevronRight className="text-gray-400" />
+                  <span
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
+                      notificationsEnabled ? "bg-slate-950" : "bg-slate-300"
+                    }`}
+                    aria-label={
+                      notificationsEnabled
+                        ? "Notifications enabled"
+                        : "Notifications disabled"
+                    }
+                  >
+                    <span
+                      className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
+                        notificationsEnabled ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </span>
                 </button>
 
+                {/* Privacy */}
                 <button
-                  onClick={() =>
-                    alert("Privacy Settings Coming Soon!")
-                  }
-                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-gray-50 transition"
+                  type="button"
+                  onClick={() => setProfilePrivate((value) => !value)}
+                  className="w-full flex items-center justify-between px-4 py-4 rounded-2xl hover:bg-slate-50 transition-all duration-200"
                 >
-                  <span className="text-gray-800">
-                    Privacy Settings
+                  <span className="flex items-center gap-3">
+                    <span className="w-9 h-9 rounded-xl bg-violet-50 flex items-center justify-center text-violet-600">
+                      <span className="text-sm">◈</span>
+                    </span>
+                    <span className="text-[15px] font-medium text-slate-800">
+                      Privacy Settings
+                    </span>
                   </span>
 
-                  <FiChevronRight className="text-gray-400" />
-                </button>
-
-                <button
-                  onClick={() =>
-                    alert("Payment Methods Coming Soon!")
-                  }
-                  className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-gray-50 transition"
-                >
-                  <span className="text-gray-800">
-                    Payment Methods
+                  <span
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                      profilePrivate
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {profilePrivate ? "Private" : "Public"}
                   </span>
-
-                  <FiChevronRight className="text-gray-400" />
                 </button>
 
+                {/* Payment */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setActiveSetting(
+                      activeSetting === "payment" ? null : "payment"
+                    )
+                  }
+                  className="w-full group flex items-center justify-between px-4 py-4 rounded-2xl hover:bg-slate-50 transition-all duration-200"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                      <span className="text-sm">₹</span>
+                    </span>
+                    <span className="text-[15px] font-medium text-slate-800">
+                      Payment Methods
+                    </span>
+                  </span>
+                  <FiChevronRight
+                    className={`text-slate-400 transition-transform ${
+                      activeSetting === "payment" ? "rotate-90" : ""
+                    }`}
+                  />
+                </button>
+
+                {activeSetting === "payment" && (
+                  <div className="mx-2 mb-2 rounded-2xl bg-slate-50 border border-slate-100 p-4">
+                    <label className="block text-xs font-semibold text-slate-500 mb-2">
+                      Default payment method
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
+                    >
+                      <option>Cash on Delivery</option>
+                      <option>UPI</option>
+                      <option>Credit / Debit Card</option>
+                    </select>
+                  </div>
+                )}
               </div>
-
             </div>
 
-            {/* Logout */}
+            {/* Save Changes */}
             <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl font-semibold shadow-sm hover:shadow-lg transition-all duration-300"
+              type="button"
+              onClick={handleSaveSettings}
+              className="w-full group flex items-center justify-center gap-2.5 bg-slate-950 hover:bg-slate-800 text-white py-4 rounded-2xl font-semibold shadow-[0_12px_30px_-12px_rgba(15,23,42,0.55)] hover:shadow-[0_18px_40px_-14px_rgba(15,23,42,0.65)] hover:-translate-y-0.5 transition-all duration-300"
             >
-              <FiLogOut />
-              Logout
+              <FiCheck className="text-lg transition-transform group-hover:scale-110" />
+              Save Changes
             </button>
 
+            {/* Toast notification */}
+            {toast && (
+              <div
+                role="status"
+                aria-live="polite"
+                className={`fixed bottom-6 right-6 z-[100] max-w-sm rounded-2xl border px-4 py-3.5 shadow-2xl backdrop-blur-xl animate-[fadeIn_0.25s_ease-out] ${
+                  toast.type === "error"
+                    ? "bg-red-50/95 border-red-200 text-red-800"
+                    : "bg-slate-950/95 border-slate-800 text-white"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      toast.type === "error"
+                        ? "bg-red-100 text-red-600"
+                        : "bg-white/10 text-emerald-300"
+                    }`}
+                  >
+                    {toast.type === "error" ? "!" : "✓"}
+                  </span>
+                  <p className="text-sm font-medium leading-5">
+                    {toast.message}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
         </div>
