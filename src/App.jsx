@@ -4,7 +4,8 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-
+import { Link } from "react-router-dom";
+import { GiAstronautHelmet } from "react-icons/gi";
 import {
   AnimatePresence,
   motion,
@@ -544,28 +545,34 @@ function App() {
                     </AdminRoute>
                   }
                 />
+<Route
+  path="*"
+  element={
+    <div className="flex min-h-[90vh] flex-col items-center justify-center px-6 text-center bg-gradient-to-b from-white to-gray-100">
+      <h1 className="text-[12rem] font-serif font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-brand-primary to-gray-700 drop-shadow-2xl animate-pulse">
+        404
+      </h1>
 
-                {/* 404 */}
+      <p className="mt-6 text-4xl font-semibold text-gray-900 tracking-tight">
+        Page Not Found
+      </p>
 
-                <Route
-                  path="*"
-                  element={
-                    <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
-                      <h1 className="font-serif text-7xl text-brand-primary">
-                        404
-                      </h1>
+      <p className="mt-3 max-w-md text-lg text-gray-500">
+        Sorry, the page you’re looking for doesn’t exist or has been moved.
+      </p>
 
-                      <p className="mt-4 text-2xl font-semibold">
-                        Page Not Found
-                      </p>
+      <div className="mt-10">
+        <a
+          href="/"
+          className="inline-block rounded-full bg-brand-primary px-10 py-4 text-xl font-semibold text-white shadow-lg hover:shadow-2xl hover:scale-105 transition-transform duration-300"
+        >
+          Back to Home
+        </a>
+      </div>
+    </div>
+  }
+/>
 
-                      <p className="mt-2 text-gray-500">
-                        The page you are looking
-                        for doesn't exist.
-                      </p>
-                    </div>
-                  }
-                />
               </Routes>
             </Suspense>
           </motion.div>
