@@ -548,27 +548,206 @@ function App() {
 <Route
   path="*"
   element={
-    <div className="flex min-h-[90vh] flex-col items-center justify-center px-6 text-center bg-gradient-to-b from-white to-gray-100">
-      <h1 className="text-[12rem] font-serif font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-brand-primary to-gray-700 drop-shadow-2xl animate-pulse">
-        404
-      </h1>
+    <div className="relative min-h-screen overflow-hidden bg-[#0b0b0b] text-white">
 
-      <p className="mt-6 text-4xl font-semibold text-gray-900 tracking-tight">
-        Page Not Found
-      </p>
+      {/* =========================
+          BACKGROUND DETAILS
+      ========================== */}
+      <div className="pointer-events-none absolute inset-0">
 
-      <p className="mt-3 max-w-md text-lg text-gray-500">
-        Sorry, the page you’re looking for doesn’t exist or has been moved.
-      </p>
+        {/* Grid */}
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)
+            `,
+            backgroundSize: "70px 70px",
+          }}
+        />
 
-      <div className="mt-10">
+        {/* Glow */}
+        <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.035] blur-3xl" />
+
+        {/* Decorative circles */}
+        <div className="absolute left-[8%] top-[18%] h-2 w-2 rounded-full bg-white/40" />
+        <div className="absolute right-[12%] top-[25%] h-1.5 w-1.5 rounded-full bg-white/30" />
+        <div className="absolute bottom-[18%] left-[18%] h-1.5 w-1.5 rounded-full bg-white/30" />
+      </div>
+
+      {/* =========================
+          TOP BAR
+      ========================== */}
+      <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10 lg:px-16">
+
         <a
           href="/"
-          className="inline-block rounded-full bg-brand-primary px-10 py-4 text-xl font-semibold text-white shadow-lg hover:shadow-2xl hover:scale-105 transition-transform duration-300"
+          className="group flex items-center gap-3"
         >
-          Back to Home
+          {/* Logo mark */}
+          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 transition-all duration-300 group-hover:border-white/60 group-hover:rotate-45">
+            <span className="h-2 w-2 rounded-full bg-white" />
+          </div>
+
+          <span className="text-sm font-semibold uppercase tracking-[0.25em]">
+            Your Brand
+          </span>
         </a>
+
+        <span className="hidden text-[10px] uppercase tracking-[0.35em] text-white/40 sm:block">
+          Error 404
+        </span>
+      </header>
+
+      {/* =========================
+          MAIN
+      ========================== */}
+      <main className="relative z-10 flex min-h-[calc(100vh-90px)] items-center justify-center px-5 pb-16 pt-8">
+
+        <div className="w-full max-w-[1400px]">
+
+          {/* Small top label */}
+          <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-5">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
+              Lost in space
+            </span>
+
+            <span className="text-[10px] uppercase tracking-[0.3em] text-white/30">
+              2026
+            </span>
+          </div>
+
+          {/* =========================
+              GIANT 404
+          ========================== */}
+          <div className="relative">
+
+            <h1
+              className="
+                select-none
+                text-center
+                text-[32vw]
+                font-black
+                leading-[0.72]
+                tracking-[-0.09em]
+                text-white
+                sm:text-[30vw]
+                md:text-[27vw]
+                lg:text-[24vw]
+              "
+            >
+              404
+            </h1>
+
+            {/* Horizontal line */}
+            <div className="absolute left-0 right-0 top-1/2 h-px bg-white/10" />
+
+            {/* Center marker */}
+            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 bg-[#0b0b0b] px-5">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+
+              <span className="whitespace-nowrap text-[9px] uppercase tracking-[0.35em] text-white/50">
+                Page not found
+              </span>
+            </div>
+          </div>
+
+          {/* =========================
+              BOTTOM CONTENT
+          ========================== */}
+          <div className="mt-12 grid grid-cols-1 gap-8 border-t border-white/10 pt-8 md:grid-cols-3 md:items-end">
+
+            {/* Message */}
+            <div className="md:col-span-2">
+              <p className="max-w-xl text-xl font-light leading-relaxed text-white/70 sm:text-2xl">
+                Looks like you've wandered somewhere
+                that doesn't exist.
+              </p>
+
+              <p className="mt-3 max-w-lg text-sm leading-6 text-white/35">
+                The page you're looking for may have been moved,
+                deleted, or the URL might be incorrect.
+              </p>
+            </div>
+
+            {/* Button */}
+            <div className="flex md:justify-end">
+              <a
+                href="/"
+                className="
+                  group
+                  relative
+                  inline-flex
+                  items-center
+                  gap-5
+                  overflow-hidden
+                  rounded-full
+                  border
+                  border-white/20
+                  px-7
+                  py-4
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-[0.2em]
+                  text-white
+                  transition-all
+                  duration-500
+                  hover:border-white
+                "
+              >
+
+                {/* Hover background */}
+                <span
+                  className="
+                    absolute
+                    inset-0
+                    -translate-x-full
+                    bg-white
+                    transition-transform
+                    duration-500
+                    group-hover:translate-x-0
+                  "
+                />
+
+                <span className="relative z-10 transition-colors duration-500 group-hover:text-black">
+                  Back Home
+                </span>
+
+                <span className="relative z-10 text-lg transition-all duration-500 group-hover:translate-x-1 group-hover:text-black">
+                  →
+                </span>
+
+              </a>
+            </div>
+          </div>
+
+          {/* =========================
+              FOOTER INFO
+          ========================== */}
+          <div className="mt-16 flex flex-col justify-between gap-4 text-[9px] uppercase tracking-[0.3em] text-white/25 sm:flex-row">
+            <span>404 — Nothing here</span>
+
+            <span>
+              Return to the beginning
+            </span>
+          </div>
+
+        </div>
+      </main>
+
+      {/* =========================
+          SIDE DECORATION
+      ========================== */}
+      <div className="pointer-events-none absolute left-5 top-1/2 hidden -translate-y-1/2 -rotate-90 text-[9px] uppercase tracking-[0.5em] text-white/20 lg:block">
+        System / Navigation / 404
       </div>
+
+      <div className="pointer-events-none absolute right-5 top-1/2 hidden -translate-y-1/2 rotate-90 text-[9px] uppercase tracking-[0.5em] text-white/20 lg:block">
+        Error / Not Found
+      </div>
+
     </div>
   }
 />

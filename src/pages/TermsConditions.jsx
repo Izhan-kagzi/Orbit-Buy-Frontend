@@ -304,7 +304,7 @@ const TermsConditions = () => {
           <div className="mt-10 flex flex-col items-center justify-center gap-3 text-center sm:flex-row sm:gap-4">
             <FiShield className="text-brand-primary" size={16} />
 
-            <p className="text-xs uppercase tracking-[2px] text-gray-400">
+            <p className="text-xs uppercase tracking-[2px] text-black">
               By using Orbit Buy, you acknowledge these terms
             </p>
           </div>
