@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FiUserPlus, FiTrash2, FiSearch, FiUsers } from "react-icons/fi";
+import { FiUserPlus, FiTrash2, FiSearch, FiUsers, FiActivity, FiChevronDown, FiChevronUp, FiClock } from "react-icons/fi";
 import toast from "react-hot-toast";
 
 import AdminLayout from "../../components/Admin/AdminLayout";
@@ -16,6 +16,10 @@ const AdminManagers = () => {
 
   const [form, setForm] = useState(emptyForm);
   const [creating, setCreating] = useState(false);
+  const [activityManagerId, setActivityManagerId] = useState(null);
+  const [activity, setActivity] = useState([]);
+  const [activityManager, setActivityManager] = useState(null);
+  const [activityLoading, setActivityLoading] = useState(false);
 
   const loadUsers = () => {
     setLoading(true);
@@ -39,6 +43,35 @@ const AdminManagers = () => {
       u.email.toLowerCase().includes(query)
     );
   });
+
+  const formatDate = (value) => {
+    if (!value) return "—";
+    return new Date(value).toLocaleString([], {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
+
+  const loadActivity = async (manager) => {
+    if (activityManagerId === manager.id) {
+      setActivityManagerId(null);
+      return;
+    }
+
+    setActivityManagerId(manager.id);
+    setActivityLoading(true);
+    try {
+      const res = await api.get(`/users/managers/${manager.id}/activity?limit=150`);
+      setActivity(res.activity || []);
+      setActivityManager(res.manager || manager);
+    } catch (error) {
+      toast.error(error.message || "Couldn't load manager activity.");
+      setActivity([]);
+      setActivityManager(null);
+    } finally {
+      setActivityLoading(false);
+    }
+  };
 
   const changeRole = async (user, role) => {
     setBusyId(user.id);
@@ -191,25 +224,100 @@ const AdminManagers = () => {
         ) : (
           <div className="divide-y divide-gray-100">
             {managers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between px-6 py-4">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-semibold shrink-0">
-                    {user.name.charAt(0).toUpperCase()}
+              <div key={user.id} className="border-b border-gray-100 last:border-b-0">
+                <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="relative shrink-0">
+                      <div className="w-10 h-10 rounded-full bg-brand-primary text-white flex items-center justify-center font-semibold">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span
+                        className={`absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full border-2 border-white ${
+                          user.online ? "bg-green-500" : "bg-gray-400"
+                        }`}
+                        title={user.online ? "Online" : "Offline"}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold truncate">{user.name}</p>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${user.online ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                          {user.online ? "Online" : "Offline"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-400 truncate">{user.email}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold truncate">{user.name}</p>
-                    <p className="text-sm text-gray-400 truncate">{user.email}</p>
+
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                    <div className="hidden xl:block">
+                      <span className="font-semibold text-gray-600">Login:</span> {formatDate(user.currentLoginAt || user.lastLoginAt)}
+                    </div>
+                    <div className="hidden xl:block">
+                      <span className="font-semibold text-gray-600">Last activity:</span> {formatDate(user.lastSeenAt)}
+                    </div>
+                    <button
+                      onClick={() => loadActivity(user)}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-brand-primary hover:text-brand-brown transition"
+                    >
+                      <FiActivity size={15} />
+                      Activity
+                      {activityManagerId === user.id ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
+                    </button>
+                    <button
+                      onClick={() => deleteManager(user)}
+                      disabled={busyId === user.id}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-800 transition disabled:opacity-50"
+                    >
+                      <FiTrash2 size={15} />
+                      Delete
+                    </button>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => deleteManager(user)}
-                  disabled={busyId === user.id}
-                  className="inline-flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-800 transition disabled:opacity-50 shrink-0"
-                >
-                  <FiTrash2 size={15} />
-                  Delete
-                </button>
+                {activityManagerId === user.id && (
+                  <div className="bg-gray-50 border-t border-gray-100 px-6 py-5">
+                    {activityLoading ? (
+                      <div className="flex justify-center py-6"><div className="w-7 h-7 border-4 border-gray-200 border-t-brand-primary rounded-full animate-spin" /></div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                          <div className="bg-white rounded-xl border border-gray-200 p-4">
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">Current login</p>
+                            <p className="font-semibold mt-1">{formatDate(activityManager?.currentLoginAt)}</p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-gray-200 p-4">
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">Last logout</p>
+                            <p className="font-semibold mt-1">{formatDate(activityManager?.lastLogoutAt)}</p>
+                          </div>
+                          <div className="bg-white rounded-xl border border-gray-200 p-4">
+                            <p className="text-xs text-gray-400 uppercase tracking-wide">Last seen</p>
+                            <p className="font-semibold mt-1">{formatDate(activityManager?.lastSeenAt)}</p>
+                          </div>
+                        </div>
+
+                        {activity.length === 0 ? (
+                          <p className="text-sm text-gray-500 text-center py-6">No activity recorded yet.</p>
+                        ) : (
+                          <div className="max-h-80 overflow-y-auto rounded-xl border border-gray-200 bg-white divide-y divide-gray-100">
+                            {activity.map((entry) => (
+                              <div key={entry.id} className="px-4 py-3 flex items-start gap-3">
+                                <div className={`mt-0.5 rounded-lg p-2 ${entry.type === "login" ? "bg-green-100 text-green-700" : entry.type === "logout" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
+                                  {entry.type === "activity" ? <FiActivity size={14} /> : <FiClock size={14} />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-medium text-sm text-gray-800">{entry.action || entry.type}</p>
+                                  {entry.path && <p className="text-xs text-gray-400 truncate mt-0.5">{entry.method} {entry.path}</p>}
+                                </div>
+                                <time className="text-xs text-gray-400 whitespace-nowrap">{formatDate(entry.createdAt)}</time>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -47,6 +47,23 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // =====================================================
+  // MANAGER SESSION HEARTBEAT
+  // =====================================================
+
+  useEffect(() => {
+    if (!user || user.role?.toLowerCase() !== "manager") return undefined;
+
+    const sendHeartbeat = () => {
+      api.post("/auth/heartbeat").catch(() => {});
+    };
+
+    sendHeartbeat();
+    const interval = window.setInterval(sendHeartbeat, 45 * 1000);
+
+    return () => window.clearInterval(interval);
+  }, [user?.id, user?.role]);
+
+  // =====================================================
   // LOGIN
   // =====================================================
 
@@ -137,13 +154,19 @@ export const AuthProvider = ({ children }) => {
   // LOGOUT
   // =====================================================
 
-  const logout = () => {
-    localStorage.removeItem("orbit-token");
-    localStorage.removeItem("orbit-user");
-
-    setUser(null);
-
-    toast.success("Logged out successfully.");
+  const logout = async () => {
+    try {
+      if (localStorage.getItem("orbit-token")) {
+        await api.post("/auth/logout");
+      }
+    } catch {
+      // Even if the network is unavailable, clear the local session.
+    } finally {
+      localStorage.removeItem("orbit-token");
+      localStorage.removeItem("orbit-user");
+      setUser(null);
+      toast.success("Logged out successfully.");
+    }
   };
 
   // =====================================================

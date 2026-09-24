@@ -143,8 +143,8 @@ const AdminLayout = ({ children }) => {
     ? adminNavItems
     : managerNavItems;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate("/login");
   };
 
