@@ -26,6 +26,7 @@ import SEO from "./components/SEO";
 
 import Home from "./pages/Home";
 
+import Maintenance from "./pages/Maintenance/Maintenance";
 /* ============================================================
    CUSTOMER PAGES
 ============================================================ */
@@ -194,6 +195,7 @@ function App() {
       "/login",
       "/register",
       "/forgot-password",
+      "/maintenance"
     ].includes(location.pathname) ||
     location.pathname.startsWith("/admin");
 
@@ -238,7 +240,7 @@ function App() {
                   path="/login"
                   element={<Login />}
                 />
-
+<Route path="/maintenance" element={<Maintenance />} />
                 <Route
                   path="/register"
                   element={<Register />}
