@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { FiMail, FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
-export default function Maintenance() {
-  // Set your target reopen date here
-  const targetDate = new Date("2026-10-01T00:00:00").getTime();
+export default function Maintenance({ message, endTime }) {
+  // The countdown only renders once an admin has actually set an end time
+  // for the maintenance window — without one we just show the message.
+  const targetDate = endTime ? new Date(endTime).getTime() : null;
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -15,13 +16,14 @@ export default function Maintenance() {
   });
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    if (!targetDate) return undefined;
+
+    const tick = () => {
       const now = new Date().getTime();
       const distance = targetDate - now;
 
       if (distance < 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        clearInterval(timer);
         return;
       }
 
@@ -31,7 +33,10 @@ export default function Maintenance() {
         minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
         seconds: Math.floor((distance % (1000 * 60)) / 1000),
       });
-    }, 1000);
+    };
+
+    tick();
+    const timer = setInterval(tick, 1000);
 
     return () => clearInterval(timer);
   }, [targetDate]);

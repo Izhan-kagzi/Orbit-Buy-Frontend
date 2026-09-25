@@ -16,6 +16,7 @@ import {
   FiCheckCircle,
   FiAlertCircle,
   FiClock,
+  FiTool,
 } from "react-icons/fi";
 
 import { useAuth } from "../../hooks/useAuth";
@@ -31,6 +32,7 @@ const adminNavItems = [
   { to: "/admin/coupons", label: "Coupons", icon: FiTag },
   { to: "/admin/managers", label: "Managers", icon: FiUsers },
   { to: "/admin/flash-sale", label: "Flash Sale", icon: FiZap },
+  { to: "/admin/maintenance", label: "Maintenance", icon: FiTool },
 ];
 
 const managerNavItems = [

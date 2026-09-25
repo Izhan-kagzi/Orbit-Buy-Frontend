@@ -27,6 +27,8 @@ import SEO from "./components/SEO";
 import Home from "./pages/Home";
 
 import Maintenance from "./pages/Maintenance/Maintenance";
+import { useAuth } from "./hooks/useAuth";
+import { useMaintenanceStatus } from "./hooks/useMaintenance";
 /* ============================================================
    CUSTOMER PAGES
 ============================================================ */
@@ -187,8 +189,14 @@ const AdminReviews = lazy(
   () => import("./pages/admin/AdminReviews")
 );
 
+const AdminMaintenance = lazy(
+  () => import("./pages/admin/AdminMaintenance")
+);
+
 function App() {
   const location = useLocation();
+  const { isStaff } = useAuth();
+  const maintenance = useMaintenanceStatus();
 
   const hideLayout =
     [
@@ -198,6 +206,21 @@ function App() {
       "/maintenance"
     ].includes(location.pathname) ||
     location.pathname.startsWith("/admin");
+
+  // While maintenance is on, everyone except signed-in staff and the
+  // login page (so an admin/manager can actually sign in) sees the
+  // maintenance page instead of the normal site.
+  const blockedByMaintenance =
+    maintenance.active && !isStaff && location.pathname !== "/login";
+
+  if (blockedByMaintenance) {
+    return (
+      <Maintenance
+        message={maintenance.message}
+        endTime={maintenance.endTime}
+      />
+    );
+  }
 
   return (
     <>
@@ -544,6 +567,15 @@ function App() {
                   element={
                     <AdminRoute>
                       <AdminManagers />
+                    </AdminRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin/maintenance"
+                  element={
+                    <AdminRoute>
+                      <AdminMaintenance />
                     </AdminRoute>
                   }
                 />
