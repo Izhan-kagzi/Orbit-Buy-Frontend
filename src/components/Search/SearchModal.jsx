@@ -5,12 +5,16 @@ import { FiSearch, FiX, FiArrowUpRight } from "react-icons/fi";
 import api, { getImageUrl } from "../../services/api";
 
 const POPULAR_SEARCHES = [
-  "Shirts",
-  "T-Shirts",
+  "Shirt",
+  "T-Shirt",
   "Jeans",
   "Hoodie",
-  "Dresses",
+  "Dress",
   "Party Wear",
+  "Jumpsuit",
+  "Track Pant",
+  "Cord Set",
+  "Skirts",
 ];
 
 const SearchModal = ({ isOpen, onClose }) => {

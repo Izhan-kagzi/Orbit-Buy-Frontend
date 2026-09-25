@@ -138,10 +138,9 @@ const SearchOverlay = ({
               <div className="flex flex-wrap gap-4">
 
                 {[
-                  "Shirts",
-                  "T-Shirts",
-                  "Jeans",
+                  "Shirt",
                   "T-Shirt",
+                  "Jeans",
                   "Jacket",
                   "Dress",
                   "Cord Set",
