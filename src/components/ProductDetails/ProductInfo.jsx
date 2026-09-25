@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 
 import {
@@ -19,6 +19,7 @@ import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
 const ProductInfo = ({ product }) => {
+  const navigate = useNavigate();
   const { addToCart } = useCart();
 
   const {
@@ -158,12 +159,10 @@ const ProductInfo = ({ product }) => {
     });
 
     toast.success(
-      "Added to Cart"
-    );
-
-    toast.success(
       "Redirecting to Checkout..."
     );
+
+    navigate("/checkout");
   };
 
   return (
@@ -362,11 +361,16 @@ const ProductInfo = ({ product }) => {
             Select Size
           </h3>
 
-        <Link
+       <Link
   to="/ai-stylist"
-  className="inline-block bg-brand-primary text-white text-lg font-bold px-6 py-3 rounded-md shadow-md hover:bg-brand-primary/90 hover:scale-105 transition-transform duration-200"
+  className="inline-block bg-gradient-to-r from-[#1a1a1a] via-[#2c2c2c] to-[#1a1a1a] 
+             text-white text-lg font-semibold tracking-wide px-8 py-3 
+             rounded-full shadow-lg hover:shadow-xl 
+             hover:from-[#2c2c2c] hover:to-[#000000] 
+             border border-[#d4af37] hover:border-[#b8860b] 
+             transition-all duration-300 ease-in-out"
 >
-  Ask Ai-Stylist
+  ✨ Ask Ai-Stylist
 </Link>
         </div>
 
