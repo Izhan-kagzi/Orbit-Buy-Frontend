@@ -363,14 +363,61 @@ const ProductInfo = ({ product }) => {
 
        <Link
   to="/ai-stylist"
-  className="inline-block bg-gradient-to-r from-[#1a1a1a] via-[#2c2c2c] to-[#1a1a1a] 
-             text-white text-lg font-semibold tracking-wide px-8 py-3 
-             rounded-full shadow-lg hover:shadow-xl 
-             hover:from-[#2c2c2c] hover:to-[#000000] 
-             border border-[#d4af37] hover:border-[#b8860b] 
-             transition-all duration-300 ease-in-out"
+  className="
+    group
+    relative
+    inline-flex
+    items-center
+    justify-center
+    gap-2
+    overflow-hidden
+    rounded-full
+    border
+    border-[#C9A227]
+    bg-gradient-to-r
+    from-[#09335A]
+    via-[#0D416F]
+    to-[#09335A]
+    px-8
+    py-3.5
+    text-base
+    font-semibold
+    tracking-wide
+    text-white
+    shadow-[0_10px_30px_rgba(9,51,90,0.25)]
+    transition-all
+    duration-300
+    ease-out
+    hover:-translate-y-0.5
+    hover:border-[#E0B93F]
+    hover:shadow-[0_14px_38px_rgba(9,51,90,0.35)]
+  "
 >
-  ✨ Ask Ai-Stylist
+  {/* Premium shine */}
+  <span
+    className="
+      absolute
+      inset-y-0
+      -left-full
+      w-1/2
+      skew-x-[-20deg]
+      bg-gradient-to-r
+      from-transparent
+      via-white/20
+      to-transparent
+      transition-all
+      duration-700
+      group-hover:left-[130%]
+    "
+  />
+
+  <span className="relative z-10 flex items-center gap-2">
+    <span className="text-[#E0B93F] transition-transform duration-300 group-hover:rotate-12">
+      ✨
+    </span>
+
+    <span>Ask AI Stylist</span>
+  </span>
 </Link>
         </div>
 

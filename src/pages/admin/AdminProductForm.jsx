@@ -20,6 +20,9 @@ const SLUG_OPTIONS = [
   { value: "mens-trackpants", label: "Men's Track Pants" },
   { value: "mens-hoodies", label: "Men's Hoodies" },
   { value: "mens-jackets", label: "Men's Jackets" },
+  { value: "mens-formals", label: "Men's Formals" },
+  { value: "mens-sweatshirts", label: "Men's Sweatshirts" },
+  { value: "mens-shackets", label: "Men's Shackets" },
   { value: "women-dresses", label: "Women's Dresses" },
   { value: "women-partywear", label: "Women's Party Wear" },
   { value: "women-jeans", label: "Women's Jeans" },
@@ -28,6 +31,9 @@ const SLUG_OPTIONS = [
   { value: "women-shirts", label: "Women's Shirts" },
   { value: "women-skirts", label: "Women's Skirts" },
   { value: "women-jumpsuits", label: "Women's Jumpsuits" },
+  { value: "women-leggings", label: "Women's Leggings" },
+  { value: "women-shrugs", label: "Women's Shrugs" },
+  { value: "women-cardigans", label: "Women's Cardigans" },
 ];
 
 const BRAND_OPTIONS = [

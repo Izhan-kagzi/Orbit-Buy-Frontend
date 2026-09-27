@@ -547,10 +547,9 @@ const Footer = () => {
             </span>
 
           </div>
-
-          <span>
+          <a href="https://izhankagzi.vercel.app" target="_blank">
             Design &amp; Developed by Izhan Kagzi
-          </span>
+          </a>
 
         </div>
 
