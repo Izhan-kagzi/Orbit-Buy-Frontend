@@ -19,48 +19,165 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    let cancelled = false;
 
-    setLoading(true);
-    setProduct(null);
+    const loadProduct = async () => {
+      if (!id) {
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
 
-    api
-      .get(`/products/${id}`)
-      .then((res) => {
-        setProduct({
-          ...res.product,
-          image: getImageUrl(res.product.image),
+      try {
+        setLoading(true);
+        setProduct(null);
+        setRelated([]);
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
         });
-        return api.get(`/products/${id}/related`);
-      })
-      .then((res) => {
-        setRelated(
-          res.products.map((p) => ({
-            ...p,
-            image: getImageUrl(p.image),
-          }))
+
+        /*
+        =====================================================
+        GET PRODUCT
+        =====================================================
+        */
+
+        const productResponse = await api.get(
+          `/products/${encodeURIComponent(id)}`
         );
-      })
-      .catch(() => setProduct(null))
-      .finally(() => setLoading(false));
+
+        if (
+          !productResponse?.success ||
+          !productResponse?.product
+        ) {
+          throw new Error("Product not found.");
+        }
+
+        const productData = productResponse.product;
+
+        if (cancelled) return;
+
+        /*
+        =====================================================
+        NORMALIZE PRODUCT IMAGES
+        =====================================================
+        */
+
+        const normalizedProduct = {
+          ...productData,
+
+          image: getImageUrl(productData.image),
+
+          images: Array.isArray(productData.images)
+            ? productData.images.map(getImageUrl)
+            : productData.image
+              ? [getImageUrl(productData.image)]
+              : [],
+
+          videos: Array.isArray(productData.videos)
+            ? productData.videos.map(getImageUrl)
+            : [],
+        };
+
+        setProduct(normalizedProduct);
+
+        /*
+        =====================================================
+        GET RELATED PRODUCTS
+        =====================================================
+        */
+
+        try {
+          const relatedResponse = await api.get(
+            `/products/${encodeURIComponent(id)}/related`
+          );
+
+          if (cancelled) return;
+
+          setRelated(
+            Array.isArray(relatedResponse?.products)
+              ? relatedResponse.products.map((item) => ({
+                  ...item,
+
+                  image: getImageUrl(item.image),
+
+                  images: Array.isArray(item.images)
+                    ? item.images.map(getImageUrl)
+                    : item.image
+                      ? [getImageUrl(item.image)]
+                      : [],
+
+                  videos: Array.isArray(item.videos)
+                    ? item.videos.map(getImageUrl)
+                    : [],
+                }))
+              : []
+          );
+        } catch (relatedError) {
+          // Related products should never make
+          // the main product disappear.
+          console.warn(
+            "[ProductDetails] Related products failed:",
+            relatedError
+          );
+
+          if (!cancelled) {
+            setRelated([]);
+          }
+        }
+      } catch (error) {
+        console.error(
+          "[ProductDetails] Failed to load product:",
+          error
+        );
+
+        if (!cancelled) {
+          setProduct(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadProduct();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
+
+  /*
+  =====================================================
+  LOADING
+  =====================================================
+  */
 
   if (loading) {
     return <ProductDetailsSkeleton />;
   }
 
+  /*
+  =====================================================
+  PRODUCT NOT FOUND
+  =====================================================
+  */
+
   if (!product) {
     return (
       <section className="min-h-screen flex items-center justify-center px-6">
+        <div className="text-center max-w-md">
 
-        <div className="text-center">
-
-          <h2 className="text-4xl font-bold">
+          <h2 className="text-4xl font-bold text-brand-dark">
             Product Not Found
           </h2>
 
           <p className="text-gray-500 mt-4">
-            The product you're looking for doesn't exist.
+            The product you're looking for doesn't exist
+            or may have been removed.
           </p>
 
           <button
@@ -80,10 +197,15 @@ const ProductDetails = () => {
           </button>
 
         </div>
-
       </section>
     );
   }
+
+  /*
+  =====================================================
+  PRODUCT PAGE
+  =====================================================
+  */
 
   return (
     <section className="bg-white py-10">
@@ -91,41 +213,31 @@ const ProductDetails = () => {
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Breadcrumb */}
-
         <Breadcrumb product={product} />
 
         {/* Product */}
-
         <div className="grid lg:grid-cols-2 gap-16 mt-10">
 
-          {/* Left */}
-
+          {/* Gallery */}
           <ProductGallery product={product} />
 
-          {/* Right */}
-
+          {/* Product Information */}
           <ProductInfo product={product} />
 
         </div>
 
-                {/* Product Tabs */}
-
+        {/* Product Tabs */}
         <div className="mt-20">
-
           <ProductTabs product={product} />
-
         </div>
 
         {/* Related Products */}
-
         {related.length > 0 && (
           <div className="mt-24">
-
             <RelatedProducts
               currentProduct={product}
               products={related}
             />
-
           </div>
         )}
 
