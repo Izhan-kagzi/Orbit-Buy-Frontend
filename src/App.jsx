@@ -4,8 +4,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-import { Link } from "react-router-dom";
-import { GiAstronautHelmet } from "react-icons/gi";
+
 import {
   AnimatePresence,
   motion,
@@ -29,6 +28,7 @@ import Home from "./pages/Home";
 import Maintenance from "./pages/Maintenance/Maintenance";
 import { useAuth } from "./hooks/useAuth";
 import { useMaintenanceStatus } from "./hooks/useMaintenance";
+
 /* ============================================================
    CUSTOMER PAGES
 ============================================================ */
@@ -41,21 +41,31 @@ const ForgotPassword = lazy(
 
 const Contact = lazy(() => import("./pages/Contact"));
 const About = lazy(() => import("./pages/About"));
+
 const PrivacyPolicy = lazy(
   () => import("./pages/PrivacyPolicy")
 );
+
 const TermsConditions = lazy(
   () => import("./pages/TermsConditions")
 );
+
 const FAQs = lazy(() => import("./pages/FAQs"));
 
 const Shop = lazy(() => import("./pages/Shop"));
-const Compare = lazy(() => import("./pages/Compare"));
+
+const Compare = lazy(
+  () => import("./pages/Compare")
+);
+
 const AiStylist = lazy(
   () => import("./pages/AiStylist")
 );
 
-const Search = lazy(() => import("./pages/Search"));
+const Search = lazy(
+  () => import("./pages/Search")
+);
+
 const ProductDetails = lazy(
   () => import("./pages/ProductDetails")
 );
@@ -86,6 +96,20 @@ const MensHoodies = lazy(
 
 const MensJackets = lazy(
   () => import("./pages/MensJackets")
+);
+
+/* NEW MEN CATEGORIES */
+
+const MensFormals = lazy(
+  () => import("./pages/MensFormals")
+);
+
+const MensSweatshirts = lazy(
+  () => import("./pages/MensSweatshirts")
+);
+
+const MensShackets = lazy(
+  () => import("./pages/MensShackets")
 );
 
 /* ============================================================
@@ -124,11 +148,28 @@ const WomenJumpsuits = lazy(
   () => import("./pages/WomenJumpsuits")
 );
 
+/* NEW WOMEN CATEGORIES */
+
+const WomenLeggings = lazy(
+  () => import("./pages/WomenLeggings")
+);
+
+const WomenShrugs = lazy(
+  () => import("./pages/WomenShrugs")
+);
+
+const WomenCardigans = lazy(
+  () => import("./pages/WomenCardigans")
+);
+
 /* ============================================================
    SHOPPING
 ============================================================ */
 
-const Cart = lazy(() => import("./pages/Cart"));
+const Cart = lazy(
+  () => import("./pages/Cart")
+);
+
 const Wishlist = lazy(
   () => import("./pages/Wishlist")
 );
@@ -193,25 +234,38 @@ const AdminMaintenance = lazy(
   () => import("./pages/admin/AdminMaintenance")
 );
 
+/* ============================================================
+   APP
+============================================================ */
+
 function App() {
   const location = useLocation();
+
   const { isStaff } = useAuth();
+
   const maintenance = useMaintenanceStatus();
+
+  /* ============================================================
+     LAYOUT VISIBILITY
+  ============================================================ */
 
   const hideLayout =
     [
       "/login",
       "/register",
       "/forgot-password",
-      "/maintenance"
+      "/maintenance",
     ].includes(location.pathname) ||
     location.pathname.startsWith("/admin");
 
-  // While maintenance is on, everyone except signed-in staff and the
-  // login page (so an admin/manager can actually sign in) sees the
-  // maintenance page instead of the normal site.
+  /* ============================================================
+     MAINTENANCE MODE
+  ============================================================ */
+
   const blockedByMaintenance =
-    maintenance.active && !isStaff && location.pathname !== "/login";
+    maintenance.active &&
+    !isStaff &&
+    location.pathname !== "/login";
 
   if (blockedByMaintenance) {
     return (
@@ -246,24 +300,32 @@ function App() {
               ease: "easeInOut",
             }}
           >
-            <Suspense
-              fallback={<RouteLoader />}
-            >
+            <Suspense fallback={<RouteLoader />}>
               <Routes location={location}>
-                {/* HOME */}
+
+                {/* ==================================================
+                    HOME
+                ================================================== */}
 
                 <Route
                   path="/"
                   element={<Home />}
                 />
 
-                {/* AUTH */}
+                {/* ==================================================
+                    AUTH
+                ================================================== */}
 
                 <Route
                   path="/login"
                   element={<Login />}
                 />
-<Route path="/maintenance" element={<Maintenance />} />
+
+                <Route
+                  path="/maintenance"
+                  element={<Maintenance />}
+                />
+
                 <Route
                   path="/register"
                   element={<Register />}
@@ -271,12 +333,12 @@ function App() {
 
                 <Route
                   path="/forgot-password"
-                  element={
-                    <ForgotPassword />
-                  }
+                  element={<ForgotPassword />}
                 />
 
-                {/* MEN */}
+                {/* ==================================================
+                    MEN
+                ================================================== */}
 
                 <Route
                   path="/mens-shirts"
@@ -308,7 +370,26 @@ function App() {
                   element={<MensJackets />}
                 />
 
-                {/* WOMEN */}
+                {/* NEW MEN CATEGORIES */}
+
+                <Route
+                  path="/mens-formals"
+                  element={<MensFormals />}
+                />
+
+                <Route
+                  path="/mens-sweatshirts"
+                  element={<MensSweatshirts />}
+                />
+
+                <Route
+                  path="/mens-shackets"
+                  element={<MensShackets />}
+                />
+
+                {/* ==================================================
+                    WOMEN
+                ================================================== */}
 
                 <Route
                   path="/women-dresses"
@@ -350,7 +431,26 @@ function App() {
                   element={<WomenJumpsuits />}
                 />
 
-                {/* SHOP */}
+                {/* NEW WOMEN CATEGORIES */}
+
+                <Route
+                  path="/women-leggings"
+                  element={<WomenLeggings />}
+                />
+
+                <Route
+                  path="/women-shrugs"
+                  element={<WomenShrugs />}
+                />
+
+                <Route
+                  path="/women-cardigans"
+                  element={<WomenCardigans />}
+                />
+
+                {/* ==================================================
+                    SHOP
+                ================================================== */}
 
                 <Route
                   path="/shop"
@@ -399,12 +499,12 @@ function App() {
 
                 <Route
                   path="/product/:id"
-                  element={
-                    <ProductDetails />
-                  }
+                  element={<ProductDetails />}
                 />
 
-                {/* INFORMATION */}
+                {/* ==================================================
+                    INFORMATION
+                ================================================== */}
 
                 <Route
                   path="/contact"
@@ -418,16 +518,12 @@ function App() {
 
                 <Route
                   path="/privacy-policy"
-                  element={
-                    <PrivacyPolicy />
-                  }
+                  element={<PrivacyPolicy />}
                 />
 
                 <Route
                   path="/terms-conditions"
-                  element={
-                    <TermsConditions />
-                  }
+                  element={<TermsConditions />}
                 />
 
                 <Route
@@ -435,7 +531,9 @@ function App() {
                   element={<FAQs />}
                 />
 
-                {/* SHOPPING */}
+                {/* ==================================================
+                    SHOPPING
+                ================================================== */}
 
                 <Route
                   path="/cart"
@@ -454,12 +552,12 @@ function App() {
 
                 <Route
                   path="/order-confirmation/:orderId"
-                  element={
-                    <OrderConfirmation />
-                  }
+                  element={<OrderConfirmation />}
                 />
 
-                {/* ACCOUNT */}
+                {/* ==================================================
+                    ACCOUNT
+                ================================================== */}
 
                 <Route
                   path="/profile"
@@ -551,7 +649,9 @@ function App() {
                   }
                 />
 
-                {/* ADMIN ONLY */}
+                {/* ==================================================
+                    ADMIN ONLY
+                ================================================== */}
 
                 <Route
                   path="/admin/coupons"
@@ -579,212 +679,226 @@ function App() {
                     </AdminRoute>
                   }
                 />
-<Route
-  path="*"
-  element={
-    <div className="relative min-h-screen overflow-hidden bg-[#0b0b0b] text-white">
 
-      {/* =========================
-          BACKGROUND DETAILS
-      ========================== */}
-      <div className="pointer-events-none absolute inset-0">
+                {/* ==================================================
+                    404
+                ================================================== */}
 
-        {/* Grid */}
-        <div
-          className="absolute inset-0 opacity-[0.06]"
-          style={{
-            backgroundImage: `
-              linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)
-            `,
-            backgroundSize: "70px 70px",
-          }}
-        />
+                <Route
+                  path="*"
+                  element={
+                    <div className="relative min-h-screen overflow-hidden bg-[#0b0b0b] text-white">
 
-        {/* Glow */}
-        <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.035] blur-3xl" />
+                      {/* BACKGROUND */}
 
-        {/* Decorative circles */}
-        <div className="absolute left-[8%] top-[18%] h-2 w-2 rounded-full bg-white/40" />
-        <div className="absolute right-[12%] top-[25%] h-1.5 w-1.5 rounded-full bg-white/30" />
-        <div className="absolute bottom-[18%] left-[18%] h-1.5 w-1.5 rounded-full bg-white/30" />
-      </div>
+                      <div className="pointer-events-none absolute inset-0">
 
-      {/* =========================
-          TOP BAR
-      ========================== */}
-      <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10 lg:px-16">
+                        <div
+                          className="absolute inset-0 opacity-[0.06]"
+                          style={{
+                            backgroundImage: `
+                              linear-gradient(
+                                rgba(255,255,255,0.4) 1px,
+                                transparent 1px
+                              ),
+                              linear-gradient(
+                                90deg,
+                                rgba(255,255,255,0.4) 1px,
+                                transparent 1px
+                              )
+                            `,
+                            backgroundSize: "70px 70px",
+                          }}
+                        />
 
-        <a
-          href="/"
-          className="group flex items-center gap-3"
-        >
-          {/* Logo mark */}
-          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 transition-all duration-300 group-hover:border-white/60 group-hover:rotate-45">
-            <span className="h-2 w-2 rounded-full bg-white" />
-          </div>
+                        <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.035] blur-3xl" />
 
-          <span className="text-sm font-semibold uppercase tracking-[0.25em]">
-            Your Brand
-          </span>
-        </a>
+                        <div className="absolute left-[8%] top-[18%] h-2 w-2 rounded-full bg-white/40" />
 
-        <span className="hidden text-[10px] uppercase tracking-[0.35em] text-white/40 sm:block">
-          Error 404
-        </span>
-      </header>
+                        <div className="absolute right-[12%] top-[25%] h-1.5 w-1.5 rounded-full bg-white/30" />
 
-      {/* =========================
-          MAIN
-      ========================== */}
-      <main className="relative z-10 flex min-h-[calc(100vh-90px)] items-center justify-center px-5 pb-16 pt-8">
+                        <div className="absolute bottom-[18%] left-[18%] h-1.5 w-1.5 rounded-full bg-white/30" />
 
-        <div className="w-full max-w-[1400px]">
+                      </div>
 
-          {/* Small top label */}
-          <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-5">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
-              Lost in space
-            </span>
+                      {/* TOP BAR */}
 
-            <span className="text-[10px] uppercase tracking-[0.3em] text-white/30">
-              2026
-            </span>
-          </div>
+                      <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10 lg:px-16">
 
-          {/* =========================
-              GIANT 404
-          ========================== */}
-          <div className="relative">
+                        <a
+                          href="/"
+                          className="group flex items-center gap-3"
+                        >
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 transition-all duration-300 group-hover:border-white/60 group-hover:rotate-45">
+                            <span className="h-2 w-2 rounded-full bg-white" />
+                          </div>
 
-            <h1
-              className="
-                select-none
-                text-center
-                text-[32vw]
-                font-black
-                leading-[0.72]
-                tracking-[-0.09em]
-                text-white
-                sm:text-[30vw]
-                md:text-[27vw]
-                lg:text-[24vw]
-              "
-            >
-              404
-            </h1>
+                          <span className="text-sm font-semibold uppercase tracking-[0.25em]">
+                            Orbit Buy
+                          </span>
+                        </a>
 
-            {/* Horizontal line */}
-            <div className="absolute left-0 right-0 top-1/2 h-px bg-white/10" />
+                        <span className="hidden text-[10px] uppercase tracking-[0.35em] text-white/40 sm:block">
+                          Error 404
+                        </span>
 
-            {/* Center marker */}
-            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 bg-[#0b0b0b] px-5">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                      </header>
 
-              <span className="whitespace-nowrap text-[9px] uppercase tracking-[0.35em] text-white/50">
-                Page not found
-              </span>
-            </div>
-          </div>
+                      {/* MAIN */}
 
-          {/* =========================
-              BOTTOM CONTENT
-          ========================== */}
-          <div className="mt-12 grid grid-cols-1 gap-8 border-t border-white/10 pt-8 md:grid-cols-3 md:items-end">
+                      <main className="relative z-10 flex min-h-[calc(100vh-90px)] items-center justify-center px-5 pb-16 pt-8">
 
-            {/* Message */}
-            <div className="md:col-span-2">
-              <p className="max-w-xl text-xl font-light leading-relaxed text-white/70 sm:text-2xl">
-                Looks like you've wandered somewhere
-                that doesn't exist.
-              </p>
+                        <div className="w-full max-w-[1400px]">
 
-              <p className="mt-3 max-w-lg text-sm leading-6 text-white/35">
-                The page you're looking for may have been moved,
-                deleted, or the URL might be incorrect.
-              </p>
-            </div>
+                          <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-5">
 
-            {/* Button */}
-            <div className="flex md:justify-end">
-              <a
-                href="/"
-                className="
-                  group
-                  relative
-                  inline-flex
-                  items-center
-                  gap-5
-                  overflow-hidden
-                  rounded-full
-                  border
-                  border-white/20
-                  px-7
-                  py-4
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-[0.2em]
-                  text-white
-                  transition-all
-                  duration-500
-                  hover:border-white
-                "
-              >
+                            <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
+                              Lost in space
+                            </span>
 
-                {/* Hover background */}
-                <span
-                  className="
-                    absolute
-                    inset-0
-                    -translate-x-full
-                    bg-white
-                    transition-transform
-                    duration-500
-                    group-hover:translate-x-0
-                  "
+                            <span className="text-[10px] uppercase tracking-[0.3em] text-white/30">
+                              2026
+                            </span>
+
+                          </div>
+
+                          {/* GIANT 404 */}
+
+                          <div className="relative">
+
+                            <h1
+                              className="
+                                select-none
+                                text-center
+                                text-[32vw]
+                                font-black
+                                leading-[0.72]
+                                tracking-[-0.09em]
+                                text-white
+                                sm:text-[30vw]
+                                md:text-[27vw]
+                                lg:text-[24vw]
+                              "
+                            >
+                              404
+                            </h1>
+
+                            <div className="absolute left-0 right-0 top-1/2 h-px bg-white/10" />
+
+                            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 bg-[#0b0b0b] px-5">
+
+                              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+
+                              <span className="whitespace-nowrap text-[9px] uppercase tracking-[0.35em] text-white/50">
+                                Page not found
+                              </span>
+
+                            </div>
+
+                          </div>
+
+                          {/* BOTTOM CONTENT */}
+
+                          <div className="mt-12 grid grid-cols-1 gap-8 border-t border-white/10 pt-8 md:grid-cols-3 md:items-end">
+
+                            <div className="md:col-span-2">
+
+                              <p className="max-w-xl text-xl font-light leading-relaxed text-white/70 sm:text-2xl">
+                                Looks like you've wandered somewhere
+                                that doesn't exist.
+                              </p>
+
+                              <p className="mt-3 max-w-lg text-sm leading-6 text-white/35">
+                                The page you're looking for may have been moved,
+                                deleted, or the URL might be incorrect.
+                              </p>
+
+                            </div>
+
+                            <div className="flex md:justify-end">
+
+                              <a
+                                href="/"
+                                className="
+                                  group
+                                  relative
+                                  inline-flex
+                                  items-center
+                                  gap-5
+                                  overflow-hidden
+                                  rounded-full
+                                  border
+                                  border-white/20
+                                  px-7
+                                  py-4
+                                  text-xs
+                                  font-semibold
+                                  uppercase
+                                  tracking-[0.2em]
+                                  text-white
+                                  transition-all
+                                  duration-500
+                                  hover:border-white
+                                "
+                              >
+
+                                <span
+                                  className="
+                                    absolute
+                                    inset-0
+                                    -translate-x-full
+                                    bg-white
+                                    transition-transform
+                                    duration-500
+                                    group-hover:translate-x-0
+                                  "
+                                />
+
+                                <span className="relative z-10 transition-colors duration-500 group-hover:text-black">
+                                  Back Home
+                                </span>
+
+                                <span className="relative z-10 text-lg transition-all duration-500 group-hover:translate-x-1 group-hover:text-black">
+                                  →
+                                </span>
+
+                              </a>
+
+                            </div>
+
+                          </div>
+
+                          {/* FOOTER INFO */}
+
+                          <div className="mt-16 flex flex-col justify-between gap-4 text-[9px] uppercase tracking-[0.3em] text-white/25 sm:flex-row">
+
+                            <span>
+                              404 — Nothing here
+                            </span>
+
+                            <span>
+                              Return to the beginning
+                            </span>
+
+                          </div>
+
+                        </div>
+
+                      </main>
+
+                      {/* SIDE DECORATION */}
+
+                      <div className="pointer-events-none absolute left-5 top-1/2 hidden -translate-y-1/2 -rotate-90 text-[9px] uppercase tracking-[0.5em] text-white/20 lg:block">
+                        System / Navigation / 404
+                      </div>
+
+                      <div className="pointer-events-none absolute right-5 top-1/2 hidden -translate-y-1/2 rotate-90 text-[9px] uppercase tracking-[0.5em] text-white/20 lg:block">
+                        Error / Not Found
+                      </div>
+
+                    </div>
+                  }
                 />
-
-                <span className="relative z-10 transition-colors duration-500 group-hover:text-black">
-                  Back Home
-                </span>
-
-                <span className="relative z-10 text-lg transition-all duration-500 group-hover:translate-x-1 group-hover:text-black">
-                  →
-                </span>
-
-              </a>
-            </div>
-          </div>
-
-          {/* =========================
-              FOOTER INFO
-          ========================== */}
-          <div className="mt-16 flex flex-col justify-between gap-4 text-[9px] uppercase tracking-[0.3em] text-white/25 sm:flex-row">
-            <span>404 — Nothing here</span>
-
-            <span>
-              Return to the beginning
-            </span>
-          </div>
-
-        </div>
-      </main>
-
-      {/* =========================
-          SIDE DECORATION
-      ========================== */}
-      <div className="pointer-events-none absolute left-5 top-1/2 hidden -translate-y-1/2 -rotate-90 text-[9px] uppercase tracking-[0.5em] text-white/20 lg:block">
-        System / Navigation / 404
-      </div>
-
-      <div className="pointer-events-none absolute right-5 top-1/2 hidden -translate-y-1/2 rotate-90 text-[9px] uppercase tracking-[0.5em] text-white/20 lg:block">
-        Error / Not Found
-      </div>
-
-    </div>
-  }
-/>
 
               </Routes>
             </Suspense>

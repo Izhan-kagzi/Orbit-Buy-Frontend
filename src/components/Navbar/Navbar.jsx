@@ -72,6 +72,27 @@ const mensMenu = [
       "https://i.pinimg.com/736x/65/3f/b6/653fb6d7107dea352dd89441460ca993.jpg",
     desc: "Stylish outerwear",
   },
+  {
+  name: "Formals",
+  path: "/mens-formals",
+  image:
+    "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=500&q=80",
+  desc: "Sharp styles for work & occasions",
+},
+{
+  name: "Sweatshirts",
+  path: "/mens-sweatshirts",
+  image:
+    "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=500&q=80",
+  desc: "Comfortable everyday layers",
+},
+{
+  name: "Shackets",
+  path: "/mens-shackets",
+  image:
+    "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=500&q=80",
+  desc: "Modern shirt-jacket layering",
+},
 ];
 
 const womensMenu = [
@@ -125,6 +146,27 @@ const womensMenu = [
       "https://images.pexels.com/photos/24724191/pexels-photo-24724191.jpeg",
     desc: "Sharp workplace fits",
   },
+  {
+  name: "Leggings",
+  path: "/women-leggings",
+  image:
+    "https://images.unsplash.com/photo-1506629905607-d9c297d37d5c?auto=format&fit=crop&w=500&q=80",
+  desc: "Comfortable everyday essentials",
+},
+{
+  name: "Shrugs",
+  path: "/women-shrugs",
+  image:
+    "https://images.unsplash.com/photo-1591369822096-ffd140ec948f?auto=format&fit=crop&w=500&q=80",
+  desc: "Easy layering with effortless style",
+},
+{
+  name: "Cardigans",
+  path: "/women-cardigans",
+  image:
+    "https://images.unsplash.com/photo-1618932260643-eee4a2f652a6?auto=format&fit=crop&w=500&q=80",
+  desc: "Soft knit layers for every season",
+},
 ];
 /* ============================================================
    Shop MENU
