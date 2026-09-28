@@ -150,14 +150,14 @@ const womensMenu = [
   name: "Leggings",
   path: "/women-leggings",
   image:
-    "https://images.unsplash.com/photo-1506629905607-d9c297d37d5c?auto=format&fit=crop&w=500&q=80",
+    "https://images.unsplash.com/photo-1789110853564-23a6b1d206e7?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
   desc: "Comfortable everyday essentials",
 },
 {
   name: "Shrugs",
   path: "/women-shrugs",
   image:
-    "https://images.unsplash.com/photo-1591369822096-ffd140ec948f?auto=format&fit=crop&w=500&q=80",
+    "https://i.pinimg.com/1200x/33/28/72/332872c99472028bc80e56052ad345d6.jpg",
   desc: "Easy layering with effortless style",
 },
 {

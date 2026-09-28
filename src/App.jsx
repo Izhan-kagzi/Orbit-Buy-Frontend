@@ -262,9 +262,16 @@ function App() {
      MAINTENANCE MODE
   ============================================================ */
 
+  // Maintenance applies to the customer storefront only. Keep /admin
+  // reachable so an admin can still sign in, inspect the dashboard, and
+  // switch maintenance back off after a hard refresh. AdminRoute/StaffRoute
+  // still enforce authorization for those pages.
+  const isAdminArea = location.pathname.startsWith("/admin");
+
   const blockedByMaintenance =
     maintenance.active &&
     !isStaff &&
+    !isAdminArea &&
     location.pathname !== "/login";
 
   if (blockedByMaintenance) {

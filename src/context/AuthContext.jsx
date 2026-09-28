@@ -1,236 +1,658 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import toast from "react-hot-toast";
+  import {
+    createContext,
+    useContext,
+    useEffect,
+    useState,
+  } from "react";
 
-import api from "../services/api";
+  import toast from "react-hot-toast";
 
-const AuthContext = createContext();
+  import api from "../services/api";
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  /*
+  =========================================================
+  AUTH CONTEXT
+  =========================================================
+  */
 
-  // =====================================================
-  // CHECK EXISTING LOGIN
-  // =====================================================
+  const AuthContext = createContext(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("orbit-token");
+  /*
+  =========================================================
+  AUTH PROVIDER
+  =========================================================
+  */
 
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+  export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    api
-      .get("/auth/me")
-      .then((res) => {
-        if (!res?.success || !res?.user) {
-          throw new Error("Session expired.");
-        }
+    /*
+    =======================================================
+    STORE USER CONSISTENTLY
+    =======================================================
+    */
 
-        setUser(res.user);
-        localStorage.setItem("orbit-user", JSON.stringify(res.user));
-      })
-      .catch(() => {
-        localStorage.removeItem("orbit-token");
-        localStorage.removeItem("orbit-user");
+    const setAuthenticatedUser = (nextUser) => {
+      if (!nextUser) {
         setUser(null);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
 
-  // =====================================================
-  // MANAGER SESSION HEARTBEAT
-  // =====================================================
+        localStorage.removeItem(
+          "orbit-user"
+        );
 
-  useEffect(() => {
-    if (!user || user.role?.toLowerCase() !== "manager") return undefined;
+        return null;
+      }
 
-    const sendHeartbeat = () => {
-      api.post("/auth/heartbeat").catch(() => {});
+      const normalizedUser = {
+        ...nextUser,
+
+        id:
+          nextUser.id ||
+          nextUser._id ||
+          undefined,
+      };
+
+      setUser(normalizedUser);
+
+      localStorage.setItem(
+        "orbit-user",
+        JSON.stringify(normalizedUser)
+      );
+
+      return normalizedUser;
     };
 
-    sendHeartbeat();
-    const interval = window.setInterval(sendHeartbeat, 45 * 1000);
+    /*
+    =======================================================
+    REFRESH CURRENT USER
+    =======================================================
+    */
 
-    return () => window.clearInterval(interval);
-  }, [user?.id, user?.role]);
+    const refreshUser = async () => {
+      const token =
+        localStorage.getItem(
+          "orbit-token"
+        );
 
-  // =====================================================
-  // LOGIN
-  // =====================================================
-
-  const login = async ({ email, password }) => {
-    const cleanEmail = String(email || "").trim().toLowerCase();
-    const cleanPassword = String(password || "");
-
-    if (!cleanEmail || !cleanPassword) {
-      throw new Error("Email and password are required.");
-    }
-
-    const res = await api.post(
-      "/auth/login",
-      {
-        email: cleanEmail,
-        password: cleanPassword,
-      },
-      {
-        auth: false,
+      if (!token) {
+        setAuthenticatedUser(null);
+        return null;
       }
+
+      try {
+        const res = await api.get(
+          "/auth/me"
+        );
+
+        if (
+          !res?.success ||
+          !res?.user
+        ) {
+          throw new Error(
+            res?.message ||
+              "Session expired."
+          );
+        }
+
+        return setAuthenticatedUser(
+          res.user
+        );
+      } catch (error) {
+        /*
+        ---------------------------------------------------
+        If the backend rejects the token,
+        clear the local authentication state.
+        ---------------------------------------------------
+        */
+
+        if (
+          error?.status === 401
+        ) {
+          localStorage.removeItem(
+            "orbit-token"
+          );
+
+          setAuthenticatedUser(
+            null
+          );
+        }
+
+        throw error;
+      }
+    };
+
+    /*
+    =======================================================
+    CHECK EXISTING LOGIN
+    =======================================================
+    */
+
+    useEffect(() => {
+      let mounted = true;
+
+      const checkSession =
+        async () => {
+          const token =
+            localStorage.getItem(
+              "orbit-token"
+            );
+
+          if (!token) {
+            if (mounted) {
+              setLoading(false);
+            }
+
+            return;
+          }
+
+          try {
+            await refreshUser();
+          } catch (error) {
+            console.error(
+              "Auth session refresh failed:",
+              error
+            );
+
+            if (mounted) {
+              localStorage.removeItem(
+                "orbit-token"
+              );
+
+              localStorage.removeItem(
+                "orbit-user"
+              );
+
+              setUser(null);
+            }
+          } finally {
+            if (mounted) {
+              setLoading(false);
+            }
+          }
+        };
+
+      checkSession();
+
+      return () => {
+        mounted = false;
+      };
+    }, []);
+
+    /*
+    =======================================================
+    MANAGER SESSION HEARTBEAT
+    =======================================================
+    */
+
+    useEffect(() => {
+      if (
+        !user ||
+        user.role?.toLowerCase() !==
+          "manager"
+      ) {
+        return undefined;
+      }
+
+      const sendHeartbeat =
+        () => {
+          api
+            .post("/auth/heartbeat")
+            .catch(() => {});
+        };
+
+      /*
+      Send immediately.
+      */
+
+      sendHeartbeat();
+
+      /*
+      Then every 45 seconds.
+      */
+
+      const interval =
+        window.setInterval(
+          sendHeartbeat,
+          45 * 1000
+        );
+
+      return () => {
+        window.clearInterval(
+          interval
+        );
+      };
+    }, [
+      user?.id,
+      user?.role,
+    ]);
+
+    /*
+    =======================================================
+    LOGIN
+    =======================================================
+    */
+
+    const login = async ({
+      email,
+      password,
+    }) => {
+      const cleanEmail =
+        String(email || "")
+          .trim()
+          .toLowerCase();
+
+      const cleanPassword =
+        String(password || "");
+
+      if (
+        !cleanEmail ||
+        !cleanPassword
+      ) {
+        throw new Error(
+          "Email and password are required."
+        );
+      }
+
+      const res =
+        await api.post(
+          "/auth/login",
+          {
+            email: cleanEmail,
+            password:
+              cleanPassword,
+          },
+          {
+            auth: false,
+          }
+        );
+
+      if (!res?.success) {
+        throw new Error(
+          res?.message ||
+            "Invalid email or password."
+        );
+      }
+
+      if (
+        !res?.token ||
+        !res?.user
+      ) {
+        throw new Error(
+          "Login response is incomplete. Please try again."
+        );
+      }
+
+      /*
+      ---------------------------------------------------
+      Clear previous session.
+      ---------------------------------------------------
+      */
+
+      localStorage.removeItem(
+        "orbit-token"
+      );
+
+      localStorage.removeItem(
+        "orbit-user"
+      );
+
+      /*
+      ---------------------------------------------------
+      Save new session.
+      ---------------------------------------------------
+      */
+
+      localStorage.setItem(
+        "orbit-token",
+        res.token
+      );
+
+      const authenticatedUser =
+        setAuthenticatedUser(
+          res.user
+        );
+
+      return authenticatedUser;
+    };
+
+    /*
+    =======================================================
+    REGISTER
+    =======================================================
+    */
+
+    const register = async (
+      formData
+    ) => {
+      const name =
+        `${formData?.firstName || ""} ${
+          formData?.lastName || ""
+        }`.trim();
+
+      const res =
+        await api.post(
+          "/auth/register",
+          {
+            name,
+
+            email:
+              formData?.email,
+
+            password:
+              formData?.password,
+
+            mobile:
+              formData?.mobile || "",
+          },
+          {
+            auth: false,
+          }
+        );
+
+      if (!res?.success) {
+        throw new Error(
+          res?.message ||
+            "Registration failed."
+        );
+      }
+
+      if (
+        !res?.token ||
+        !res?.user
+      ) {
+        throw new Error(
+          "Registration response is incomplete. Please try again."
+        );
+      }
+
+      localStorage.setItem(
+        "orbit-token",
+        res.token
+      );
+
+      const authenticatedUser =
+        setAuthenticatedUser(
+          res.user
+        );
+
+      return authenticatedUser;
+    };
+
+    /*
+    =======================================================
+    LOGOUT
+    =======================================================
+    */
+
+    const logout = async () => {
+      try {
+        const token =
+          localStorage.getItem(
+            "orbit-token"
+          );
+
+        if (token) {
+          await api.post(
+            "/auth/logout"
+          );
+        }
+      } catch (error) {
+        /*
+        ---------------------------------------------------
+        Always clear local session even if
+        backend logout fails.
+        ---------------------------------------------------
+        */
+
+        console.error(
+          "Logout request failed:",
+          error
+        );
+      } finally {
+        localStorage.removeItem(
+          "orbit-token"
+        );
+
+        localStorage.removeItem(
+          "orbit-user"
+        );
+
+        setUser(null);
+
+        toast.success(
+          "Logged out successfully."
+        );
+      }
+    };
+
+    /*
+    =======================================================
+    UPDATE PROFILE
+    =======================================================
+    */
+
+    const updateProfile =
+      async (data) => {
+        const res =
+          await api.put(
+            "/auth/me",
+            data
+          );
+
+        if (
+          !res?.success ||
+          !res?.user
+        ) {
+          throw new Error(
+            res?.message ||
+              "Couldn't update profile."
+          );
+        }
+
+        const updatedUser =
+          setAuthenticatedUser(
+            res.user
+          );
+
+        return updatedUser;
+      };
+
+    /*
+    =======================================================
+    UPDATE PROFILE PICTURE
+    =======================================================
+    */
+
+    const updateProfilePicture =
+      async (file) => {
+        if (!file) {
+          throw new Error(
+            "Please select a profile picture."
+          );
+        }
+
+        const formData =
+          new FormData();
+
+        formData.append(
+          "profilePicture",
+          file
+        );
+
+        const res =
+          await api.put(
+            "/auth/profile-picture",
+            formData,
+            {
+              isFormData: true,
+            }
+          );
+
+        if (
+          !res?.success ||
+          !res?.user
+        ) {
+          throw new Error(
+            res?.message ||
+              "Couldn't update profile picture."
+          );
+        }
+
+        const updatedUser =
+          setAuthenticatedUser(
+            res.user
+          );
+
+        return updatedUser;
+      };
+
+    /*
+    =======================================================
+    REMOVE PROFILE PICTURE
+    =======================================================
+    */
+
+    const removeProfilePicture =
+      async () => {
+        const res =
+          await api.delete(
+            "/auth/profile-picture"
+          );
+
+        if (
+          !res?.success ||
+          !res?.user
+        ) {
+          throw new Error(
+            res?.message ||
+              "Couldn't remove profile picture."
+          );
+        }
+
+        const updatedUser =
+          setAuthenticatedUser(
+            res.user
+          );
+
+        return updatedUser;
+      };
+
+    /*
+    =======================================================
+    AUTH HELPERS
+    =======================================================
+    */
+
+    const isAuthenticated =
+      Boolean(user);
+
+    const isAdmin =
+      user?.role?.toLowerCase() ===
+      "admin";
+
+    const isManager =
+      user?.role?.toLowerCase() ===
+      "manager";
+
+    const isStaff =
+      isAdmin || isManager;
+
+    /*
+    =======================================================
+    CONTEXT VALUE
+    =======================================================
+    */
+
+    const value = {
+      /*
+      User
+      */
+      user,
+
+      /*
+      Loading
+      */
+      loading,
+
+      /*
+      Authentication actions
+      */
+      login,
+      register,
+      logout,
+
+      /*
+      Profile actions
+      */
+      updateProfile,
+      updateProfilePicture,
+      removeProfilePicture,
+
+      /*
+      Session
+      */
+      refreshUser,
+
+      /*
+      Role helpers
+      */
+      isAuthenticated,
+      isAdmin,
+      isManager,
+      isStaff,
+    };
+
+    /*
+    =======================================================
+    PROVIDER
+    =======================================================
+    */
+
+    return (
+      <AuthContext.Provider
+        value={value}
+      >
+        {!loading &&
+          children}
+      </AuthContext.Provider>
     );
-
-    // IMPORTANT:
-    // api.js returns { success:false, message }
-    // instead of throwing on backend errors.
-    if (!res?.success) {
-      throw new Error(res?.message || "Invalid email or password.");
-    }
-
-    if (!res.token || !res.user) {
-      throw new Error("Login response is incomplete. Please try again.");
-    }
-
-    // Clear any old session first
-    localStorage.removeItem("orbit-token");
-    localStorage.removeItem("orbit-user");
-
-    // Save new session
-    localStorage.setItem("orbit-token", res.token);
-    localStorage.setItem("orbit-user", JSON.stringify(res.user));
-
-    setUser(res.user);
-
-    return res.user;
   };
 
-  // =====================================================
-  // REGISTER
-  // =====================================================
+  /*
+  =========================================================
+  useAuth HOOK
+  =========================================================
+  */
 
-  const register = async (formData) => {
-    const name = `${formData.firstName || ""} ${
-      formData.lastName || ""
-    }`.trim();
+  export const useAuth = () => {
+    const context =
+      useContext(
+        AuthContext
+      );
 
-    const res = await api.post(
-      "/auth/register",
-      {
-        name,
-        email: formData.email,
-        password: formData.password,
-        mobile: formData.mobile,
-      },
-      {
-        auth: false,
-      }
-    );
-
-    if (!res?.success) {
-      throw new Error(res?.message || "Registration failed.");
-    }
-
-    if (!res.token || !res.user) {
+    if (!context) {
       throw new Error(
-        "Registration response is incomplete. Please try again."
+        "useAuth must be used inside an AuthProvider."
       );
     }
 
-    localStorage.setItem("orbit-token", res.token);
-    localStorage.setItem("orbit-user", JSON.stringify(res.user));
-
-    setUser(res.user);
-
-    return res.user;
+    return context;
   };
 
-  // =====================================================
-  // LOGOUT
-  // =====================================================
+  /*
+  =========================================================
+  BACKWARD-COMPATIBLE HOOK NAME
+  =========================================================
+  */
 
-  const logout = async () => {
-    try {
-      if (localStorage.getItem("orbit-token")) {
-        await api.post("/auth/logout");
-      }
-    } catch {
-      // Even if the network is unavailable, clear the local session.
-    } finally {
-      localStorage.removeItem("orbit-token");
-      localStorage.removeItem("orbit-user");
-      setUser(null);
-      toast.success("Logged out successfully.");
-    }
-  };
+  export const useAuthContext =
+    useAuth;
 
-  // =====================================================
-  // UPDATE PROFILE
-  // =====================================================
+  /*
+  =========================================================
+  DEFAULT EXPORT
+  =========================================================
+  */
 
-  const updateProfile = async (data) => {
-    const res = await api.put("/auth/me", data);
-
-    if (!res?.success || !res?.user) {
-      throw new Error(res?.message || "Couldn't update profile.");
-    }
-
-    setUser(res.user);
-
-    localStorage.setItem(
-      "orbit-user",
-      JSON.stringify(res.user)
-    );
-
-    toast.success("Profile updated.");
-
-    return res.user;
-  };
-
-  // =====================================================
-  // AUTH HELPERS
-  // =====================================================
-
-  const isAuthenticated = Boolean(user);
-
-  const isAdmin = user?.role?.toLowerCase() === "admin";
-
-  const isManager =
-    user?.role?.toLowerCase() === "manager";
-
-  const isStaff = isAdmin || isManager;
-
-  const value = {
-    user,
-    loading,
-
-    login,
-    register,
-    logout,
-    updateProfile,
-
-    isAuthenticated,
-    isAdmin,
-    isManager,
-    isStaff,
-  };
-
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
-};
-
-// =====================================================
-// HOOK
-// =====================================================
-
-export const useAuthContext = () => useContext(AuthContext);
-
-export default AuthContext;
+  export default AuthContext;

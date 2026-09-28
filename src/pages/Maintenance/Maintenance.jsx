@@ -22,8 +22,10 @@ export default function Maintenance({ message, endTime }) {
       const now = new Date().getTime();
       const distance = targetDate - now;
 
-      if (distance < 0) {
+      if (distance <= 0) {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        // The parent hook will re-check maintenance status at the exact
+        // end boundary and restore the storefront automatically.
         return;
       }
 
