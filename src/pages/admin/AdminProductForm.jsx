@@ -285,7 +285,7 @@ const AdminProductForm = () => {
       }
 
       if (file.size > MAX_VIDEO_SIZE) {
-        toast.error(`${file.name}: Maximum video size is 50MB.`);
+        toast.error(`${file.name}: Maximum video size is 100MB.`);
         continue;
       }
 
@@ -535,7 +535,7 @@ const AdminProductForm = () => {
                 </p>
 
                 <p className="text-xs text-gray-400 mt-2">
-                  Select multiple JPG, PNG or WEBP images
+                  Select multiple JPG, PNG, WEBP or AVIF images
                 </p>
 
                 <p className="text-xs text-gray-400 mt-1">
@@ -547,7 +547,7 @@ const AdminProductForm = () => {
             <input
               id="product-images"
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/jpg"
+              accept="image/jpeg,image/png,image/webp,image/jpg,image/avif"
               multiple
               onChange={handleImageChange}
               className="hidden"
