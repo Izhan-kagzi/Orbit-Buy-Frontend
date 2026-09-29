@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
-import { getImageUrl } from "../../services/api";
+import ProductMedia from "../ProductMedia/ProductMedia";
 
 const BestSellerCard = ({ product }) => {
   const navigate = useNavigate();
@@ -94,20 +94,10 @@ const BestSellerCard = ({ product }) => {
         "
         onClick={openProduct}
       >
-        <img
-          src={getImageUrl(product.image)}
+        <ProductMedia
+          product={product}
           alt={product.name}
-          loading="lazy"
-          className="
-            w-full
-            h-[320px]
-            sm:h-[340px]
-            object-cover
-            transition-transform
-            duration-700
-            ease-out
-            group-hover:scale-105
-          "
+          className="w-full h-[320px] sm:h-[340px] object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
 
         {/* IMAGE OVERLAY */}

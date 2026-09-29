@@ -1,7 +1,7 @@
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
-import { getImageUrl } from "../../services/api";
+import ProductMedia from "../ProductMedia/ProductMedia";
 
 const WishlistCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -28,8 +28,8 @@ const WishlistCard = ({ product }) => {
       {/* Product Image */}
       <div className="relative overflow-hidden">
 
-        <img
-          src={getImageUrl(product.image)}
+        <ProductMedia
+          product={product}
           alt={product.name}
           className="w-full h-96 object-cover group-hover:scale-105 transition duration-500"
         />

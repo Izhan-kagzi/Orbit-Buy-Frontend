@@ -6,7 +6,7 @@ import { FiHeart, FiShoppingCart, FiCheck, FiBarChart2 } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 import { useCompare } from "../../context/CompareContext";
-import { getImageUrl } from "../../services/api";
+import ProductMedia from "../ProductMedia/ProductMedia";
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
@@ -70,14 +70,16 @@ const ProductCard = ({ product }) => {
             Limited Stock
           </span>
         )}
-        <img
-          src={getImageUrl(product.image)}
-          alt={product.name}
+        <div
           onClick={() => navigate(`/product/${product.id}`)}
-          className={`w-full h-96 object-cover group-hover:scale-110 transition duration-500 cursor-pointer ${
-            isOutOfStock ? "grayscale opacity-60" : ""
-          }`}
-        />
+          className="cursor-pointer"
+        >
+          <ProductMedia
+            product={product}
+            dimmed={isOutOfStock}
+            className="w-full h-96 object-cover group-hover:scale-110 transition duration-500"
+          />
+        </div>
         <button
           onClick={handleToggleWishlist}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}

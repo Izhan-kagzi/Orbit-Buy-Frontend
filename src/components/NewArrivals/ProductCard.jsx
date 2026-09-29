@@ -16,7 +16,7 @@ import toast from "react-hot-toast";
 import { useCart } from "../../context/CartContext";
 import { useWishlist } from "../../context/WishlistContext";
 
-import { getImageUrl } from "../../services/api";
+import ProductMedia from "../ProductMedia/ProductMedia";
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
@@ -152,25 +152,11 @@ const ProductCard = ({ product }) => {
         "
         onClick={openProduct}
       >
-        <img
-          src={getImageUrl(
-            product.image
-          )}
-          alt={
-            product.name ||
-            "Orbit Buy product"
-          }
-          loading="lazy"
-          className="
-            h-[320px]
-            w-full
-            object-cover
-            transition-transform
-            duration-700
-            ease-out
-            group-hover:scale-[1.06]
-            sm:h-[340px]
-          "
+        <ProductMedia
+          product={product}
+          alt={product.name || "Orbit Buy product"}
+          dimmed={isOutOfStock}
+          className="h-[320px] w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06] sm:h-[340px]"
         />
 
         {/* ==================================================
