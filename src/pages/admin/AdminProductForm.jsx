@@ -11,7 +11,7 @@ import {
 import toast from "react-hot-toast";
 
 import AdminLayout from "../../components/Admin/AdminLayout";
-import api, { getImageUrl } from "../../services/api";
+import api, { getImageUrl, getVideoUrl } from "../../services/api";
 
 const SLUG_OPTIONS = [
   { value: "mens-shirts", label: "Men's Shirts" },
@@ -64,6 +64,7 @@ const ALLOWED_IMAGE_TYPES = [
   "image/png",
   "image/webp",
   "image/jpg",
+  "image/avif",
 ];
 
 const ALLOWED_VIDEO_TYPES = [
@@ -74,6 +75,27 @@ const ALLOWED_VIDEO_TYPES = [
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+
+const IMAGE_EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".avif",
+];
+
+const VIDEO_EXTENSIONS = [
+  ".mp4",
+  ".webm",
+  ".mov",
+];
+
+const hasAllowedExtension = (file, extensions) => {
+  const name = String(file?.name || "").toLowerCase();
+  return extensions.some((extension) =>
+    name.endsWith(extension)
+  );
+};
 
 const emptyForm = {
   name: "",
@@ -144,9 +166,12 @@ const AdminProductForm = () => {
               ? [p.image]
               : [];
 
-        const normalizedVideos = Array.isArray(p.videos)
-          ? p.videos
-          : [];
+        const normalizedVideos =
+          Array.isArray(p.videos) && p.videos.length > 0
+            ? p.videos
+            : p.video
+              ? [p.video]
+              : [];
 
         setForm({
           name: p.name || "",
@@ -228,8 +253,15 @@ const AdminProductForm = () => {
     const validFiles = [];
 
     for (const file of filesToAdd) {
-      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-        toast.error(`${file.name}: JPG, PNG or WEBP only.`);
+      const validImageType =
+        ALLOWED_IMAGE_TYPES.includes(
+          String(file.type || "").toLowerCase()
+        ) || hasAllowedExtension(file, IMAGE_EXTENSIONS);
+
+      if (!validImageType) {
+        toast.error(
+          `${file.name}: JPG, JPEG, PNG, WEBP or AVIF only.`
+        );
         continue;
       }
 
@@ -279,8 +311,15 @@ const AdminProductForm = () => {
     const validFiles = [];
 
     for (const file of filesToAdd) {
-      if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
-        toast.error(`${file.name}: MP4, WebM or MOV only.`);
+      const validVideoType =
+        ALLOWED_VIDEO_TYPES.includes(
+          String(file.type || "").toLowerCase()
+        ) || hasAllowedExtension(file, VIDEO_EXTENSIONS);
+
+      if (!validVideoType) {
+        toast.error(
+          `${file.name}: MP4, WebM or MOV only.`
+        );
         continue;
       }
 
@@ -427,6 +466,14 @@ const AdminProductForm = () => {
         fd.append("videos", item.file);
       });
 
+      if (
+        imageFiles.length === 0 &&
+        existingImages.length === 0
+      ) {
+        toast.error("Please keep or upload at least one image.");
+        return;
+      }
+
       if (isEdit) {
         await api.put(`/products/${id}`, fd, {
           isFormData: true,
@@ -443,7 +490,12 @@ const AdminProductForm = () => {
 
       navigate("/admin/products");
     } catch (error) {
-      toast.error(error.message || "Couldn't save product.");
+      const message =
+        error?.response?.message ||
+        error?.message ||
+        "Couldn't save product.";
+
+      toast.error(message);
     } finally {
       setSaving(false);
     }
@@ -669,7 +721,7 @@ const AdminProductForm = () => {
                     className="relative rounded-xl overflow-hidden bg-black"
                   >
                     <video
-                      src={getImageUrl(video)}
+                      src={getVideoUrl(video)}
                       controls
                       playsInline
                       preload="metadata"

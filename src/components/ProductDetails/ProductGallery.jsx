@@ -1,4 +1,3 @@
-
 import {
   useEffect,
   useMemo,
@@ -16,34 +15,116 @@ import {
   FiCheck,
 } from "react-icons/fi";
 
-import { getImageUrl } from "../../services/api";
+import {
+  getImageUrl,
+  getVideoUrl,
+} from "../../services/api";
+
+const normalizeMediaValue = (value) => {
+  if (!value) return "";
+
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (typeof value === "object") {
+    return (
+      value.url ||
+      value.path ||
+      value.src ||
+      value.location ||
+      ""
+    ).toString().trim();
+  }
+
+  return "";
+};
+
+const uniqueMedia = (items) => {
+  return [
+    ...new Set(
+      items
+        .map(normalizeMediaValue)
+        .filter(Boolean)
+    ),
+  ];
+};
 
 const ProductGallery = ({ product }) => {
-  const images =
-    Array.isArray(product?.images) &&
-    product.images.length > 0
-      ? product.images
-      : product?.image
-        ? [product.image]
-        : [];
+  /*
+   * ============================================================
+   * NORMALIZE IMAGES
+   * Supports:
+   *
+   * product.image
+   * product.images[]
+   * { url: "..." }
+   * { path: "..." }
+   * { src: "..." }
+   * { location: "..." }
+   * ============================================================
+   */
 
-  const videos = Array.isArray(product?.videos)
-    ? product.videos
-    : [];
+  const images = useMemo(() => {
+    return uniqueMedia([
+      ...(Array.isArray(product?.images)
+        ? product.images
+        : []),
 
-  const media = useMemo(
-    () => [
+      product?.image,
+    ]);
+  }, [
+    product?.images,
+    product?.image,
+  ]);
+
+  /*
+   * ============================================================
+   * NORMALIZE VIDEOS
+   *
+   * Supports:
+   *
+   * product.video
+   * product.videos[]
+   * { url: "..." }
+   * { path: "..." }
+   * { src: "..." }
+   * { location: "..." }
+   * ============================================================
+   */
+
+  const videos = useMemo(() => {
+    return uniqueMedia([
+      ...(Array.isArray(product?.videos)
+        ? product.videos
+        : []),
+
+      product?.video,
+    ]);
+  }, [
+    product?.videos,
+    product?.video,
+  ]);
+
+  /*
+   * ============================================================
+   * COMBINED MEDIA
+   * ============================================================
+   */
+
+  const media = useMemo(() => {
+    return [
       ...images.map((src) => ({
         type: "image",
         src,
       })),
+
       ...videos.map((src) => ({
         type: "video",
         src,
       })),
-    ],
-    [images, videos]
-  );
+    ];
+  }, [images, videos]);
 
   const [selectedIndex, setSelectedIndex] =
     useState(0);
@@ -51,10 +132,69 @@ const ProductGallery = ({ product }) => {
   const [zoomOpen, setZoomOpen] =
     useState(false);
 
+  const [failedImages, setFailedImages] =
+    useState({});
+
+  const [failedVideos, setFailedVideos] =
+    useState({});
+
+  /*
+   * ============================================================
+   * RESET WHEN PRODUCT CHANGES
+   * ============================================================
+   */
+
   useEffect(() => {
     setSelectedIndex(0);
     setZoomOpen(false);
+    setFailedImages({});
+    setFailedVideos({});
   }, [product?.id]);
+
+  /*
+   * ============================================================
+   * KEEP INDEX VALID
+   * ============================================================
+   */
+
+  useEffect(() => {
+    if (!media.length) {
+      setSelectedIndex(0);
+      return;
+    }
+
+    if (selectedIndex >= media.length) {
+      setSelectedIndex(0);
+    }
+  }, [
+    media.length,
+    selectedIndex,
+  ]);
+
+  /*
+   * ============================================================
+   * KEYBOARD CONTROLS
+   * ============================================================
+   */
+
+  const goPrevious = () => {
+    if (media.length <= 1) return;
+
+    setSelectedIndex(
+      (prev) =>
+        (prev - 1 + media.length) %
+        media.length
+    );
+  };
+
+  const goNext = () => {
+    if (media.length <= 1) return;
+
+    setSelectedIndex(
+      (prev) =>
+        (prev + 1) % media.length
+    );
+  };
 
   useEffect(() => {
     if (!zoomOpen) return;
@@ -88,24 +228,48 @@ const ProductGallery = ({ product }) => {
 
       document.body.style.overflow = "";
     };
-  }, [zoomOpen]);
+  }, [zoomOpen, media.length]);
+
+  /*
+   * ============================================================
+   * NO MEDIA
+   * ============================================================
+   */
 
   if (!media.length) {
     return (
       <div
         className="
-          flex h-[500px] items-center
-          justify-center rounded-[2rem]
+          flex h-[500px]
+          items-center
+          justify-center
+          rounded-[2rem]
           border border-gray-200
           bg-gradient-to-br
-          from-gray-50 to-gray-100
+          from-gray-50
+          to-gray-100
           text-gray-400
           lg:h-[600px]
         "
       >
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm">
-            <FiImage className="text-2xl text-gray-300" />
+          <div
+            className="
+              mx-auto mb-4
+              flex h-16 w-16
+              items-center
+              justify-center
+              rounded-2xl
+              bg-white
+              shadow-sm
+            "
+          >
+            <FiImage
+              className="
+                text-2xl
+                text-gray-300
+              "
+            />
           </div>
 
           <p className="font-semibold">
@@ -113,7 +277,8 @@ const ProductGallery = ({ product }) => {
           </p>
 
           <p className="mt-1 text-sm text-gray-400">
-            Product images will appear here.
+            Product images and videos will
+            appear here.
           </p>
         </div>
       </div>
@@ -123,78 +288,206 @@ const ProductGallery = ({ product }) => {
   const selectedMedia =
     media[selectedIndex] || media[0];
 
-  const goPrevious = () => {
-    setSelectedIndex(
-      (prev) =>
-        (prev - 1 + media.length) %
-        media.length
-    );
-  };
+  /*
+   * ============================================================
+   * DISCOUNT
+   * ============================================================
+   */
 
-  const goNext = () => {
-    setSelectedIndex(
-      (prev) =>
-        (prev + 1) % media.length
-    );
-  };
+  const currentPrice =
+    Number(product?.price || 0);
+
+  const currentOldPrice =
+    Number(product?.oldPrice || 0);
 
   const discount =
-    Number(product?.oldPrice || 0) >
-    Number(product?.price || 0)
+    currentOldPrice > currentPrice &&
+    currentOldPrice > 0
       ? Math.round(
-          ((Number(product.oldPrice) -
-            Number(product.price)) /
-            Number(product.oldPrice)) *
+          ((currentOldPrice -
+            currentPrice) /
+            currentOldPrice) *
             100
         )
       : 0;
 
+  /*
+   * ============================================================
+   * MEDIA ERROR HANDLERS
+   * ============================================================
+   */
+
+  const handleImageError = (src) => {
+    setFailedImages((prev) => ({
+      ...prev,
+      [src]: true,
+    }));
+  };
+
+  const handleVideoError = (src) => {
+    setFailedVideos((prev) => ({
+      ...prev,
+      [src]: true,
+    }));
+  };
+
+  /*
+   * ============================================================
+   * MEDIA URL
+   * ============================================================
+   */
+
+  const getMediaUrl = (item) => {
+    if (!item?.src) return "";
+
+    if (item.type === "video") {
+      return getVideoUrl(item.src);
+    }
+
+    return getImageUrl(item.src);
+  };
+
   return (
     <>
       <div className="space-y-5">
+
         {/* =====================================================
             MAIN MEDIA
         ===================================================== */}
 
         <div
           className="
-            group relative overflow-hidden
+            group
+            relative
+            overflow-hidden
             rounded-[2rem]
             border border-gray-100
             bg-gray-100
             shadow-[0_20px_60px_rgba(0,0,0,0.08)]
           "
         >
-          {/* Image */}
+
+          {/* =================================================
+              IMAGE
+          ================================================= */}
+
           {selectedMedia.type === "image" ? (
-            <img
-              src={getImageUrl(
-                selectedMedia.src
-              )}
-              alt={product?.name || "Product"}
+            failedImages[selectedMedia.src] ? (
+              <div
+                className="
+                  flex
+                  h-[500px]
+                  w-full
+                  items-center
+                  justify-center
+                  bg-gradient-to-br
+                  from-gray-50
+                  to-gray-100
+                  sm:h-[550px]
+                  lg:h-[600px]
+                "
+              >
+                <div className="text-center">
+                  <FiImage
+                    className="
+                      mx-auto
+                      mb-3
+                      text-4xl
+                      text-gray-300
+                    "
+                  />
+
+                  <p className="text-sm font-semibold text-gray-500">
+                    Image unavailable
+                  </p>
+
+                  <p className="mt-1 text-xs text-gray-400">
+                    This product image could not be loaded.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <img
+                src={getMediaUrl(
+                  selectedMedia
+                )}
+                alt={
+                  product?.name ||
+                  "Product"
+                }
+                onError={() =>
+                  handleImageError(
+                    selectedMedia.src
+                  )
+                }
+                className="
+                  h-[500px]
+                  w-full
+                  object-cover
+                  transition-transform
+                  duration-700
+                  ease-out
+                  group-hover:scale-[1.025]
+                  sm:h-[550px]
+                  lg:h-[600px]
+                "
+              />
+            )
+          ) : failedVideos[
+              selectedMedia.src
+            ] ? (
+            <div
               className="
-                h-[500px] w-full
-                object-cover
-                transition-transform
-                duration-700
-                ease-out
-                group-hover:scale-[1.025]
+                flex
+                h-[500px]
+                w-full
+                items-center
+                justify-center
+                bg-gray-950
                 sm:h-[550px]
                 lg:h-[600px]
               "
-            />
+            >
+              <div className="text-center text-white">
+                <FiVideo
+                  className="
+                    mx-auto
+                    mb-3
+                    text-4xl
+                    text-gray-500
+                  "
+                />
+
+                <p className="text-sm font-semibold">
+                  Video unavailable
+                </p>
+
+                <p className="mt-1 text-xs text-gray-500">
+                  This product video could not be loaded.
+                </p>
+              </div>
+            </div>
           ) : (
-            /* Video */
+            /* =================================================
+               VIDEO
+            ================================================= */
+
             <video
               key={selectedMedia.src}
-              src={getImageUrl(
-                selectedMedia.src
+              src={getMediaUrl(
+                selectedMedia
               )}
               controls
               playsInline
               preload="metadata"
+              onError={() =>
+                handleVideoError(
+                  selectedMedia.src
+                )
+              }
               className="
-                h-[500px] w-full
+                h-[500px]
+                w-full
                 bg-black
                 object-cover
                 sm:h-[550px]
@@ -207,13 +500,23 @@ const ProductGallery = ({ product }) => {
               TOP LEFT BADGES
           ================================================= */}
 
-          <div className="absolute left-5 top-5 flex flex-wrap gap-2">
+          <div
+            className="
+              absolute
+              left-5
+              top-5
+              flex
+              flex-wrap
+              gap-2
+            "
+          >
             {discount > 0 && (
               <span
                 className="
                   rounded-full
                   bg-red-500
-                  px-4 py-2
+                  px-4
+                  py-2
                   text-xs
                   font-black
                   tracking-wide
@@ -229,10 +532,13 @@ const ProductGallery = ({ product }) => {
               "video" && (
               <span
                 className="
-                  flex items-center gap-2
+                  flex
+                  items-center
+                  gap-2
                   rounded-full
                   bg-black/70
-                  px-4 py-2
+                  px-4
+                  py-2
                   text-xs
                   font-bold
                   text-white
@@ -250,33 +556,44 @@ const ProductGallery = ({ product }) => {
           ================================================= */}
 
           {selectedMedia.type ===
-            "image" && (
-            <button
-              type="button"
-              onClick={() =>
-                setZoomOpen(true)
-              }
-              className="
-                absolute right-5 top-5
-                flex h-12 w-12
-                items-center justify-center
-                rounded-full
-                border border-white/60
-                bg-white/90
-                text-gray-800
-                shadow-xl
-                backdrop-blur-md
-                transition-all
-                duration-300
-                hover:scale-110
-                hover:bg-white
-                active:scale-95
-              "
-              aria-label="Zoom image"
-            >
-              <FiZoomIn className="text-xl" />
-            </button>
-          )}
+            "image" &&
+            !failedImages[
+              selectedMedia.src
+            ] && (
+              <button
+                type="button"
+                onClick={() =>
+                  setZoomOpen(true)
+                }
+                className="
+                  absolute
+                  right-5
+                  top-5
+                  flex
+                  h-12
+                  w-12
+                  items-center
+                  justify-center
+                  rounded-full
+                  border
+                  border-white/60
+                  bg-white/90
+                  text-gray-800
+                  shadow-xl
+                  backdrop-blur-md
+                  transition-all
+                  duration-300
+                  hover:scale-110
+                  hover:bg-white
+                  active:scale-95
+                "
+                aria-label="Zoom image"
+              >
+                <FiZoomIn
+                  className="text-xl"
+                />
+              </button>
+            )}
 
           {/* =================================================
               PREVIOUS / NEXT
@@ -288,12 +605,18 @@ const ProductGallery = ({ product }) => {
                 type="button"
                 onClick={goPrevious}
                 className="
-                  absolute left-4 top-1/2
-                  flex h-12 w-12
+                  absolute
+                  left-4
+                  top-1/2
+                  flex
+                  h-12
+                  w-12
                   -translate-y-1/2
-                  items-center justify-center
+                  items-center
+                  justify-center
                   rounded-full
-                  border border-white/50
+                  border
+                  border-white/50
                   bg-white/90
                   text-gray-800
                   shadow-xl
@@ -307,19 +630,27 @@ const ProductGallery = ({ product }) => {
                 "
                 aria-label="Previous media"
               >
-                <FiChevronLeft className="text-xl" />
+                <FiChevronLeft
+                  className="text-xl"
+                />
               </button>
 
               <button
                 type="button"
                 onClick={goNext}
                 className="
-                  absolute right-4 top-1/2
-                  flex h-12 w-12
+                  absolute
+                  right-4
+                  top-1/2
+                  flex
+                  h-12
+                  w-12
                   -translate-y-1/2
-                  items-center justify-center
+                  items-center
+                  justify-center
                   rounded-full
-                  border border-white/50
+                  border
+                  border-white/50
                   bg-white/90
                   text-gray-800
                   shadow-xl
@@ -333,7 +664,9 @@ const ProductGallery = ({ product }) => {
                 "
                 aria-label="Next media"
               >
-                <FiChevronRight className="text-xl" />
+                <FiChevronRight
+                  className="text-xl"
+                />
               </button>
             </>
           )}
@@ -345,12 +678,16 @@ const ProductGallery = ({ product }) => {
           {media.length > 1 && (
             <div
               className="
-                absolute bottom-5 left-1/2
+                absolute
+                bottom-5
+                left-1/2
                 -translate-x-1/2
                 rounded-full
-                border border-white/20
+                border
+                border-white/20
                 bg-black/65
-                px-4 py-2
+                px-4
+                py-2
                 text-xs
                 font-bold
                 tracking-wide
@@ -360,24 +697,31 @@ const ProductGallery = ({ product }) => {
               "
             >
               {selectedIndex + 1}
+
               <span className="mx-1.5 text-white/40">
                 /
               </span>
+
               {media.length}
             </div>
           )}
 
           {/* =================================================
-              IMAGE / VIDEO LABEL
+              MEDIA LABEL
           ================================================= */}
 
           <div
             className="
-              absolute bottom-5 left-5
-              hidden items-center gap-2
+              absolute
+              bottom-5
+              left-5
+              hidden
+              items-center
+              gap-2
               rounded-full
               bg-black/55
-              px-3 py-2
+              px-3
+              py-2
               text-xs
               font-semibold
               text-white
@@ -407,15 +751,31 @@ const ProductGallery = ({ product }) => {
         <div>
           <div
             className="
-              mb-3 flex items-center
+              mb-3
+              flex
+              items-center
               justify-between
             "
           >
-            <p className="text-xs font-black uppercase tracking-[2px] text-gray-400">
+            <p
+              className="
+                text-xs
+                font-black
+                uppercase
+                tracking-[2px]
+                text-gray-400
+              "
+            >
               Product Gallery
             </p>
 
-            <p className="text-xs font-semibold text-gray-400">
+            <p
+              className="
+                text-xs
+                font-semibold
+                text-gray-400
+              "
+            >
               {media.length}{" "}
               {media.length === 1
                 ? "item"
@@ -425,26 +785,42 @@ const ProductGallery = ({ product }) => {
 
           <div
             className="
-              flex gap-3 overflow-x-auto
-              pb-2 scrollbar-thin
+              flex
+              gap-3
+              overflow-x-auto
+              pb-2
+              scrollbar-thin
             "
           >
             {media.map(
               (item, index) => {
                 const active =
-                  selectedIndex === index;
+                  selectedIndex ===
+                  index;
+
+                const itemFailed =
+                  item.type === "image"
+                    ? failedImages[
+                        item.src
+                      ]
+                    : failedVideos[
+                        item.src
+                      ];
 
                 return (
                   <button
                     key={`${item.type}-${item.src}-${index}`}
                     type="button"
                     onClick={() =>
-                      setSelectedIndex(index)
+                      setSelectedIndex(
+                        index
+                      )
                     }
                     className={`
                       group/thumb
                       relative
-                      h-20 w-20
+                      h-20
+                      w-20
                       shrink-0
                       overflow-hidden
                       rounded-2xl
@@ -457,22 +833,52 @@ const ProductGallery = ({ product }) => {
                       ${
                         active
                           ? "scale-[1.03] border-brand-primary shadow-lg shadow-brand-primary/15"
-                          : "border-gray-200 hover:border-gray-400 hover:-translate-y-0.5"
+                          : "border-gray-200 hover:-translate-y-0.5 hover:border-gray-400"
                       }
                     `}
-                    aria-label={`View ${
-                      item.type
-                    } ${index + 1}`}
+                    aria-label={`View ${item.type} ${
+                      index + 1
+                    }`}
                   >
-                    {item.type ===
-                    "image" ? (
-                      <img
-                        src={getImageUrl(
-                          item.src
-                        )}
-                        alt={`${product?.name || "Product"} ${index + 1}`}
+                    {/* =================================================
+                        BROKEN MEDIA THUMBNAIL
+                    ================================================= */}
+
+                    {itemFailed ? (
+                      <div
                         className="
-                          h-full w-full
+                          flex
+                          h-full
+                          w-full
+                          items-center
+                          justify-center
+                          bg-gray-100
+                        "
+                      >
+                        {item.type ===
+                        "video" ? (
+                          <FiVideo className="text-2xl text-gray-400" />
+                        ) : (
+                          <FiImage className="text-2xl text-gray-400" />
+                        )}
+                      </div>
+                    ) : item.type ===
+                      "image" ? (
+                      <img
+                        src={getMediaUrl(
+                          item
+                        )}
+                        alt={`${product?.name || "Product"} ${
+                          index + 1
+                        }`}
+                        onError={() =>
+                          handleImageError(
+                            item.src
+                          )
+                        }
+                        className="
+                          h-full
+                          w-full
                           object-cover
                           transition-transform
                           duration-500
@@ -481,14 +887,20 @@ const ProductGallery = ({ product }) => {
                       />
                     ) : (
                       <video
-                        src={getImageUrl(
-                          item.src
+                        src={getMediaUrl(
+                          item
                         )}
                         muted
                         playsInline
                         preload="metadata"
+                        onError={() =>
+                          handleVideoError(
+                            item.src
+                          )
+                        }
                         className="
-                          h-full w-full
+                          h-full
+                          w-full
                           bg-black
                           object-cover
                         "
@@ -496,9 +908,11 @@ const ProductGallery = ({ product }) => {
                     )}
 
                     {/* Dark overlay */}
+
                     <span
                       className={`
-                        absolute inset-0
+                        absolute
+                        inset-0
                         bg-black/0
                         transition
                         ${
@@ -510,39 +924,54 @@ const ProductGallery = ({ product }) => {
                     />
 
                     {/* Video icon */}
+
                     {item.type ===
-                      "video" && (
-                      <span
-                        className="
-                          absolute inset-0
-                          flex items-center
-                          justify-center
-                        "
-                      >
+                      "video" &&
+                      !itemFailed && (
                         <span
                           className="
-                            flex h-9 w-9
+                            absolute
+                            inset-0
+                            flex
                             items-center
                             justify-center
-                            rounded-full
-                            bg-black/70
-                            text-white
-                            shadow-lg
-                            backdrop-blur-sm
                           "
                         >
-                          <FiPlay className="ml-0.5 text-sm" />
+                          <span
+                            className="
+                              flex
+                              h-9
+                              w-9
+                              items-center
+                              justify-center
+                              rounded-full
+                              bg-black/70
+                              text-white
+                              shadow-lg
+                              backdrop-blur-sm
+                            "
+                          >
+                            <FiPlay
+                              className="
+                                ml-0.5
+                                text-sm
+                              "
+                            />
+                          </span>
                         </span>
-                      </span>
-                    )}
+                      )}
 
                     {/* Active check */}
+
                     {active && (
                       <span
                         className="
-                          absolute right-1.5
+                          absolute
+                          right-1.5
                           top-1.5
-                          flex h-6 w-6
+                          flex
+                          h-6
+                          w-6
                           items-center
                           justify-center
                           rounded-full
@@ -551,7 +980,9 @@ const ProductGallery = ({ product }) => {
                           shadow-md
                         "
                       >
-                        <FiCheck className="text-xs" />
+                        <FiCheck
+                          className="text-xs"
+                        />
                       </span>
                     )}
                   </button>
@@ -566,16 +997,34 @@ const ProductGallery = ({ product }) => {
         ===================================================== */}
 
         <div className="flex flex-wrap gap-3">
+
+          {/* Images */}
+
           <div
             className="
-              flex items-center gap-2
+              flex
+              items-center
+              gap-2
               rounded-2xl
-              border border-gray-100
+              border
+              border-gray-100
               bg-gray-50
-              px-4 py-3
+              px-4
+              py-3
             "
           >
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-xl
+                bg-brand-primary/10
+                text-brand-primary
+              "
+            >
               <FiImage />
             </span>
 
@@ -584,7 +1033,15 @@ const ProductGallery = ({ product }) => {
                 {images.length}
               </p>
 
-              <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+              <p
+                className="
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-wide
+                  text-gray-400
+                "
+              >
                 {images.length === 1
                   ? "Image"
                   : "Images"}
@@ -592,17 +1049,34 @@ const ProductGallery = ({ product }) => {
             </div>
           </div>
 
+          {/* Videos */}
+
           {videos.length > 0 && (
             <div
               className="
-                flex items-center gap-2
+                flex
+                items-center
+                gap-2
                 rounded-2xl
-                border border-gray-100
+                border
+                border-gray-100
                 bg-gray-50
-                px-4 py-3
+                px-4
+                py-3
               "
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gray-900/10 text-gray-700">
+              <span
+                className="
+                  flex
+                  h-8
+                  w-8
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-gray-900/10
+                  text-gray-700
+                "
+              >
                 <FiVideo />
               </span>
 
@@ -611,7 +1085,15 @@ const ProductGallery = ({ product }) => {
                   {videos.length}
                 </p>
 
-                <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                <p
+                  className="
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-wide
+                    text-gray-400
+                  "
+                >
                   {videos.length === 1
                     ? "Video"
                     : "Videos"}
@@ -619,18 +1101,6 @@ const ProductGallery = ({ product }) => {
               </div>
             </div>
           )}
-        </div>
-
-        {/* =====================================================
-            PREMIUM HIGHLIGHTS
-        ===================================================== */}
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {/* Quality */}
-         
-
-          {/* Delivery */}
-          
         </div>
       </div>
 
@@ -640,11 +1110,17 @@ const ProductGallery = ({ product }) => {
 
       {zoomOpen &&
         selectedMedia.type ===
-          "image" && (
+          "image" &&
+        !failedImages[
+          selectedMedia.src
+        ] && (
           <div
             className="
-              fixed inset-0 z-[9999]
-              flex items-center
+              fixed
+              inset-0
+              z-[9999]
+              flex
+              items-center
               justify-center
               bg-black/95
               p-4
@@ -655,15 +1131,20 @@ const ProductGallery = ({ product }) => {
             }
           >
             {/* Close */}
+
             <button
               type="button"
               onClick={() =>
                 setZoomOpen(false)
               }
               className="
-                absolute right-5 top-5
+                absolute
+                right-5
+                top-5
                 z-20
-                flex h-12 w-12
+                flex
+                h-12
+                w-12
                 items-center
                 justify-center
                 rounded-full
@@ -681,6 +1162,7 @@ const ProductGallery = ({ product }) => {
             </button>
 
             {/* Previous */}
+
             {media.length > 1 && (
               <button
                 type="button"
@@ -689,9 +1171,13 @@ const ProductGallery = ({ product }) => {
                   goPrevious();
                 }}
                 className="
-                  absolute left-4 top-1/2
+                  absolute
+                  left-4
+                  top-1/2
                   z-20
-                  flex h-12 w-12
+                  flex
+                  h-12
+                  w-12
                   -translate-y-1/2
                   items-center
                   justify-center
@@ -711,9 +1197,11 @@ const ProductGallery = ({ product }) => {
             )}
 
             {/* Image */}
+
             <div
               className="
-                relative flex
+                relative
+                flex
                 max-h-[90vh]
                 max-w-6xl
                 items-center
@@ -741,15 +1229,18 @@ const ProductGallery = ({ product }) => {
               />
 
               {/* Counter */}
+
               {media.length > 1 && (
                 <div
                   className="
-                    absolute bottom-4
+                    absolute
+                    bottom-4
                     left-1/2
                     -translate-x-1/2
                     rounded-full
                     bg-black/70
-                    px-4 py-2
+                    px-4
+                    py-2
                     text-xs
                     font-bold
                     text-white
@@ -764,6 +1255,7 @@ const ProductGallery = ({ product }) => {
             </div>
 
             {/* Next */}
+
             {media.length > 1 && (
               <button
                 type="button"
@@ -772,9 +1264,13 @@ const ProductGallery = ({ product }) => {
                   goNext();
                 }}
                 className="
-                  absolute right-4 top-1/2
+                  absolute
+                  right-4
+                  top-1/2
                   z-20
-                  flex h-12 w-12
+                  flex
+                  h-12
+                  w-12
                   -translate-y-1/2
                   items-center
                   justify-center
