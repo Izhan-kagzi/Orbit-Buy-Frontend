@@ -56,7 +56,11 @@ const getPaymentMethodsKey = (user) =>
 
 const safeJsonParse = (value, fallback) => {
   try {
-    return JSON.parse(value);
+    // JSON.parse(null) returns null (no throw), so fall back explicitly.
+    const parsed = JSON.parse(value);
+    if (parsed === null || parsed === undefined) return fallback;
+    if (Array.isArray(fallback) && !Array.isArray(parsed)) return fallback;
+    return parsed;
   } catch {
     return fallback;
   }
@@ -269,7 +273,7 @@ export default function Profile() {
     setOrdersError("");
 
     try {
-      const res = await api.get("/orders/my-orders");
+      const res = await api.get("/orders");
 
       const orders =
         (Array.isArray(res?.orders) && res.orders) ||
