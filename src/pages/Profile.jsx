@@ -634,29 +634,41 @@ export default function Profile() {
   */
 
   return (
-    <main className="min-h-screen bg-[#f8fafc]">
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 md:pt-32 pb-12">
+    <main className="relative min-h-screen overflow-hidden bg-[#031e3d] text-[#f5efe6]">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 right-[-8rem] h-[32rem] w-[32rem] rounded-full bg-[#0b4778]/30 blur-3xl" />
+        <div className="absolute top-[38rem] -left-40 h-[26rem] w-[26rem] rounded-full bg-[#d9c3a3]/[0.06] blur-3xl" />
+        <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: "radial-gradient(#d9c3a3 0.7px, transparent 0.7px)", backgroundSize: "18px 18px" }} />
+      </div>
+      <section className="relative mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 pt-28 md:pt-32 pb-14">
 
         {/* PAGE HEADER */}
 
-        <div className="mb-8">
-          <p className="text-xs font-semibold tracking-[0.25em] uppercase text-brand-primary mb-2">
-            My Account
-          </p>
-
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
-            Welcome back, {displayName}
-          </h1>
-
-          <p className="mt-2 text-gray-500">
-            Manage your profile, orders, wishlist and account information.
-          </p>
+        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#d9c3a3]/20 bg-[#d9c3a3]/[0.08] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.24em] text-[#e7d6bd]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#d9c3a3] shadow-[0_0_10px_#d9c3a3]" />
+              Your personal space
+            </div>
+            <h1 className="max-w-3xl text-3xl font-semibold tracking-[-0.04em] text-white sm:text-4xl lg:text-5xl">
+              Welcome back, <span className="text-[#d9c3a3]">{displayName.split(' ')[0]}</span>
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#a9bdd0] sm:text-base">
+              Everything you need to manage your account, purchases and preferences — all in one place.
+            </p>
+          </div>
+          <div className="hidden shrink-0 items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.035] px-4 py-3 sm:flex">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#d9c3a3]/10 text-[#d9c3a3]"><FiUser size={19} /></div>
+            <div><p className="text-xs text-[#8fa9c1]">Signed in as</p><p className="mt-0.5 max-w-[210px] truncate text-sm font-medium text-white">{displayEmail || displayName}</p></div>
+          </div>
         </div>
 
         {/* PROFILE HEADER CARD */}
 
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 sm:p-7 mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="group relative mb-7 overflow-hidden rounded-[30px] border border-white/[0.11] bg-gradient-to-br from-[#0b3b66] via-[#09335a] to-[#062747] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.22)] sm:p-8">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-20 h-64 w-64 rounded-full border border-[#d9c3a3]/10 sm:h-80 sm:w-80" />
+          <div aria-hidden="true" className="pointer-events-none absolute -right-2 -top-12 h-48 w-48 rounded-full border border-[#d9c3a3]/10 sm:h-64 sm:w-64" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
             <div className="flex items-center gap-5">
 
@@ -673,7 +685,7 @@ export default function Profile() {
                   type="button"
                   onClick={handleProfilePictureClick}
                   disabled={uploadingPicture}
-                  className="group relative block w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-white shadow-lg ring-2 ring-gray-100 focus:outline-none focus:ring-4 focus:ring-brand-primary/20"
+                  className="group relative block h-24 w-24 overflow-hidden rounded-[28px] border border-white/20 bg-[#031e3d] shadow-[0_16px_40px_rgba(0,0,0,0.28)] ring-4 ring-[#d9c3a3]/10 transition-transform duration-300 hover:scale-[1.03] sm:h-28 sm:w-28"
                   aria-label="Change profile picture"
                 >
                   <img
@@ -682,7 +694,7 @@ export default function Profile() {
                     className="w-full h-full object-cover"
                   />
 
-                  <span className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
+                  <span className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white">
                     <FiCamera size={22} />
                     <span className="text-[10px] mt-1 font-semibold uppercase tracking-wider">
                       Change
@@ -701,7 +713,7 @@ export default function Profile() {
                     type="button"
                     onClick={handleRemoveProfilePicture}
                     disabled={removingPicture}
-                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white border border-gray-200 shadow flex items-center justify-center text-red-500 hover:bg-red-50 transition"
+                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#09335a] border border-white/[0.12] shadow flex items-center justify-center text-red-300 hover:bg-red-500/10 transition"
                     title="Remove profile picture"
                   >
                     <FiTrash2 size={14} />
@@ -709,12 +721,13 @@ export default function Profile() {
                 )}
               </div>
 
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <div className="min-w-0">
+                <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-200"><FiCheckCircle size={12} /> Account active</div>
+                <h2 className="break-words text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                   {displayName}
                 </h2>
 
-                <div className="flex flex-col gap-1 mt-2 text-sm text-gray-500">
+                <div className="flex flex-col gap-1 mt-2 text-sm text-[#c1cddd]">
                   {displayEmail && (
                     <span className="flex items-center gap-2">
                       <FiMail />
@@ -739,7 +752,7 @@ export default function Profile() {
             <button
               type="button"
               onClick={handleEditProfile}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#d9c3a3]/40 bg-[#d9c3a3] px-5 py-3 text-sm font-bold text-[#031e3d] shadow-[0_8px_24px_rgba(0,0,0,0.14)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#ead8bd] focus:outline-none focus:ring-4 focus:ring-[#d9c3a3]/20"
             >
               <FiEdit2 />
               Edit Profile
@@ -747,14 +760,29 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* QUICK OVERVIEW */}
+        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+          {[
+            { label: "Orders placed", value: recentOrders.length, icon: FiPackage, note: "Your purchase history" },
+            { label: "Saved wishlist", value: wishlistItems.length, icon: FiHeart, note: "Items you love" },
+            { label: "Items in cart", value: cartItems.length, icon: FiShoppingCart, note: "Ready when you are" },
+          ].map((stat) => {
+            const StatIcon = stat.icon;
+            return <div key={stat.label} className="flex items-center gap-4 rounded-[22px] border border-white/[0.09] bg-white/[0.035] p-4 transition-colors hover:border-[#d9c3a3]/25 hover:bg-white/[0.055] sm:p-5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#d9c3a3]/15 bg-[#d9c3a3]/[0.08] text-[#d9c3a3]"><StatIcon size={20} /></div>
+              <div className="min-w-0"><p className="text-xs font-medium text-[#9cb2c8]">{stat.label}</p><p className="mt-0.5 text-2xl font-semibold tracking-tight text-white">{stat.value}</p><p className="mt-0.5 text-[11px] text-[#7793ad]">{stat.note}</p></div>
+            </div>;
+          })}
+        </div>
+
         {/* MAIN LAYOUT */}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-7">
 
           {/* SIDEBAR */}
 
           <aside>
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-2 lg:sticky lg:top-28">
+            <div className="rounded-[26px] border border-white/[0.09] bg-[#06294a]/90 p-2 shadow-[0_20px_55px_rgba(0,0,0,0.16)] backdrop-blur-xl lg:sticky lg:top-28">
               {sections.map((section) => {
                 const Icon = section.icon;
                 const active = activeSection === section.id;
@@ -764,14 +792,14 @@ export default function Profile() {
                     key={section.id}
                     type="button"
                     onClick={() => setActiveSection(section.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${
+                    className={`group w-full flex items-center gap-3 rounded-2xl px-3.5 py-3.5 text-left text-sm font-semibold transition-all duration-200 ${
                       active
-                        ? "bg-gray-900 text-white"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-[#d9c3a3] text-[#031e3d] shadow-[0_8px_22px_rgba(0,0,0,0.16)]"
+                        : "text-[#a9bfd3] hover:bg-white/[0.055] hover:text-white"
                     }`}
                   >
-                    <Icon size={18} />
-                    <span>{section.label}</span>
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${active ? "bg-[#031e3d]/[0.08]" : "bg-white/[0.045] group-hover:bg-[#d9c3a3]/10"}`}><Icon size={17} /></span>
+                    <span className="flex-1">{section.label}</span>
                     {active && <FiChevronRight className="ml-auto" />}
                   </button>
                 );
@@ -788,15 +816,15 @@ export default function Profile() {
             {activeSection === "profile" && (
               <div className="space-y-6">
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+                <div className="rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#0a365d] to-[#062747] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.17)] sm:p-8">
 
                   <div className="flex items-center justify-between gap-4 mb-7">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">
+                      <h2 className="text-xl font-bold text-[#f5efe6]">
                         Personal Information
                       </h2>
 
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-[#c1cddd] mt-1">
                         Keep your account information up to date.
                       </p>
                     </div>
@@ -805,7 +833,7 @@ export default function Profile() {
                       <button
                         type="button"
                         onClick={handleEditProfile}
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-[#e9d9c3] hover:text-[#f5efe6]"
                       >
                         <FiEdit2 />
                         Edit
@@ -816,7 +844,7 @@ export default function Profile() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#c1cddd] mb-2">
                         Display Name
                       </label>
 
@@ -824,17 +852,17 @@ export default function Profile() {
                         <input
                           value={editedName}
                           onChange={(e) => setEditedName(e.target.value)}
-                          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-gray-900"
+                          className="w-full rounded-xl border border-white/[0.12] bg-[#031e3d]/80 text-[#f5efe6] placeholder:text-[#7890aa] px-4 py-3 text-sm outline-none transition-colors focus:border-[#d9c3a3]"
                         />
                       ) : (
-                        <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-900">
+                        <div className="rounded-xl border border-white/[0.07] bg-[#031e3d]/70 px-4 py-3 text-sm text-[#f5efe6]">
                           {displayName}
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#c1cddd] mb-2">
                         Email Address
                       </label>
 
@@ -843,17 +871,17 @@ export default function Profile() {
                           type="email"
                           value={editedEmail}
                           onChange={(e) => setEditedEmail(e.target.value)}
-                          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-gray-900"
+                          className="w-full rounded-xl border border-white/[0.12] bg-[#031e3d]/80 text-[#f5efe6] placeholder:text-[#7890aa] px-4 py-3 text-sm outline-none transition-colors focus:border-[#d9c3a3]"
                         />
                       ) : (
-                        <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-900">
+                        <div className="rounded-xl border border-white/[0.07] bg-[#031e3d]/70 px-4 py-3 text-sm text-[#f5efe6]">
                           {displayEmail || "Not provided"}
                         </div>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#c1cddd] mb-2">
                         Phone Number
                       </label>
 
@@ -862,10 +890,10 @@ export default function Profile() {
                           type="tel"
                           value={editedMobile}
                           onChange={(e) => setEditedMobile(e.target.value)}
-                          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-gray-900"
+                          className="w-full rounded-xl border border-white/[0.12] bg-[#031e3d]/80 text-[#f5efe6] placeholder:text-[#7890aa] px-4 py-3 text-sm outline-none transition-colors focus:border-[#d9c3a3]"
                         />
                       ) : (
-                        <div className="rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-900">
+                        <div className="rounded-xl border border-white/[0.07] bg-[#031e3d]/70 px-4 py-3 text-sm text-[#f5efe6]">
                           {displayMobile || "Not provided"}
                         </div>
                       )}
@@ -874,12 +902,12 @@ export default function Profile() {
                   </div>
 
                   {isEditingProfile && (
-                    <div className="flex flex-wrap gap-3 mt-7 pt-6 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-3 mt-7 pt-6 border-t border-white/[0.09]">
                       <button
                         type="button"
                         onClick={handleSaveProfile}
                         disabled={savingProfile}
-                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#d9c3a3] text-[#031e3d] text-sm font-semibold hover:bg-[#c5ad8c] disabled:opacity-50"
                       >
                         <FiSave />
                         {savingProfile ? "Saving..." : "Save Changes"}
@@ -889,7 +917,7 @@ export default function Profile() {
                         type="button"
                         onClick={handleCancelEditProfile}
                         disabled={savingProfile}
-                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50"
+                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-white/[0.13] text-[#e9d9c3] text-sm font-semibold hover:bg-[#031e3d]"
                       >
                         <FiX />
                         Cancel
@@ -900,26 +928,26 @@ export default function Profile() {
 
                 {/* Addresses */}
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+                <div className="rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#0a365d] to-[#062747] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.17)] sm:p-8">
 
                   <div className="flex items-center justify-between gap-4 mb-7">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">
+                      <h2 className="text-xl font-bold text-[#f5efe6]">
                         Addresses
                       </h2>
 
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-[#c1cddd] mt-1">
                         Manage your shipping and billing addresses.
                       </p>
                     </div>
 
-                    <FiMapPin className="text-gray-400" size={22} />
+                    <FiMapPin className="text-[#a8bbcf]" size={22} />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#c1cddd] mb-2">
                         Shipping Address
                       </label>
 
@@ -928,12 +956,12 @@ export default function Profile() {
                         onChange={(e) => setShippingAddress(e.target.value)}
                         rows={5}
                         placeholder="Enter your shipping address"
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-gray-900 resize-none"
+                        className="w-full rounded-xl border border-white/[0.12] bg-[#031e3d]/80 text-[#f5efe6] placeholder:text-[#7890aa] px-4 py-3 text-sm outline-none transition-colors focus:border-[#d9c3a3] resize-none"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-[#c1cddd] mb-2">
                         Billing Address
                       </label>
 
@@ -942,7 +970,7 @@ export default function Profile() {
                         onChange={(e) => setBillingAddress(e.target.value)}
                         rows={5}
                         placeholder="Enter your billing address"
-                        className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:border-gray-900 resize-none"
+                        className="w-full rounded-xl border border-white/[0.12] bg-[#031e3d]/80 text-[#f5efe6] placeholder:text-[#7890aa] px-4 py-3 text-sm outline-none transition-colors focus:border-[#d9c3a3] resize-none"
                       />
                     </div>
 
@@ -952,7 +980,7 @@ export default function Profile() {
                     type="button"
                     onClick={handleSaveAddresses}
                     disabled={savingProfile}
-                    className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 disabled:opacity-50"
+                    className="mt-5 inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#d9c3a3] text-[#031e3d] text-sm font-semibold hover:bg-[#c5ad8c] disabled:opacity-50"
                   >
                     <FiSave />
                     {savingProfile ? "Saving..." : "Save Addresses"}
@@ -964,15 +992,15 @@ export default function Profile() {
             {/* ORDERS */}
 
             {activeSection === "orders" && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+              <div className="rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#0a365d] to-[#062747] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.17)] sm:p-8">
 
                 <div className="flex items-center justify-between mb-7">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-xl font-bold text-[#f5efe6]">
                       My Orders
                     </h2>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       View your past purchases and delivery status.
                     </p>
                   </div>
@@ -982,7 +1010,7 @@ export default function Profile() {
                       type="button"
                       onClick={loadOrders}
                       disabled={loadingOrders}
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/[0.12] text-xs font-semibold text-[#d9c3a3] hover:bg-[#031e3d] disabled:opacity-50"
                       title="Refresh orders"
                     >
                       <FiRefreshCw
@@ -991,7 +1019,7 @@ export default function Profile() {
                       Refresh
                     </button>
 
-                    <FiPackage size={24} className="text-gray-400" />
+                    <FiPackage size={24} className="text-[#a8bbcf]" />
                   </div>
                 </div>
 
@@ -1000,46 +1028,46 @@ export default function Profile() {
                     {[1, 2, 3].map((item) => (
                       <div
                         key={item}
-                        className="h-24 rounded-2xl bg-gray-100 animate-pulse"
+                        className="h-24 rounded-2xl bg-white/[0.06] animate-pulse"
                       />
                     ))}
                   </div>
                 ) : ordersError ? (
                   <div className="text-center py-14">
-                    <FiPackage size={42} className="mx-auto text-gray-300" />
+                    <FiPackage size={42} className="mx-auto text-[#6f8ba8]" />
 
-                    <h3 className="mt-4 font-semibold text-gray-900">
+                    <h3 className="mt-4 font-semibold text-[#f5efe6]">
                       Couldn't load your orders
                     </h3>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       {ordersError}
                     </p>
 
                     <button
                       type="button"
                       onClick={loadOrders}
-                      className="mt-5 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold"
+                      className="mt-5 px-5 py-3 rounded-xl bg-[#d9c3a3] text-[#031e3d] text-sm font-semibold"
                     >
                       Try Again
                     </button>
                   </div>
                 ) : recentOrders.length === 0 ? (
                   <div className="text-center py-14">
-                    <FiShoppingBag size={42} className="mx-auto text-gray-300" />
+                    <FiShoppingBag size={42} className="mx-auto text-[#6f8ba8]" />
 
-                    <h3 className="mt-4 font-semibold text-gray-900">
+                    <h3 className="mt-4 font-semibold text-[#f5efe6]">
                       No orders found
                     </h3>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       Your orders will appear here.
                     </p>
 
                     <button
                       type="button"
                       onClick={() => navigate("/products")}
-                      className="mt-5 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold"
+                      className="mt-5 px-5 py-3 rounded-xl bg-[#d9c3a3] text-[#031e3d] text-sm font-semibold"
                     >
                       Start Shopping
                     </button>
@@ -1055,21 +1083,21 @@ export default function Profile() {
                       return (
                         <div
                           key={orderId || index}
-                          className="border border-gray-100 rounded-2xl p-5"
+                          className="border border-[#1c4a70] rounded-2xl p-5"
                         >
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 
                             <div>
-                              <p className="text-xs text-gray-400 uppercase tracking-wider">
+                              <p className="text-xs text-[#a8bbcf] uppercase tracking-wider">
                                 Order
                               </p>
 
-                              <p className="font-semibold text-gray-900 mt-1">
+                              <p className="font-semibold text-[#f5efe6] mt-1">
                                 #{orderId || "Pending"}
                               </p>
 
                               {orderDate && (
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-xs text-[#a8bbcf] mt-1">
                                   {new Date(orderDate).toLocaleDateString(
                                     "en-IN",
                                     {
@@ -1091,20 +1119,20 @@ export default function Profile() {
                               {status}
                             </div>
 
-                            <div className="font-bold text-gray-900">
+                            <div className="font-bold text-[#f5efe6]">
                               {formatCurrency(getOrderTotal(order))}
                             </div>
                           </div>
 
                           {order.items?.length > 0 && (
-                            <div className="mt-5 pt-5 border-t border-gray-100 flex gap-3 overflow-x-auto">
+                            <div className="mt-5 pt-5 border-t border-white/[0.09] flex gap-3 overflow-x-auto">
                               {order.items.slice(0, 5).map((item, itemIndex) => {
                                 const image = getItemImage(item);
 
                                 return (
                                   <div
                                     key={itemIndex}
-                                    className="shrink-0 w-16 h-16 rounded-xl bg-gray-50 overflow-hidden"
+                                    className="shrink-0 w-16 h-16 rounded-xl bg-[#031e3d] overflow-hidden"
                                   >
                                     {image ? (
                                       <img
@@ -1113,7 +1141,7 @@ export default function Profile() {
                                         className="w-full h-full object-cover"
                                       />
                                     ) : (
-                                      <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                      <div className="w-full h-full flex items-center justify-center text-[#6f8ba8]">
                                         <FiPackage />
                                       </div>
                                     )}
@@ -1130,7 +1158,7 @@ export default function Profile() {
                                 navigate(`/order-confirmation/${orderId}`)
                               }
                               disabled={!orderId}
-                              className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+                              className="px-4 py-2 rounded-lg border border-white/[0.12] text-sm font-semibold hover:bg-[#031e3d] disabled:opacity-50"
                             >
                               View Order
                             </button>
@@ -1142,7 +1170,7 @@ export default function Profile() {
                                   "Invoice download will be connected when the invoice endpoint is added."
                                 )
                               }
-                              className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold hover:bg-gray-50 inline-flex items-center gap-2"
+                              className="px-4 py-2 rounded-lg border border-white/[0.12] text-sm font-semibold hover:bg-[#031e3d] inline-flex items-center gap-2"
                             >
                               <FiFileText />
                               Invoice
@@ -1154,7 +1182,7 @@ export default function Profile() {
                                 navigate(`/order-confirmation/${orderId}`)
                               }
                               disabled={!orderId}
-                              className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-50"
+                              className="px-4 py-2 rounded-lg bg-[#d9c3a3] text-[#031e3d] text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-50"
                             >
                               <FiTruck />
                               Track
@@ -1171,31 +1199,31 @@ export default function Profile() {
             {/* WISHLIST */}
 
             {activeSection === "wishlist" && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+              <div className="rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#0a365d] to-[#062747] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.17)] sm:p-8">
 
                 <div className="flex items-center justify-between mb-7">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-xl font-bold text-[#f5efe6]">
                       Wishlist
                     </h2>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       Products you saved for later.
                     </p>
                   </div>
 
-                  <FiHeart size={24} className="text-gray-400" />
+                  <FiHeart size={24} className="text-[#a8bbcf]" />
                 </div>
 
                 {wishlistItems.length === 0 ? (
                   <div className="text-center py-14">
-                    <FiHeart size={42} className="mx-auto text-gray-300" />
+                    <FiHeart size={42} className="mx-auto text-[#6f8ba8]" />
 
-                    <h3 className="mt-4 font-semibold text-gray-900">
+                    <h3 className="mt-4 font-semibold text-[#f5efe6]">
                       Your wishlist is empty
                     </h3>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       Save products you love and find them here.
                     </p>
                   </div>
@@ -1207,9 +1235,9 @@ export default function Profile() {
                       return (
                         <div
                           key={item?.id || item?._id || index}
-                          className="border border-gray-100 rounded-2xl overflow-hidden group"
+                          className="border border-[#1c4a70] rounded-2xl overflow-hidden group"
                         >
-                          <div className="aspect-square bg-gray-50">
+                          <div className="aspect-square bg-[#031e3d]">
                             {image ? (
                               <img
                                 src={image}
@@ -1217,18 +1245,18 @@ export default function Profile() {
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                               />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <div className="w-full h-full flex items-center justify-center text-[#6f8ba8]">
                                 <FiHeart size={30} />
                               </div>
                             )}
                           </div>
 
                           <div className="p-4">
-                            <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
+                            <h3 className="text-sm font-semibold text-[#f5efe6] line-clamp-2">
                               {getItemName(item)}
                             </h3>
 
-                            <p className="mt-2 font-bold text-gray-900">
+                            <p className="mt-2 font-bold text-[#f5efe6]">
                               {formatCurrency(getItemPrice(item))}
                             </p>
                           </div>
@@ -1245,21 +1273,21 @@ export default function Profile() {
             {activeSection === "cart" && (
               <div className="space-y-6">
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+                <div className="rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#0a365d] to-[#062747] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.17)] sm:p-8">
 
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">
+                      <h2 className="text-xl font-bold text-[#f5efe6]">
                         Current Cart
                       </h2>
 
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-[#c1cddd] mt-1">
                         Products currently in your shopping cart.
                       </p>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                      <span className="px-3 py-1 rounded-full bg-[#164267] text-xs font-semibold text-[#d9c3a3]">
                         {cartItems.length} items
                       </span>
 
@@ -1267,7 +1295,7 @@ export default function Profile() {
                         type="button"
                         onClick={saveCartSnapshot}
                         disabled={!cartItems.length}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold disabled:opacity-40"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#d9c3a3] text-[#031e3d] text-sm font-semibold disabled:opacity-40"
                       >
                         <FiSave />
                         Save Snapshot
@@ -1277,9 +1305,9 @@ export default function Profile() {
 
                   {cartItems.length === 0 ? (
                     <div className="text-center py-12">
-                      <FiShoppingCart size={42} className="mx-auto text-gray-300" />
+                      <FiShoppingCart size={42} className="mx-auto text-[#6f8ba8]" />
 
-                      <h3 className="mt-4 font-semibold text-gray-900">
+                      <h3 className="mt-4 font-semibold text-[#f5efe6]">
                         Your cart is empty
                       </h3>
                     </div>
@@ -1291,9 +1319,9 @@ export default function Profile() {
                         return (
                           <div
                             key={item?.id || item?._id || index}
-                            className="flex items-center gap-4 border border-gray-100 rounded-xl p-3"
+                            className="flex items-center gap-4 border border-[#1c4a70] rounded-xl p-3"
                           >
-                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-50 shrink-0">
+                            <div className="w-16 h-16 rounded-lg overflow-hidden bg-[#031e3d] shrink-0">
                               {image ? (
                                 <img
                                   src={image}
@@ -1301,23 +1329,23 @@ export default function Profile() {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <div className="w-full h-full flex items-center justify-center text-[#6f8ba8]">
                                   <FiShoppingCart />
                                 </div>
                               )}
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <h3 className="font-semibold text-sm text-gray-900 truncate">
+                              <h3 className="font-semibold text-sm text-[#f5efe6] truncate">
                                 {getItemName(item)}
                               </h3>
 
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-[#c1cddd] mt-1">
                                 Qty: {getItemQuantity(item)}
                               </p>
                             </div>
 
-                            <p className="font-bold text-sm text-gray-900">
+                            <p className="font-bold text-sm text-[#f5efe6]">
                               {formatCurrency(
                                 getItemPrice(item) * getItemQuantity(item)
                               )}
@@ -1331,20 +1359,20 @@ export default function Profile() {
 
                 {/* Cart History */}
 
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+                <div className="rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#0a365d] to-[#062747] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.17)] sm:p-8">
 
                   <div className="mb-7">
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-xl font-bold text-[#f5efe6]">
                       Cart History
                     </h2>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       Saved cart snapshots on this device.
                     </p>
                   </div>
 
                   {cartHistory.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400">
+                    <div className="text-center py-10 text-[#a8bbcf]">
                       <FiClock size={34} className="mx-auto" />
 
                       <p className="mt-3 text-sm">No cart history yet.</p>
@@ -1354,14 +1382,14 @@ export default function Profile() {
                       {cartHistory.map((snapshot) => (
                         <div
                           key={snapshot.id}
-                          className="flex items-center justify-between gap-4 border border-gray-100 rounded-xl p-4"
+                          className="flex items-center justify-between gap-4 border border-[#1c4a70] rounded-xl p-4"
                         >
                           <div>
-                            <p className="font-semibold text-sm text-gray-900">
+                            <p className="font-semibold text-sm text-[#f5efe6]">
                               {snapshot.items?.length} products
                             </p>
 
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-[#c1cddd] mt-1">
                               {new Date(snapshot.createdAt).toLocaleString()}
                             </p>
                           </div>
@@ -1385,15 +1413,15 @@ export default function Profile() {
             {/* PAYMENT METHODS */}
 
             {activeSection === "payments" && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+              <div className="rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#0a365d] to-[#062747] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.17)] sm:p-8">
 
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-xl font-bold text-[#f5efe6]">
                       Payment Methods
                     </h2>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       Manage your preferred payment methods.
                     </p>
                   </div>
@@ -1401,7 +1429,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setShowPaymentForm((value) => !value)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#d9c3a3] text-[#031e3d] text-sm font-semibold"
                   >
                     <FiPlus />
                     Add Method
@@ -1409,19 +1437,19 @@ export default function Profile() {
                 </div>
 
                 {showPaymentForm && (
-                  <div className="border border-gray-100 rounded-2xl p-5 mb-6 bg-gray-50">
+                  <div className="border border-[#1c4a70] rounded-2xl p-5 mb-6 bg-[#031e3d]">
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-[#c1cddd] mb-2">
                           Payment Type
                         </label>
 
                         <select
                           value={paymentType}
                           onChange={(e) => setPaymentType(e.target.value)}
-                          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none"
+                          className="w-full rounded-xl border border-white/[0.12] bg-[#031e3d]/80 text-[#f5efe6] px-4 py-3 text-sm outline-none transition-colors"
                         >
                           <option>Card</option>
                           <option>UPI</option>
@@ -1432,7 +1460,7 @@ export default function Profile() {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-[#c1cddd] mb-2">
                           Label / Details
                         </label>
 
@@ -1440,7 +1468,7 @@ export default function Profile() {
                           value={paymentLabel}
                           onChange={(e) => setPaymentLabel(e.target.value)}
                           placeholder="e.g. Visa ending 4242"
-                          className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none"
+                          className="w-full rounded-xl border border-white/[0.12] bg-[#031e3d]/80 text-[#f5efe6] px-4 py-3 text-sm outline-none transition-colors"
                         />
                       </div>
                     </div>
@@ -1449,7 +1477,7 @@ export default function Profile() {
                       <button
                         type="button"
                         onClick={handleAddPaymentMethod}
-                        className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold"
+                        className="px-4 py-2 rounded-lg bg-[#d9c3a3] text-[#031e3d] text-sm font-semibold"
                       >
                         Save
                       </button>
@@ -1457,7 +1485,7 @@ export default function Profile() {
                       <button
                         type="button"
                         onClick={() => setShowPaymentForm(false)}
-                        className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold"
+                        className="px-4 py-2 rounded-lg border border-white/[0.12] text-sm font-semibold"
                       >
                         Cancel
                       </button>
@@ -1467,13 +1495,13 @@ export default function Profile() {
 
                 {paymentMethods.length === 0 ? (
                   <div className="text-center py-14">
-                    <FiCreditCard size={42} className="mx-auto text-gray-300" />
+                    <FiCreditCard size={42} className="mx-auto text-[#6f8ba8]" />
 
-                    <h3 className="mt-4 font-semibold text-gray-900">
+                    <h3 className="mt-4 font-semibold text-[#f5efe6]">
                       No saved payment methods
                     </h3>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       Add a payment method for quick access.
                     </p>
                   </div>
@@ -1482,18 +1510,18 @@ export default function Profile() {
                     {paymentMethods.map((method) => (
                       <div
                         key={method.id}
-                        className="flex items-center gap-4 border border-gray-100 rounded-xl p-4"
+                        className="flex items-center gap-4 border border-[#1c4a70] rounded-xl p-4"
                       >
-                        <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center">
+                        <div className="w-11 h-11 rounded-xl bg-[#164267] flex items-center justify-center">
                           <FiCreditCard />
                         </div>
 
                         <div className="flex-1">
-                          <p className="font-semibold text-sm text-gray-900">
+                          <p className="font-semibold text-sm text-[#f5efe6]">
                             {method.type}
                           </p>
 
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-[#c1cddd] mt-1">
                             {method.label}
                           </p>
                         </div>
@@ -1521,31 +1549,31 @@ export default function Profile() {
             {/* REVIEWS */}
 
             {activeSection === "reviews" && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+              <div className="rounded-[28px] border border-white/[0.09] bg-gradient-to-br from-[#0a365d] to-[#062747] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.17)] sm:p-8">
 
                 <div className="flex items-center justify-between mb-7">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-xl font-bold text-[#f5efe6]">
                       My Reviews
                     </h2>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       Reviews and ratings you have submitted.
                     </p>
                   </div>
 
-                  <FiStar size={24} className="text-gray-400" />
+                  <FiStar size={24} className="text-[#a8bbcf]" />
                 </div>
 
                 {reviews.length === 0 ? (
                   <div className="text-center py-14">
-                    <FiStar size={42} className="mx-auto text-gray-300" />
+                    <FiStar size={42} className="mx-auto text-[#6f8ba8]" />
 
-                    <h3 className="mt-4 font-semibold text-gray-900">
+                    <h3 className="mt-4 font-semibold text-[#f5efe6]">
                       No reviews yet
                     </h3>
 
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[#c1cddd] mt-1">
                       Your submitted reviews will appear here.
                     </p>
                   </div>
@@ -1554,12 +1582,12 @@ export default function Profile() {
                     {reviews.map((review, index) => (
                       <div
                         key={review?.id || review?._id || index}
-                        className="border border-gray-100 rounded-2xl p-5"
+                        className="border border-[#1c4a70] rounded-2xl p-5"
                       >
                         <div className="flex items-start justify-between gap-4">
 
                           <div>
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-[#f5efe6]">
                               {review.productName || review.name || "Product"}
                             </h3>
 
@@ -1571,21 +1599,21 @@ export default function Profile() {
                                   className={
                                     starIndex < Number(review.rating || 0)
                                       ? "fill-current text-yellow-500 text-yellow-500"
-                                      : "text-gray-300"
+                                      : "text-[#6f8ba8]"
                                   }
                                 />
                               ))}
                             </div>
                           </div>
 
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-[#a8bbcf]">
                             {review.createdAt
                               ? new Date(review.createdAt).toLocaleDateString()
                               : ""}
                           </span>
                         </div>
 
-                        <p className="text-sm text-gray-600 mt-4 leading-6">
+                        <p className="text-sm text-[#d9c3a3] mt-4 leading-6">
                           {review.comment}
                         </p>
                       </div>
@@ -1603,8 +1631,8 @@ export default function Profile() {
 
       {toast && (
         <div
-          className={`fixed bottom-6 right-6 z-[100] max-w-sm px-5 py-4 rounded-xl shadow-2xl text-sm font-semibold flex items-center gap-3 ${
-            toast.type === "error" ? "bg-red-600 text-white" : "bg-gray-900 text-white"
+          className={`fixed bottom-5 right-5 z-[100] flex max-w-sm items-center gap-3 rounded-2xl border border-white/10 px-5 py-4 text-sm font-semibold shadow-[0_20px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl ${
+            toast.type === "error" ? "bg-red-600 text-white" : "bg-[#d9c3a3] text-[#031e3d]"
           }`}
         >
           {toast.type === "error" ? <FiX /> : <FiCheckCircle />}
