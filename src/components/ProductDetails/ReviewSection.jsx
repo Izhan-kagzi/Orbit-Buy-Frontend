@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 import {
   FiUser,
   FiSend,
   FiCheckCircle,
+  FiEdit2,
+  FiTrash2,
+  FiLogIn,
 } from "react-icons/fi";
 
 import api from "../../services/api";
+import { useAuth } from "../../hooks/useAuth";
 
 const formatDate = (value) => {
   if (!value) return "";
@@ -23,7 +28,14 @@ const formatDate = (value) => {
 };
 
 const ReviewSection = ({ product }) => {
+  const { user, isAuthenticated } = useAuth();
+
+  const location = useLocation();
+
   const [reviews, setReviews] = useState([]);
+
+  // Editing the logged-in customer's own review.
+  const [editing, setEditing] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -53,13 +65,11 @@ const ReviewSection = ({ product }) => {
     setLoading(true);
 
     try {
-      // Sent without the auth header on purpose — this endpoint is
-      // public, and a stale token would only add noise.
+      // The token is sent when available so a logged-in customer
+      // can also see their own review while it awaits approval.
+      // The endpoint stays public for guests.
       const response = await api.get(
-        `/reviews/product/${product.id}`,
-        {
-          auth: false,
-        }
+        `/reviews/product/${product.id}`
       );
 
       setReviews(response?.reviews || []);
@@ -79,7 +89,64 @@ const ReviewSection = ({ product }) => {
 
   useEffect(() => {
     loadReviews();
-  }, [product?.id]);
+  }, [product?.id, user?.id]);
+
+  // The logged-in customer's existing review for this product.
+  const myReview = useMemo(
+    () =>
+      isAuthenticated && user?.id
+        ? reviews.find(
+            (review) =>
+              String(review.userId) ===
+              String(user.id)
+          ) || null
+        : null,
+    [reviews, isAuthenticated, user?.id]
+  );
+
+  const startEdit = () => {
+    if (!myReview) return;
+
+    setRating(Number(myReview.rating) || 0);
+    setComment(myReview.comment || "");
+    setEditing(true);
+    setError("");
+    setMessage("");
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setRating(0);
+    setHoverRating(0);
+    setComment("");
+    setError("");
+  };
+
+  const deleteMyReview = async () => {
+    if (!myReview) return;
+
+    if (
+      !window.confirm(
+        "Delete your review? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await api.delete(`/reviews/${myReview.id}`);
+
+      setMessage("Your review was deleted.");
+      setError("");
+
+      await loadReviews();
+    } catch (err) {
+      setError(
+        err.message ||
+          "Unable to delete your review."
+      );
+    }
+  };
 
   const averageRating = useMemo(() => {
     if (summary.averageRating) {
@@ -124,17 +191,32 @@ const ReviewSection = ({ product }) => {
       return;
     }
 
+    if (!isAuthenticated) {
+      setError("Please log in to write a review.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      const response = await api.post(
-        "/reviews",
-        {
-          productId: product.id,
-          rating,
-          comment: comment.trim(),
-        }
-      );
+      const response = editing && myReview
+        ? await api.put(
+            `/reviews/${myReview.id}`,
+            {
+              rating,
+              comment: comment.trim(),
+            }
+          )
+        : await api.post(
+            "/reviews",
+            {
+              productId: product.id,
+              rating,
+              comment: comment.trim(),
+            }
+          );
+
+      setEditing(false);
 
       setMessage(
         response?.message ||
@@ -313,6 +395,16 @@ const ReviewSection = ({ product }) => {
                           "Orbit Buy Customer"}
                       </h3>
 
+                      {myReview &&
+                        review.id === myReview.id && (
+                          <span className="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-semibold text-brand-primary">
+                            Your review
+                            {review.approved === false
+                              ? " · awaiting approval"
+                              : ""}
+                          </span>
+                        )}
+
                       {review.verifiedPurchase && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
                           <FiCheckCircle size={13} />
@@ -349,6 +441,26 @@ const ReviewSection = ({ product }) => {
               <p className="mt-6 leading-8 text-gray-600">
                 {review.comment}
               </p>
+
+              {myReview && review.id === myReview.id && (
+                <div className="mt-5 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand-primary hover:text-brand-primary"
+                  >
+                    <FiEdit2 /> Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={deleteMyReview}
+                    className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+                  >
+                    <FiTrash2 /> Delete
+                  </button>
+                </div>
+              )}
 
               {/* STAFF REPLY */}
               {review.reply?.message && (
@@ -389,12 +501,50 @@ const ReviewSection = ({ product }) => {
       ==================================================== */}
 
       <div className="mt-20">
+        {!isAuthenticated ? (
+          <div className="rounded-3xl border border-gray-200 bg-gray-50 p-10 text-center">
+            <h2 className="text-3xl font-black text-brand-dark">
+              Write a Review
+            </h2>
+
+            <p className="mt-3 text-gray-500">
+              Please log in to share your experience
+              with this product.
+            </p>
+
+            <Link
+              to="/login"
+              state={{ from: location.pathname }}
+              className="mt-6 inline-flex items-center gap-3 rounded-xl bg-brand-primary px-8 py-4 text-lg font-bold text-white transition-all duration-300 hover:bg-brand-brown"
+            >
+              <FiLogIn />
+              Log in to Review
+            </Link>
+          </div>
+        ) : myReview && !editing ? (
+          <div className="rounded-3xl border border-gray-200 bg-gray-50 p-8 text-center">
+            <h2 className="text-2xl font-black text-brand-dark">
+              Thanks for your review!
+            </h2>
+
+            <p className="mt-2 text-gray-500">
+              You have already reviewed this product.
+              You can edit or delete your review above.
+            </p>
+
+            {message && (
+              <p className="mt-4 text-sm font-medium text-green-700">
+                {message}
+              </p>
+            )}
+          </div>
+        ) : (
         <form
           onSubmit={submitReview}
           className="rounded-3xl border border-gray-200 bg-gray-50 p-8"
         >
           <h2 className="mb-8 text-3xl font-black text-brand-dark">
-            Write a Review
+            {editing ? "Edit Your Review" : "Write a Review"}
           </h2>
 
           {/* RATING */}
@@ -482,13 +632,22 @@ const ReviewSection = ({ product }) => {
 
             {submitting
               ? "Submitting..."
+              : editing
+              ? "Save Changes"
               : "Submit Review"}
           </button>
 
-          <p className="mt-4 text-center text-sm text-gray-500">
-            Please log in to submit a review.
-          </p>
+          {editing && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="mt-3 w-full rounded-xl border border-gray-300 py-3 font-semibold text-gray-600 transition hover:bg-white"
+            >
+              Cancel
+            </button>
+          )}
         </form>
+        )}
       </div>
     </section>
   );

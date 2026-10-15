@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   FiArrowLeft,
@@ -30,6 +30,7 @@ const features = [
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const [loading, setLoading] = useState(false);
@@ -92,7 +93,15 @@ const Login = () => {
       } else if (role === "admin") {
         navigate("/admin", { replace: true });
       } else {
-        navigate("/", { replace: true });
+        // Send customers back to the page they came from
+        // (e.g. the product they wanted to review).
+        const backTo = location.state?.from;
+        navigate(
+          typeof backTo === "string" && backTo.startsWith("/")
+            ? backTo
+            : "/",
+          { replace: true }
+        );
       }
     } catch (error) {
       console.error("Login error:", error);
