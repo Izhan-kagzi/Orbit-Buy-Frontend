@@ -37,6 +37,14 @@ const AdminMaintenance = () => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [custom, setCustom] = useState({ hours: "", minutes: "" });
+  const [now, setNow] = useState(Date.now());
+
+  // Ticks every second so the live countdown below stays current.
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const load = () => {
     setLoading(true);
@@ -99,6 +107,33 @@ const AdminMaintenance = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const startCustom = () => {
+    const total =
+      (Number(custom.hours) || 0) * 60 + (Number(custom.minutes) || 0);
+
+    if (total < 1) {
+      toast.error("Enter a timer of at least 1 minute.");
+      return;
+    }
+
+    startFor(total);
+  };
+
+  const remainingMs =
+    status?.active && status?.endTime
+      ? Math.max(0, new Date(status.endTime).getTime() - now)
+      : null;
+
+  const formatRemaining = (ms) => {
+    const total = Math.floor(ms / 1000);
+    const d = Math.floor(total / 86400);
+    const h = Math.floor((total % 86400) / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const s = total % 60;
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d ? `${d}d ` : ""}${pad(h)}:${pad(m)}:${pad(s)}`;
   };
 
   const handleSubmit = (e) => {
@@ -192,6 +227,11 @@ const AdminMaintenance = () => {
             <p className="text-sm text-gray-500 mb-3">
               Start maintenance now and let it end by itself after:
             </p>
+            {remainingMs !== null && (
+              <p className="mb-3 text-sm font-semibold text-red-700">
+                Time left: {formatRemaining(remainingMs)}
+              </p>
+            )}
             <div className="flex flex-wrap gap-2">
               {PRESETS.map((preset) => (
                 <button
@@ -204,6 +244,43 @@ const AdminMaintenance = () => {
                   {preset.label}
                 </button>
               ))}
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-end gap-3">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Hours</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={custom.hours}
+                  onChange={(e) =>
+                    setCustom((prev) => ({ ...prev, hours: e.target.value }))
+                  }
+                  placeholder="0"
+                  className="w-24 border border-gray-200 rounded-xl p-2.5 focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Minutes</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={custom.minutes}
+                  onChange={(e) =>
+                    setCustom((prev) => ({ ...prev, minutes: e.target.value }))
+                  }
+                  placeholder="0"
+                  className="w-24 border border-gray-200 rounded-xl p-2.5 focus:outline-none focus:border-brand-primary"
+                />
+              </div>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={startCustom}
+                className="px-5 py-2.5 rounded-xl bg-brand-primary text-white text-sm font-semibold hover:bg-brand-brown transition disabled:opacity-60"
+              >
+                Start custom timer
+              </button>
             </div>
           </div>
 

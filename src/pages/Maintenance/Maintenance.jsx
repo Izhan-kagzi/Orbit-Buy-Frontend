@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FiMail, FiArrowRight } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function Maintenance({ message, endTime }) {
+  const { isStaff } = useAuth();
+
   // The countdown only renders once an admin has actually set an end time
   // for the maintenance window — without one we just show the message.
   const targetDate = endTime ? new Date(endTime).getTime() : null;
@@ -200,8 +203,11 @@ export default function Maintenance({ message, endTime }) {
           </div>
 
           <p className="mt-4 text-center text-[10px] text-slate-400 lg:text-left">
-            <Link to="/login" className="underline-offset-2 hover:text-[#1557a6] hover:underline">
-              Staff sign in
+            <Link
+              to={isStaff ? "/admin/maintenance" : "/login"}
+              className="underline-offset-2 hover:text-[#1557a6] hover:underline"
+            >
+              {isStaff ? "Manage maintenance" : "Staff sign in"}
             </Link>
           </p>
         </motion.div>

@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import {
   Routes,
   Route,
+  Navigate,
   useLocation,
 } from "react-router-dom";
 
@@ -266,18 +267,33 @@ function App() {
   // reachable so an admin can still sign in, inspect the dashboard, and
   // switch maintenance back off after a hard refresh. AdminRoute/StaffRoute
   // still enforce authorization for those pages.
-  const isAdminArea = location.pathname.startsWith("/admin");
+  //
+  // While maintenance is active EVERYONE (customers, managers, admins) only
+  // sees the maintenance page. The two exceptions are needed so maintenance
+  // can be switched off again: /login, and /admin/maintenance for a
+  // signed-in admin/manager.
+  const isMaintenanceControl = location.pathname === "/admin/maintenance";
 
   const blockedByMaintenance =
     maintenance.active &&
-    !isStaff &&
-    !isAdminArea &&
-    location.pathname !== "/login";
+    location.pathname !== "/login" &&
+    !(isStaff && isMaintenanceControl);
 
   // Don't flash the storefront (or the maintenance page at a signed-in
   // staff member) before we know the maintenance status and who is signed in.
   if (!maintenance.checked || authLoading) {
     return <RouteLoader />;
+  }
+
+  // Staff who land anywhere else in the dashboard (e.g. right after login)
+  // are taken straight to the maintenance control page.
+  if (
+    maintenance.active &&
+    isStaff &&
+    location.pathname.startsWith("/admin") &&
+    !isMaintenanceControl
+  ) {
+    return <Navigate to="/admin/maintenance" replace />;
   }
 
   if (blockedByMaintenance) {
