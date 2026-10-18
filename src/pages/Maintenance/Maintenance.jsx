@@ -121,36 +121,38 @@ export default function Maintenance({ message, endTime }) {
             {message || "We’re polishing things behind the scenes to bring you a smoother, more refined shopping experience. Thanks for bearing with us."}
           </motion.p>
 
-          {/* Countdown timer — original timeLeft state and endTime logic retained */}
-          <motion.div
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.65 }}
-            className="mt-8 grid w-full grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-3 lg:max-w-[620px]"
-          >
-            {[
-              { value: timeLeft.days, label: "Days" },
-              { value: timeLeft.hours, label: "Hours" },
-              { value: timeLeft.minutes, label: "Minutes" },
-              { value: timeLeft.seconds, label: "Seconds" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="overflow-hidden rounded-2xl border border-blue-100/90 bg-white/85 shadow-[0_8px_30px_rgba(28,86,145,0.07)] backdrop-blur"
-              >
-                <div className="flex min-h-[76px] items-center justify-center px-3 py-4 sm:min-h-[88px] sm:py-5">
-                  <span className="text-3xl font-semibold tracking-tight text-[#123b68] sm:text-4xl">
-                    {String(item.value).padStart(2, "0")}
-                  </span>
+          {/* Show the countdown only when the admin/manager configured an end time. */}
+          {targetDate && (
+            <motion.div
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.65 }}
+              className="mt-8 grid w-full grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-3 lg:max-w-[620px]"
+            >
+              {[
+                { value: timeLeft.days, label: "Days" },
+                { value: timeLeft.hours, label: "Hours" },
+                { value: timeLeft.minutes, label: "Minutes" },
+                { value: timeLeft.seconds, label: "Seconds" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="overflow-hidden rounded-2xl border border-blue-100/90 bg-white/85 shadow-[0_8px_30px_rgba(28,86,145,0.07)] backdrop-blur"
+                >
+                  <div className="flex min-h-[76px] items-center justify-center px-3 py-4 sm:min-h-[88px] sm:py-5">
+                    <span className="text-3xl font-semibold tracking-tight text-[#123b68] sm:text-4xl">
+                      {String(item.value).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <div className="border-t border-blue-100 bg-blue-50/70 py-2.5 text-center">
+                    <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[10px]">
+                      {item.label}
+                    </span>
+                  </div>
                 </div>
-                <div className="border-t border-blue-100 bg-blue-50/70 py-2.5 text-center">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-[10px]">
-                    {item.label}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </motion.div>
+              ))}
+            </motion.div>
+          )}
 
           {/* Notify form — existing submit behavior retained */}
           <motion.div
