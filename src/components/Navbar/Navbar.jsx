@@ -83,14 +83,14 @@ const mensMenu = [
   name: "Sweatshirts",
   path: "/mens-sweatshirts",
   image:
-    "https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&w=500&q=80",
+    "https://i.pinimg.com/1200x/f6/cd/e3/f6cde3302495e78f57cec4dc84a376ea.jpg",
   desc: "Comfortable everyday layers",
 },
 {
   name: "Shackets",
   path: "/mens-shackets",
   image:
-    "https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=500&q=80",
+    "https://i.pinimg.com/736x/12/01/9a/12019a03eabda752db972727c4d6085d.jpg",
   desc: "Modern shirt-jacket layering",
 },
 ];
@@ -115,7 +115,7 @@ const womensMenu = [
     name: "Jeans",
     path: "/women-jeans",
     image:
-      "https://images.pexels.com/photos/17630736/pexels-photo-17630736.jpeg",
+      "https://ricidress.com/cdn/shop/files/3cb575de6990347e1d7528146a82f18b_900x.jpg?v=1789204042",
     desc: "Flattering premium denim",
   },
   {
@@ -136,7 +136,7 @@ const womensMenu = [
     name: "Jumpsuits",
     path: "/women-jumpsuits",
     image:
-      "https://images.pexels.com/photos/39417903/pexels-photo-39417903.jpeg",
+      "https://i.pinimg.com/736x/06/03/0b/06030b3bf5134d1a05d62615a4d74bb7.jpg",
     desc: "One-piece, all-day looks",
   },
   {
@@ -164,7 +164,7 @@ const womensMenu = [
   name: "Cardigans",
   path: "/women-cardigans",
   image:
-    "https://images.unsplash.com/photo-1618932260643-eee4a2f652a6?auto=format&fit=crop&w=500&q=80",
+    "https://i.pinimg.com/1200x/97/12/59/97125973d962c94a8dc0ce5f5b1a89e7.jpg",
   desc: "Soft knit layers for every season",
 },
 ];
