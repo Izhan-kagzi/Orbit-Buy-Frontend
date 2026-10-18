@@ -27,7 +27,7 @@ const features = [
     icon: <FiShield size={24} />,
     title: "Secure Shopping",
     description:
-      "Your account, personal information and payments are protected with secure technology.",
+      "Your account, personal information and payments are protected with security.",
   },
   {
     icon: <FiRefreshCw size={24} />,
@@ -39,7 +39,7 @@ const features = [
 
 const stats = [
   {
-    number: "50K+",
+    number: "10K+",
     title: "Happy Customers",
   },
   {
@@ -51,7 +51,7 @@ const stats = [
     title: "Average Rating",
   },
   {
-    number: "100+",
+    number: "14",
     title: "Fashion Brands",
   },
 ];
