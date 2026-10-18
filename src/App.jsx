@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import {
   Routes,
   Route,
+  Navigate,
   useLocation,
 } from "react-router-dom";
 
@@ -330,7 +331,16 @@ function App() {
 
                 <Route
                   path="/maintenance"
-                  element={<Maintenance />}
+                  element={
+                    maintenance.active && !isStaff ? (
+                      <Maintenance
+                        message={maintenance.message}
+                        endTime={maintenance.endTime}
+                      />
+                    ) : (
+                      <Navigate to="/" replace />
+                    )
+                  }
                 />
 
                 <Route
@@ -681,9 +691,9 @@ function App() {
                 <Route
                   path="/admin/maintenance"
                   element={
-                    <AdminRoute>
+                    <StaffRoute>
                       <AdminMaintenance />
-                    </AdminRoute>
+                    </StaffRoute>
                   }
                 />
 
