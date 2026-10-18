@@ -43,6 +43,7 @@ const managerNavItems = [
   { to: "/admin/cancellations", label: "Cancellations", icon: FiXCircle },
   { to: "/admin/reviews", label: "Reviews", icon: FiMessageCircle },
   { to: "/admin/flash-sale", label: "Flash Sale", icon: FiZap },
+  { to: "/admin/maintenance", label: "Maintenance", icon: FiTool },
 ];
 
 const relativeTime = (date) => {

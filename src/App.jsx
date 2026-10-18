@@ -2,7 +2,6 @@ import { Suspense, lazy } from "react";
 import {
   Routes,
   Route,
-  Navigate,
   useLocation,
 } from "react-router-dom";
 
@@ -242,7 +241,7 @@ const AdminMaintenance = lazy(
 function App() {
   const location = useLocation();
 
-  const { isStaff } = useAuth();
+  const { isStaff, loading: authLoading } = useAuth();
 
   const maintenance = useMaintenanceStatus();
 
@@ -274,6 +273,12 @@ function App() {
     !isStaff &&
     !isAdminArea &&
     location.pathname !== "/login";
+
+  // Don't flash the storefront (or the maintenance page at a signed-in
+  // staff member) before we know the maintenance status and who is signed in.
+  if (!maintenance.checked || authLoading) {
+    return <RouteLoader />;
+  }
 
   if (blockedByMaintenance) {
     return (
@@ -331,16 +336,7 @@ function App() {
 
                 <Route
                   path="/maintenance"
-                  element={
-                    maintenance.active && !isStaff ? (
-                      <Maintenance
-                        message={maintenance.message}
-                        endTime={maintenance.endTime}
-                      />
-                    ) : (
-                      <Navigate to="/" replace />
-                    )
-                  }
+                  element={<Maintenance />}
                 />
 
                 <Route

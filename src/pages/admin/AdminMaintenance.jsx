@@ -17,6 +17,14 @@ const toLocalInputValue = (iso) => {
   return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
 };
 
+const PRESETS = [
+  { label: "30 min", minutes: 30 },
+  { label: "1 hour", minutes: 60 },
+  { label: "2 hours", minutes: 120 },
+  { label: "6 hours", minutes: 360 },
+  { label: "24 hours", minutes: 1440 },
+];
+
 const emptyForm = {
   enabled: false,
   startTime: "",
@@ -100,6 +108,17 @@ const AdminMaintenance = () => {
 
   const toggleNow = () => save({ enabled: !form.enabled });
 
+  // One click: start maintenance right now and end it automatically after
+  // the chosen duration (the storefront countdown follows the end time).
+  const startFor = (minutes) =>
+    save({
+      enabled: true,
+      startTime: "",
+      endTime: toLocalInputValue(
+        new Date(Date.now() + minutes * 60 * 1000).toISOString()
+      ),
+    });
+
   return (
     <AdminLayout>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
@@ -126,7 +145,11 @@ const AdminMaintenance = () => {
                 status?.active ? "bg-red-500" : "bg-green-500"
               }`}
             />
-            {status?.active ? "Maintenance is live" : "Site is live"}
+            {status?.active
+              ? "Maintenance is live"
+              : status?.enabled && status?.startTime
+              ? "Maintenance scheduled"
+              : "Site is live"}
           </span>
         )}
       </div>
@@ -162,6 +185,26 @@ const AdminMaintenance = () => {
               <FiPower />
               {form.enabled ? "Turn Off" : "Turn On"}
             </button>
+          </div>
+
+          <div className="md:col-span-2 rounded-xl border border-gray-200 p-4">
+            <p className="font-semibold">Quick timer</p>
+            <p className="text-sm text-gray-500 mb-3">
+              Start maintenance now and let it end by itself after:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {PRESETS.map((preset) => (
+                <button
+                  key={preset.minutes}
+                  type="button"
+                  disabled={saving}
+                  onClick={() => startFor(preset.minutes)}
+                  className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold hover:bg-gray-50 transition disabled:opacity-60"
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>

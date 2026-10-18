@@ -297,6 +297,19 @@ async function request(
     error.response = data;
 
     // --------------------------------------------------------
+    // Backend says the store is in maintenance — let the app
+    // re-check status right away instead of waiting for the poll.
+    // --------------------------------------------------------
+
+    if (
+      response.status === 503 &&
+      typeof data === "object" &&
+      data?.maintenance?.active
+    ) {
+      window.dispatchEvent(new Event("orbit:maintenance"));
+    }
+
+    // --------------------------------------------------------
     // Expired/invalid JWT
     // --------------------------------------------------------
 

@@ -121,7 +121,8 @@ export default function Maintenance({ message, endTime }) {
             {message || "We’re polishing things behind the scenes to bring you a smoother, more refined shopping experience. Thanks for bearing with us."}
           </motion.p>
 
-          {/* Countdown timer — original timeLeft state and endTime logic retained */}
+          {/* Countdown timer — only shown when staff set an end time */}
+          {targetDate && (
           <motion.div
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
@@ -151,6 +152,7 @@ export default function Maintenance({ message, endTime }) {
               </div>
             ))}
           </motion.div>
+          )}
 
           {/* Notify form — existing submit behavior retained */}
           <motion.div
@@ -196,6 +198,12 @@ export default function Maintenance({ message, endTime }) {
             </span>
             <div className="h-px w-8 bg-blue-200" />
           </div>
+
+          <p className="mt-4 text-center text-[10px] text-slate-400 lg:text-left">
+            <Link to="/login" className="underline-offset-2 hover:text-[#1557a6] hover:underline">
+              Staff sign in
+            </Link>
+          </p>
         </motion.div>
 
         {/* Blue maintenance illustration */}
@@ -214,6 +222,7 @@ export default function Maintenance({ message, endTime }) {
             <img
               src="/maintenance-illustration-blue.png"
               alt="Illustration of a person improving a website"
+              onError={(e) => { e.currentTarget.style.display = "none"; }}
               className="relative z-0 mx-auto h-auto w-full max-w-[520px] object-contain"
             />
           </div>

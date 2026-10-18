@@ -70,11 +70,13 @@ export function useMaintenanceStatus() {
     };
 
     window.addEventListener("focus", refresh);
+    window.addEventListener("orbit:maintenance", refresh);
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("orbit:maintenance", refresh);
       document.removeEventListener("visibilitychange", handleVisibility);
       clearScheduledRefresh();
     };
