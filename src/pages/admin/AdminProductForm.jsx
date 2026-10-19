@@ -31,7 +31,7 @@ const SLUG_OPTIONS = [
   { value: "women-shirts", label: "Women's Shirts" },
   { value: "women-skirts", label: "Women's Skirts" },
   { value: "women-jumpsuits", label: "Women's Jumpsuits" },
-  { value: "women-leggings", label: "Women's Leggings" },
+  
   { value: "women-shrugs", label: "Women's Shrugs" },
   { value: "women-cardigans", label: "Women's Cardigans" },
 ];

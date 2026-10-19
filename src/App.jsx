@@ -151,9 +151,7 @@ const WomenJumpsuits = lazy(
 
 /* NEW WOMEN CATEGORIES */
 
-const WomenLeggings = lazy(
-  () => import("./pages/WomenLeggings")
-);
+
 
 const WomenShrugs = lazy(
   () => import("./pages/WomenShrugs")
@@ -462,10 +460,7 @@ function App() {
 
                 {/* NEW WOMEN CATEGORIES */}
 
-                <Route
-                  path="/women-leggings"
-                  element={<WomenLeggings />}
-                />
+                
 
                 <Route
                   path="/women-shrugs"
