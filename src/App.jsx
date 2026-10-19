@@ -845,13 +845,7 @@ function App() {
 
                       </section>
 
-                      {/* FOOTER */}
-
-                      <footer className="relative z-10 px-5 pb-6 text-center sm:px-8">
-                        <p className="text-[9px] font-medium tracking-[0.12em] text-slate-400 sm:text-[10px]">
-                          © {new Date().getFullYear()} Orbit Buy <span className="mx-2 text-blue-300">·</span> All rights reserved
-                        </p>
-                      </footer>
+                      
 
                     </main>
                   }
