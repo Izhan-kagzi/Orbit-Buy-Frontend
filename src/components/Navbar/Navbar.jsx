@@ -41,7 +41,7 @@ const mensMenu = [
     name: "T-Shirts",
     path: "/mens-tshirts",
     image:
-      "https://i.pinimg.com/736x/39/37/b7/3937b7a8cca92b69cc81e46ac1e6af5b.jpg",
+      "https://i.pinimg.com/736x/19/0e/aa/190eaa3bef34fcfe77e72dfabb183795.jpg",
     desc: "Everyday essentials",
   },
   {
@@ -69,14 +69,14 @@ const mensMenu = [
     name: "Jackets",
     path: "/mens-jackets",
     image:
-      "https://i.pinimg.com/736x/65/3f/b6/653fb6d7107dea352dd89441460ca993.jpg",
+      "https://i.pinimg.com/1200x/0b/63/71/0b63710c4ff43e4b29ad8db2d64b0cf7.jpg",
     desc: "Stylish outerwear",
   },
   {
   name: "Formals",
   path: "/mens-formals",
   image:
-    "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=500&q=80",
+    "https://i.pinimg.com/736x/93/f4/88/93f488b7982ac079676772176c8a61e2.jpg",
   desc: "Sharp styles for work & occasions",
 },
 {
