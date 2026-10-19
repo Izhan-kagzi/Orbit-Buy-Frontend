@@ -704,223 +704,156 @@ function App() {
                   }
                 />
 
-                {/* ==================================================
+                                {/* ==================================================
                     404
                 ================================================== */}
 
                 <Route
                   path="*"
                   element={
-                    <div className="relative min-h-screen overflow-hidden bg-[#0b0b0b] text-white">
+                    <main className="relative isolate min-h-screen overflow-hidden bg-[#f7faff] text-[#0b1f3a]">
 
                       {/* BACKGROUND */}
 
-                      <div className="pointer-events-none absolute inset-0">
-
-                        <div
-                          className="absolute inset-0 opacity-[0.06]"
-                          style={{
-                            backgroundImage: `
-                              linear-gradient(
-                                rgba(255,255,255,0.4) 1px,
-                                transparent 1px
-                              ),
-                              linear-gradient(
-                                90deg,
-                                rgba(255,255,255,0.4) 1px,
-                                transparent 1px
-                              )
-                            `,
-                            backgroundSize: "70px 70px",
-                          }}
-                        />
-
-                        <div className="absolute left-1/2 top-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/[0.035] blur-3xl" />
-
-                        <div className="absolute left-[8%] top-[18%] h-2 w-2 rounded-full bg-white/40" />
-
-                        <div className="absolute right-[12%] top-[25%] h-1.5 w-1.5 rounded-full bg-white/30" />
-
-                        <div className="absolute bottom-[18%] left-[18%] h-1.5 w-1.5 rounded-full bg-white/30" />
-
+                      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                        <div className="absolute -left-32 -top-40 h-[420px] w-[420px] rounded-full bg-[#1d72d8]/10 blur-[100px]" />
+                        <div className="absolute -right-28 top-1/3 h-[480px] w-[480px] rounded-full bg-[#5aa7ff]/15 blur-[120px]" />
+                        <div className="absolute inset-0 opacity-[0.32] [background-image:radial-gradient(#b7cce5_1px,transparent_1px)] [background-size:24px_24px]" />
                       </div>
 
                       {/* TOP BAR */}
 
-                      <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10 lg:px-16">
-
-                        <a
-                          href="/"
-                          className="group flex items-center gap-3"
-                        >
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 transition-all duration-300 group-hover:border-white/60 group-hover:rotate-45">
-                            <span className="h-2 w-2 rounded-full bg-white" />
-                          </div>
-
-                          <span className="text-sm font-semibold uppercase tracking-[0.25em]">
-                            Orbit Buy
+                      <motion.header
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7 }}
+                        className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-6 sm:px-8 lg:px-12"
+                      >
+                        <a href="/" className="group flex items-center gap-3">
+                          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#0b2e59] text-white shadow-lg shadow-blue-950/15 transition-transform duration-300 group-hover:-rotate-6">
+                            <span className="text-lg font-semibold">O</span>
+                          </span>
+                          <span className="flex flex-col leading-none">
+                            <span className="text-lg font-bold tracking-[0.16em] text-[#0b2e59] sm:text-xl">ORBIT BUY</span>
+                            <span className="mt-1.5 text-[9px] font-semibold tracking-[0.28em] text-[#3979bd]">PREMIUM FASHION</span>
                           </span>
                         </a>
 
-                        <span className="hidden text-[10px] uppercase tracking-[0.35em] text-white/40 sm:block">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.13em] text-[#315779] shadow-sm backdrop-blur sm:px-4 sm:text-xs">
+                          <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-40" />
+                            <span className="relative h-2 w-2 rounded-full bg-blue-600" />
+                          </span>
                           Error 404
-                        </span>
-
-                      </header>
+                        </div>
+                      </motion.header>
 
                       {/* MAIN */}
 
-                      <main className="relative z-10 flex min-h-[calc(100vh-90px)] items-center justify-center px-5 pb-16 pt-8">
+                      <section className="relative z-10 mx-auto grid min-h-[calc(100vh-150px)] w-full max-w-7xl items-center gap-8 px-5 pb-12 pt-3 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-12 lg:px-12 lg:pb-16">
 
-                        <div className="w-full max-w-[1400px]">
-
-                          <div className="mb-8 flex items-center justify-between border-b border-white/10 pb-5">
-
-                            <span className="text-[10px] uppercase tracking-[0.3em] text-white/40">
-                              Lost in space
-                            </span>
-
-                            <span className="text-[10px] uppercase tracking-[0.3em] text-white/30">
-                              2026
-                            </span>
-
+                        <motion.div
+                          initial={{ opacity: 0, x: -24 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                          className="order-2 mx-auto w-full max-w-2xl text-center lg:order-1 lg:mx-0 lg:text-left"
+                        >
+                          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#3979bd] shadow-sm sm:text-xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                            Looks like you took a wrong turn
                           </div>
 
-                          {/* GIANT 404 */}
+                          <motion.h1
+                            initial={{ opacity: 0, y: 24 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                            className="text-4xl font-semibold leading-[1.08] tracking-[-0.045em] text-[#0b1f3a] sm:text-5xl md:text-6xl lg:text-[4.25rem]"
+                          >
+                            Page
+                            <span className="mt-1 block bg-gradient-to-r from-[#1557a6] via-[#287fdb] to-[#62a9ff] bg-clip-text pb-2 uppercase text-transparent">
+                              not found.
+                            </span>
+                          </motion.h1>
 
-                          <div className="relative">
+                          <p className="mt-5 text-xs font-semibold uppercase tracking-[0.24em] text-[#3979bd] sm:text-sm sm:tracking-[0.3em]">
+                            Let’s get you back on track
+                          </p>
 
-                            <h1
-                              className="
-                                select-none
-                                text-center
-                                text-[32vw]
-                                font-black
-                                leading-[0.72]
-                                tracking-[-0.09em]
-                                text-white
-                                sm:text-[30vw]
-                                md:text-[27vw]
-                                lg:text-[24vw]
-                              "
+                          <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-slate-600 sm:text-base sm:leading-8 lg:mx-0">
+                            The page you’re looking for may have been moved,
+                            deleted, or the link might be incorrect. Head back
+                            home and keep shopping.
+                          </p>
+
+                          {/* BUTTONS */}
+
+                          <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
+
+                            <a
+                              href="/"
+                              className="group inline-flex h-12 items-center gap-3 rounded-2xl bg-[#0b2e59] px-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_12px_36px_rgba(28,86,145,0.18)] transition-colors duration-300 hover:bg-[#12457e] sm:h-14 sm:px-7"
                             >
-                              404
-                            </h1>
+                              Back home
+                              <span className="text-base transition-transform duration-300 group-hover:translate-x-1">→</span>
+                            </a>
 
-                            <div className="absolute left-0 right-0 top-1/2 h-px bg-white/10" />
+                            <button
+                              type="button"
+                              onClick={() => window.history.back()}
+                              className="group inline-flex h-12 items-center gap-3 rounded-2xl border border-blue-100 bg-white/90 px-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0b2e59] shadow-sm transition-colors duration-300 hover:border-blue-300 sm:h-14 sm:px-7"
+                            >
+                              <span className="text-base transition-transform duration-300 group-hover:-translate-x-1">←</span>
+                              Go back
+                            </button>
 
-                            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 bg-[#0b0b0b] px-5">
+                          </div>
 
-                              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+                          <div className="mt-8 flex items-center justify-center gap-3 lg:justify-start">
+                            <div className="h-px w-8 bg-blue-200" />
+                            <span className="text-[9px] font-medium uppercase tracking-[0.22em] text-slate-400 sm:text-[10px]">
+                              Orbit Buy · Premium Fashion
+                            </span>
+                            <div className="h-px w-8 bg-blue-200" />
+                          </div>
+                        </motion.div>
 
-                              <span className="whitespace-nowrap text-[9px] uppercase tracking-[0.35em] text-white/50">
-                                Page not found
+                        {/* 404 ILLUSTRATION */}
+
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{ delay: 0.12, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                          className="order-1 relative mx-auto flex w-full max-w-[560px] items-center justify-center lg:order-2 lg:max-w-none"
+                        >
+                          <div aria-hidden="true" className="absolute inset-[12%] rounded-full bg-blue-300/25 blur-3xl" />
+
+                          <div className="relative w-full rounded-[2rem] border border-white/90 bg-white/70 p-3 shadow-[0_24px_80px_rgba(23,72,125,0.11)] backdrop-blur-sm sm:p-5">
+                            <div className="absolute left-6 top-6 z-10 flex items-center gap-2 rounded-full border border-blue-100 bg-white/95 px-3 py-2 shadow-sm sm:left-8 sm:top-8">
+                              <span className="h-2 w-2 rounded-full bg-blue-500" />
+                              <span className="text-[9px] font-bold uppercase tracking-[0.13em] text-[#315779]">
+                                Nothing here
                               </span>
-
                             </div>
 
+                            <img
+                              src="/404-illustration.png"
+                              alt="Illustration of a person searching with a magnifying glass on a 404"
+                              className="relative z-0 mx-auto h-auto w-full max-w-[520px] object-contain"
+                            />
                           </div>
+                        </motion.div>
 
-                          {/* BOTTOM CONTENT */}
+                      </section>
 
-                          <div className="mt-12 grid grid-cols-1 gap-8 border-t border-white/10 pt-8 md:grid-cols-3 md:items-end">
+                      {/* FOOTER */}
 
-                            <div className="md:col-span-2">
+                      <footer className="relative z-10 px-5 pb-6 text-center sm:px-8">
+                        <p className="text-[9px] font-medium tracking-[0.12em] text-slate-400 sm:text-[10px]">
+                          © {new Date().getFullYear()} Orbit Buy <span className="mx-2 text-blue-300">·</span> All rights reserved
+                        </p>
+                      </footer>
 
-                              <p className="max-w-xl text-xl font-light leading-relaxed text-white/70 sm:text-2xl">
-                                Looks like you've wandered somewhere
-                                that doesn't exist.
-                              </p>
-
-                              <p className="mt-3 max-w-lg text-sm leading-6 text-white/35">
-                                The page you're looking for may have been moved,
-                                deleted, or the URL might be incorrect.
-                              </p>
-
-                            </div>
-
-                            <div className="flex md:justify-end">
-
-                              <a
-                                href="/"
-                                className="
-                                  group
-                                  relative
-                                  inline-flex
-                                  items-center
-                                  gap-5
-                                  overflow-hidden
-                                  rounded-full
-                                  border
-                                  border-white/20
-                                  px-7
-                                  py-4
-                                  text-xs
-                                  font-semibold
-                                  uppercase
-                                  tracking-[0.2em]
-                                  text-white
-                                  transition-all
-                                  duration-500
-                                  hover:border-white
-                                "
-                              >
-
-                                <span
-                                  className="
-                                    absolute
-                                    inset-0
-                                    -translate-x-full
-                                    bg-white
-                                    transition-transform
-                                    duration-500
-                                    group-hover:translate-x-0
-                                  "
-                                />
-
-                                <span className="relative z-10 transition-colors duration-500 group-hover:text-black">
-                                  Back Home
-                                </span>
-
-                                <span className="relative z-10 text-lg transition-all duration-500 group-hover:translate-x-1 group-hover:text-black">
-                                  →
-                                </span>
-
-                              </a>
-
-                            </div>
-
-                          </div>
-
-                          {/* FOOTER INFO */}
-
-                          <div className="mt-16 flex flex-col justify-between gap-4 text-[9px] uppercase tracking-[0.3em] text-white/25 sm:flex-row">
-
-                            <span>
-                              404 — Nothing here
-                            </span>
-
-                            <span>
-                              Return to the beginning
-                            </span>
-
-                          </div>
-
-                        </div>
-
-                      </main>
-
-                      {/* SIDE DECORATION */}
-
-                      <div className="pointer-events-none absolute left-5 top-1/2 hidden -translate-y-1/2 -rotate-90 text-[9px] uppercase tracking-[0.5em] text-white/20 lg:block">
-                        System / Navigation / 404
-                      </div>
-
-                      <div className="pointer-events-none absolute right-5 top-1/2 hidden -translate-y-1/2 rotate-90 text-[9px] uppercase tracking-[0.5em] text-white/20 lg:block">
-                        Error / Not Found
-                      </div>
-
-                    </div>
+                    </main>
                   }
                 />
 
