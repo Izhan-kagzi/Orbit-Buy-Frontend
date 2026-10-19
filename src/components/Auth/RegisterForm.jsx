@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FiUser, FiMail, FiPhone } from "react-icons/fi";
+
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+} from "react-icons/fi";
+
 import toast from "react-hot-toast";
 
 import PasswordInput from "./PasswordInput";
-import SocialLogin from "./SocialLogin";
 import { useAuth } from "../../hooks/useAuth";
 
 const RegisterForm = () => {
   const navigate = useNavigate();
-
   const { register } = useAuth();
 
   const [loading, setLoading] = useState(false);
@@ -23,33 +27,65 @@ const RegisterForm = () => {
     confirmPassword: "",
   });
 
-  const [acceptTerms, setAcceptTerms] =
-    useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
   const [errors, setErrors] = useState({});
 
+  // ================= INPUT STYLING =================
+
+  const inputClass = (field) => `
+    w-full h-[58px]
+    pl-12 pr-4
+    border-0 border-b
+    ${
+      errors[field]
+        ? "border-red-400"
+        : "border-gray-300"
+    }
+    rounded-none
+    bg-transparent
+    text-[#061F3D]
+    placeholder:text-[#858995]
+    outline-none
+    focus:border-[#061F3D]
+    focus:ring-0
+    transition-all duration-300
+  `;
+
+  // ================= HANDLE CHANGE =================
+
   const handleChange = (e) => {
+    const { name, value } = e.target;
+
     setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value,
+      [name]: value,
     }));
 
     setErrors((prev) => ({
       ...prev,
-      [e.target.name]: "",
+      [name]: "",
     }));
   };
 
+  // ================= VALIDATION =================
+
   const validate = () => {
     const newErrors = {};
+
+    // First name
 
     if (!formData.firstName.trim()) {
       newErrors.firstName = "First name is required";
     }
 
+    // Last name
+
     if (!formData.lastName.trim()) {
       newErrors.lastName = "Last name is required";
     }
+
+    // Email
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -61,14 +97,16 @@ const RegisterForm = () => {
       newErrors.email = "Invalid email address";
     }
 
+    // Mobile number
+
     if (!formData.mobile.trim()) {
       newErrors.mobile = "Mobile number is required";
-    } else if (
-      !/^[6-9]\d{9}$/.test(formData.mobile)
-    ) {
+    } else if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
       newErrors.mobile =
         "Enter a valid 10-digit mobile number";
     }
+
+    // Password
 
     if (!formData.password) {
       newErrors.password = "Password is required";
@@ -77,16 +115,19 @@ const RegisterForm = () => {
         "Password must be at least 6 characters";
     }
 
+    // Confirm password
+
     if (!formData.confirmPassword) {
       newErrors.confirmPassword =
         "Confirm your password";
     } else if (
-      formData.password !==
-      formData.confirmPassword
+      formData.password !== formData.confirmPassword
     ) {
       newErrors.confirmPassword =
         "Passwords do not match";
     }
+
+    // Terms and conditions
 
     if (!acceptTerms) {
       newErrors.terms =
@@ -98,166 +139,251 @@ const RegisterForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ================= SUBMIT =================
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validate()) return;
+    if (!validate()) {
+      return;
+    }
 
     setLoading(true);
 
     try {
       await register(formData);
 
-      toast.success(
-        "Account created successfully!"
-      );
+      toast.success("Account created successfully!");
 
       navigate("/login");
     } catch (error) {
       toast.error(
-        error?.message ||
-          "Registration failed."
+        error?.message || "Registration failed."
       );
     } finally {
       setLoading(false);
     }
   };
 
+  // ================= ICON =================
+
+  const InputIcon = ({ children }) => (
+    <span
+      className="
+        absolute left-0 top-1/2
+        -translate-y-1/2
+        text-xl text-[#123D68]
+      "
+    >
+      {children}
+    </span>
+  );
+
+  // ================= FORM =================
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5"
+      className="w-full space-y-5"
+      noValidate
     >
-      {/* Name */}
 
-      <div className="grid md:grid-cols-2 gap-5">
+      {/* FIRST NAME AND LAST NAME */}
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+        {/* First Name */}
 
         <div>
-
-          <label className="block font-semibold mb-2">
+          <label
+            htmlFor="firstName"
+            className="sr-only"
+          >
             First Name
           </label>
 
           <div className="relative">
 
-            <FiUser className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+            <InputIcon>
+              <FiUser />
+            </InputIcon>
 
             <input
+              id="firstName"
               type="text"
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              placeholder="First name"
-              className="w-full h-14 pl-14 pr-4 border-2 border-gray-200 rounded-xl outline-none focus:border-brand-primary transition"
+              placeholder="First Name"
+              autoComplete="given-name"
+              aria-invalid={!!errors.firstName}
+              aria-describedby={
+                errors.firstName
+                  ? "firstName-error"
+                  : undefined
+              }
+              className={inputClass("firstName")}
             />
 
           </div>
 
           {errors.firstName && (
-            <p className="text-red-500 text-sm mt-2">
+            <p
+              id="firstName-error"
+              className="mt-2 text-sm text-red-500"
+            >
               {errors.firstName}
             </p>
           )}
-
         </div>
 
-        <div>
+        {/* Last Name */}
 
-          <label className="block font-semibold mb-2">
+        <div>
+          <label
+            htmlFor="lastName"
+            className="sr-only"
+          >
             Last Name
           </label>
 
           <div className="relative">
 
-            <FiUser className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+            <InputIcon>
+              <FiUser />
+            </InputIcon>
 
             <input
+              id="lastName"
               type="text"
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
-              placeholder="Last name"
-              className="w-full h-14 pl-14 pr-4 border-2 border-gray-200 rounded-xl outline-none focus:border-brand-primary transition"
+              placeholder="Last Name"
+              autoComplete="family-name"
+              aria-invalid={!!errors.lastName}
+              aria-describedby={
+                errors.lastName
+                  ? "lastName-error"
+                  : undefined
+              }
+              className={inputClass("lastName")}
             />
 
           </div>
 
           {errors.lastName && (
-            <p className="text-red-500 text-sm mt-2">
+            <p
+              id="lastName-error"
+              className="mt-2 text-sm text-red-500"
+            >
               {errors.lastName}
             </p>
           )}
-
         </div>
 
       </div>
 
-      {/* Email */}
+      {/* EMAIL ADDRESS */}
 
       <div>
 
-        <label className="block font-semibold mb-2">
+        <label
+          htmlFor="email"
+          className="sr-only"
+        >
           Email Address
         </label>
 
         <div className="relative">
 
-          <FiMail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+          <InputIcon>
+            <FiMail />
+          </InputIcon>
 
           <input
+            id="email"
             type="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Enter your email"
-            className="w-full h-14 pl-14 pr-4 border-2 border-gray-200 rounded-xl outline-none focus:border-brand-primary transition"
+            placeholder="Email Address"
+            autoComplete="email"
+            aria-invalid={!!errors.email}
+            aria-describedby={
+              errors.email ? "email-error" : undefined
+            }
+            className={inputClass("email")}
           />
 
         </div>
 
         {errors.email && (
-          <p className="text-red-500 text-sm mt-2">
+          <p
+            id="email-error"
+            className="mt-2 text-sm text-red-500"
+          >
             {errors.email}
           </p>
         )}
 
       </div>
 
-      {/* Mobile */}
+      {/* MOBILE NUMBER */}
 
       <div>
 
-        <label className="block font-semibold mb-2">
+        <label
+          htmlFor="mobile"
+          className="sr-only"
+        >
           Mobile Number
         </label>
 
         <div className="relative">
 
-          <FiPhone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-xl" />
+          <InputIcon>
+            <FiPhone />
+          </InputIcon>
 
           <input
+            id="mobile"
             type="tel"
             name="mobile"
             value={formData.mobile}
             onChange={handleChange}
-            placeholder="9876543210"
-            className="w-full h-14 pl-14 pr-4 border-2 border-gray-200 rounded-xl outline-none focus:border-brand-primary transition"
+            placeholder="Mobile Number"
+            autoComplete="tel"
+            inputMode="numeric"
+            maxLength={10}
+            aria-invalid={!!errors.mobile}
+            aria-describedby={
+              errors.mobile ? "mobile-error" : undefined
+            }
+            className={inputClass("mobile")}
           />
 
         </div>
 
         {errors.mobile && (
-          <p className="text-red-500 text-sm mt-2">
+          <p
+            id="mobile-error"
+            className="mt-2 text-sm text-red-500"
+          >
             {errors.mobile}
           </p>
         )}
 
       </div>
-            {/* Password */}
+
+      {/* PASSWORD */}
 
       <div>
 
-        <label className="block font-semibold mb-2">
+        <label
+          htmlFor="password"
+          className="sr-only"
+        >
           Password
         </label>
 
@@ -265,18 +391,21 @@ const RegisterForm = () => {
           name="password"
           value={formData.password}
           onChange={handleChange}
-          placeholder="Create a password"
+          placeholder="Password"
           error={errors.password}
           autoComplete="new-password"
         />
 
       </div>
 
-      {/* Confirm Password */}
+      {/* CONFIRM PASSWORD */}
 
       <div>
 
-        <label className="block font-semibold mb-2">
+        <label
+          htmlFor="confirmPassword"
+          className="sr-only"
+        >
           Confirm Password
         </label>
 
@@ -284,18 +413,18 @@ const RegisterForm = () => {
           name="confirmPassword"
           value={formData.confirmPassword}
           onChange={handleChange}
-          placeholder="Confirm your password"
+          placeholder="Confirm Password"
           error={errors.confirmPassword}
           autoComplete="new-password"
         />
 
       </div>
 
-      {/* Terms & Conditions */}
+      {/* TERMS AND CONDITIONS */}
 
-      <div>
+      <div className="pt-1">
 
-        <label className="flex items-start gap-3 cursor-pointer">
+        <label className="flex cursor-pointer items-start gap-3">
 
           <input
             type="checkbox"
@@ -303,15 +432,22 @@ const RegisterForm = () => {
             onChange={(e) =>
               setAcceptTerms(e.target.checked)
             }
-            className="mt-1 w-4 h-4 accent-black"
+            className="
+              mt-1 h-4 w-4 shrink-0
+              accent-[#061F3D]
+            "
           />
 
-          <span className="text-sm text-gray-600 leading-6">
+          <span className="text-sm leading-6 text-[#68778C]">
+
             I agree to the{" "}
 
             <Link
               to="/terms"
-              className="font-semibold text-brand-dark hover:underline"
+              className="
+                font-semibold text-[#061F3D]
+                hover:underline
+              "
             >
               Terms & Conditions
             </Link>
@@ -320,42 +456,44 @@ const RegisterForm = () => {
 
             <Link
               to="/privacy"
-              className="font-semibold text-brand-dark hover:underline"
+              className="
+                font-semibold text-[#061F3D]
+                hover:underline
+              "
             >
               Privacy Policy
             </Link>
 
             .
+
           </span>
 
         </label>
 
         {errors.terms && (
-          <p className="text-red-500 text-sm mt-2">
+          <p className="mt-2 text-sm text-red-500">
             {errors.terms}
           </p>
         )}
 
       </div>
 
-      {/* Register Button */}
+      {/* CREATE ACCOUNT BUTTON */}
 
       <button
         type="submit"
         disabled={loading}
         className="
-          w-full
-          h-14
-          rounded-xl
-          bg-brand-primary
+          mt-3 flex h-[70px] w-full
+          items-center justify-center
+          rounded-full bg-[#061F3D]
+          px-6 text-lg font-semibold
           text-white
-          text-lg
-          font-semibold
-          transition-all
-          duration-300
-          hover:bg-brand-brown
-          disabled:opacity-60
+          transition-all duration-300
+          hover:bg-[#123D68]
+          hover:shadow-lg
           disabled:cursor-not-allowed
+          disabled:opacity-60
         "
       >
         {loading
@@ -363,44 +501,20 @@ const RegisterForm = () => {
           : "Create Account"}
       </button>
 
-      {/* Divider */}
+      {/* SIGN IN LINK */}
 
-      <div className="relative py-2">
+      <div className="pt-4 text-center">
 
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200" />
-        </div>
+        <p className="text-sm text-[#68778C] sm:text-base">
 
-        <div className="relative flex justify-center">
-
-          <span className="bg-white px-4 text-sm text-gray-500">
-            OR SIGN UP WITH
-          </span>
-
-        </div>
-
-      </div>
-
-      {/* Social Login */}
-
-      <SocialLogin />
-
-      {/* Login Link */}
-
-      <div className="text-center pt-4">
-
-        <p className="text-gray-600">
-
-          Already have an account?
+          Already have an account?{" "}
 
           <Link
             to="/login"
             className="
-              ml-2
-              font-semibold
-              text-brand-dark
-              hover:text-brand-primary
+              font-bold text-[#061F3D]
               transition-colors
+              hover:text-[#123D68]
             "
           >
             Sign In

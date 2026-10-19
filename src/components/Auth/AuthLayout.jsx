@@ -1,171 +1,256 @@
 import { Link } from "react-router-dom";
-import { FiArrowLeft, FiShield } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiShield,
+  FiTruck,
+  FiRefreshCw,
+} from "react-icons/fi";
 
-const AuthLayout = ({
-  title,
-  subtitle,
-  children,
-}) => {
+const AuthLayout = ({ title, subtitle, children }) => {
+  const isRegister = title?.toLowerCase().includes("create");
+
   return (
-    <section className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <section className="min-h-screen w-full bg-white">
+      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
 
-      <div className="container mx-auto px-5 py-10">
+        {/* ================= LEFT PANEL ================= */}
 
-        {/* Back */}
-
-        <Link
-          to="/"
+        <aside
           className="
-            inline-flex
-            items-center
-            gap-2
-            text-gray-600
-            hover:text-brand-dark
-            transition
-            mb-10
+            relative flex min-h-[460px] flex-col
+            justify-between overflow-hidden
+            bg-[#061F3D] px-8 py-10 text-white
+            sm:px-12 sm:py-12
+            lg:min-h-screen lg:px-[8.3%] lg:py-16
           "
         >
-          <FiArrowLeft />
-          Back to Home
-        </Link>
-
-        <div
-          className="
-            max-w-6xl
-            mx-auto
-            bg-white
-            rounded-[32px]
-            overflow-hidden
-            shadow-2xl
-            grid
-            lg:grid-cols-2
-          "
-        >
-
-          {/* Left Side */}
+          {/* Dotted Background */}
 
           <div
-            className="
-              hidden
-              lg:flex
-              flex-col
-              justify-center
-              bg-brand-primary
-              text-white
-              p-16
-              relative
-              overflow-hidden
-            "
-          >
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.12]"
+            style={{
+              backgroundImage:
+                "radial-gradient(#b8c9df 0.8px, transparent 0.8px)",
+              backgroundSize: "32px 32px",
+            }}
+          />
 
-            <div
-              className="
-                absolute
-                -top-28
-                -right-28
-                w-72
-                h-72
-                rounded-full
-                bg-white/10
-              "
-            />
+          {/* Brand and Welcome Message */}
 
-            <div
-              className="
-                absolute
-                bottom-0
-                -left-20
-                w-56
-                h-56
-                rounded-full
-                bg-white/5
-              "
-            />
+          <div className="relative z-10">
 
-            <span
+            <Link
+              to="/"
               className="
-                w-16
-                h-16
-                rounded-2xl
-                bg-white/10
-                flex
-                items-center
-                justify-center
-                mb-8
+                inline-block font-serif text-4xl
+                italic tracking-tight text-white
+                sm:text-5xl
               "
             >
-              <FiShield size={30} />
-            </span>
-
-            <h2 className="text-5xl font-black leading-tight">
-              Welcome to
-              <br />
               Orbit Buy
-            </h2>
+            </Link>
 
-            <p className="mt-6 text-gray-300 leading-8">
-              Shop premium fashion with secure checkout,
-              fast delivery and a luxury shopping
-              experience designed just for you.
-            </p>
+            <div className="mt-14 sm:mt-16 lg:mt-16">
 
-            <div className="mt-12 space-y-5">
+              <p
+                className="
+                  mb-7 text-xs font-bold uppercase
+                  tracking-[0.38em] text-[#DDC5A3]
+                "
+              >
+                Member Access
+              </p>
 
-              <div className="flex items-center gap-3">
-                <span className="text-green-400 text-xl">
-                  ✓
+              <h2
+                className="
+                  max-w-lg font-serif
+                  text-5xl leading-[1.08]
+                  tracking-tight
+                  sm:text-6xl lg:text-[68px]
+                "
+              >
+                {isRegister ? (
+                  <>
+                    Join Our
+                    <br />
+                    Community.
+                  </>
+                ) : (
+                  <>
+                    Welcome
+                    <br />
+                    Back.
+                  </>
+                )}
+              </h2>
+
+              <p
+                className="
+                  mt-8 max-w-lg
+                  text-base leading-8
+                  text-slate-300 sm:text-lg
+                "
+              >
+                {isRegister
+                  ? "Create your account to save your wishlist, track your orders, and discover exclusive member-only offers across our collection."
+                  : "Sign in to pick up your wishlist, track your orders, and unlock member-only pricing across our full collection."}
+              </p>
+
+            </div>
+          </div>
+
+          {/* Benefits */}
+
+          <div className="relative z-10 mt-12">
+
+            <div className="mb-7 border-t border-white/15" />
+
+            <div className="space-y-5">
+
+              {/* Benefit 1 */}
+
+              <div className="flex items-center gap-5">
+
+                <span
+                  className="
+                    flex h-12 w-12 shrink-0
+                    items-center justify-center
+                    rounded-full bg-white/10
+                    text-[#DDC5A3]
+                  "
+                >
+                  <FiShield size={20} />
                 </span>
-                Secure Authentication
+
+                <p className="text-base font-medium text-slate-200 sm:text-lg">
+                  Bank-grade secure checkout
+                </p>
+
               </div>
 
-              <div className="flex items-center gap-3">
-                <span className="text-green-400 text-xl">
-                  ✓
+              {/* Benefit 2 */}
+
+              <div className="flex items-center gap-5">
+
+                <span
+                  className="
+                    flex h-12 w-12 shrink-0
+                    items-center justify-center
+                    rounded-full bg-white/10
+                    text-[#DDC5A3]
+                  "
+                >
+                  <FiTruck size={20} />
                 </span>
-                Fast Checkout
+
+                <p className="text-base font-medium text-slate-200 sm:text-lg">
+                  Fast, tracked delivery
+                </p>
+
               </div>
 
-              <div className="flex items-center gap-3">
-                <span className="text-green-400 text-xl">
-                  ✓
+              {/* Benefit 3 */}
+
+              <div className="flex items-center gap-5">
+
+                <span
+                  className="
+                    flex h-12 w-12 shrink-0
+                    items-center justify-center
+                    rounded-full bg-white/10
+                    text-[#DDC5A3]
+                  "
+                >
+                  <FiRefreshCw size={20} />
                 </span>
-                Premium Support
+
+                <p className="text-base font-medium text-slate-200 sm:text-lg">
+                  Effortless returns
+                </p>
+
               </div>
 
             </div>
+          </div>
+
+        </aside>
+
+        {/* ================= RIGHT PANEL ================= */}
+
+        <main
+          className="
+            flex min-w-0 flex-col
+            bg-white px-6 py-8
+            sm:px-10 md:px-14
+            lg:px-12 xl:px-20
+          "
+        >
+
+          {/* Back to Home */}
+
+          <div className="mx-auto w-full max-w-[530px]">
+
+            <Link
+              to="/"
+              className="
+                inline-flex items-center gap-3
+                text-sm font-semibold
+                text-[#68778C]
+                transition-colors
+                hover:text-[#061F3D]
+              "
+            >
+              <FiArrowLeft size={17} />
+              Back to Home
+            </Link>
 
           </div>
 
-          {/* Right Side */}
+          {/* Heading and Form */}
 
           <div
             className="
-              p-8
-              sm:p-12
-              lg:p-16
+              mx-auto my-auto w-full
+              max-w-[530px] py-12
             "
           >
 
-            <div className="mb-10">
+            {/* Page Heading */}
 
-              <h1 className="text-4xl font-black">
+            <div className="mb-9">
+
+              <h1
+                className="
+                  font-serif text-4xl
+                  tracking-tight text-[#061F3D]
+                  sm:text-[42px]
+                "
+              >
                 {title}
               </h1>
 
-              <p className="text-gray-500 mt-3">
+              <p
+                className="
+                  mt-3 text-base leading-7
+                  text-[#68778C]
+                  sm:text-lg
+                "
+              >
                 {subtitle}
               </p>
 
             </div>
 
+            {/* Render the form exactly once */}
+
             {children}
 
           </div>
 
-        </div>
+        </main>
 
       </div>
-
     </section>
   );
 };
