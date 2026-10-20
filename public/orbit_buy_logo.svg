@@ -1,9 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
-  <g fill="#083156" fill-rule="evenodd">
-    <!-- Solid Geometric 'O' -->
-    <path d="M 170,130 L 246,130 L 266,150 L 266,370 L 140,370 L 140,160 Z M 162,152 L 162,348 L 244,348 L 244,152 Z" />
-    
-    <!-- Solid Geometric 'B' -->
-    <path d="M 280,130 L 346,130 L 380,164 L 380,192 L 322,242 L 398,318 L 398,370 L 280,370 Z M 302,152 L 302,230 L 340,198 L 340,172 L 320,152 Z M 302,258 L 302,348 L 376,348 L 376,328 L 318,270 Z" />
-  </g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1359" height="1158" viewBox="0 0 1359 1158">
+  <title>OB Logo</title>
+  <desc>Vector-traced white OB monogram on a dark navy background.</desc>
+  <rect width="1359" height="1158" fill="rgb(6,51,100)"/>
+  <path fill="#FFFFFF" fill-rule="evenodd" d="M 701 349 L 657 394 L 701 394 L 702 395 L 702 819 L 943 819 L 943 601 L 844 503 L 847 498 L 890 455 L 890 454 L 909 435 L 909 434 L 824 349 Z M 777 504 L 897 620 L 897 775 L 896 776 L 748 776 L 747 775 L 747 534 Z M 749 475 L 776 503 L 749 530 L 747 529 L 747 476 Z M 749 394 L 804 394 L 806 395 L 845 435 L 778 502 L 777 502 L 747 471 L 747 396 Z M 461 349 L 460 351 L 415 397 L 415 819 L 607 819 L 607 394 L 654 349 Z M 461 396 L 561 396 L 562 397 L 562 774 L 561 775 L 462 775 L 460 773 L 460 397 Z"/>
 </svg>
