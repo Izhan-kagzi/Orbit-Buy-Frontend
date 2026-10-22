@@ -7,14 +7,20 @@ import api, { getImageUrl } from "../../services/api";
 const POPULAR_SEARCHES = [
   "Shirt",
   "T-Shirt",
-  "Jeans",
   "Hoodie",
+  "Jacket",
+  "Sweatshirt",
+  "Cord Set",
   "Dress",
   "Party Wear",
   "Jumpsuit",
   "Track Pant",
-  "Cord Set",
-  "Skirts",
+  "Jeans",
+  "Men Formal",
+  "Women Formal",
+  "Skirt",
+  "Shrug",
+  "Cardigans",
 ];
 
 const SearchModal = ({ isOpen, onClose }) => {

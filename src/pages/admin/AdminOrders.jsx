@@ -1,14 +1,81 @@
 import { useEffect, useState } from "react";
-import { FiChevronDown, FiChevronUp, FiMapPin, FiUser } from "react-icons/fi";
+import {
+  FiChevronDown,
+  FiChevronUp,
+  FiMapPin,
+  FiSearch,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
+import toast from "react-hot-toast";
 
 import AdminLayout from "../../components/Admin/AdminLayout";
 import TableSkeleton from "../../components/Skeleton/TableSkeleton";
 import api from "../../services/api";
 
+const STATUS_OPTIONS = [
+  "Pending",
+  "Confirmed",
+  "Shipped",
+  "Delivered",
+  "Cancelled",
+];
+
+const STATUS_STYLES = {
+  Pending: "bg-amber-100 text-amber-700",
+  Confirmed: "bg-green-100 text-green-700",
+  Processing: "bg-purple-100 text-purple-700",
+  Shipped: "bg-blue-100 text-blue-700",
+  Delivered: "bg-emerald-100 text-emerald-700",
+  Cancelled: "bg-red-100 text-red-600",
+};
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [busyId, setBusyId] = useState(null);
+
+  const normalizedSearch = search.trim().replace(/^#/, "").toLowerCase();
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesStatus =
+      statusFilter === "All" || order.status === statusFilter;
+    const matchesSearch =
+      !normalizedSearch ||
+      String(order.id).toLowerCase().includes(normalizedSearch);
+    return matchesStatus && matchesSearch;
+  });
+
+  const changeStatus = async (order, status) => {
+    if (status === order.status) return;
+
+    if (
+      status === "Cancelled" &&
+      !window.confirm(
+        `Cancel order #${order.id}? Stock will be restored and this can't be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setBusyId(order.id);
+    try {
+      const res = await api.put(`/orders/${order.id}/status`, { status });
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === order.id ? { ...o, ...res.order } : o
+        )
+      );
+      toast.success(`Order #${order.id} marked ${status}.`);
+    } catch (error) {
+      toast.error(error.message || "Couldn't update the order status.");
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   useEffect(() => {
     api
@@ -32,6 +99,46 @@ const AdminOrders = () => {
         </p>
       </div>
 
+      <div className="mb-6 space-y-4">
+        <div className="relative max-w-md">
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by order ID (e.g. OB123456)"
+            className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-10 text-sm outline-none focus:border-gray-400"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <FiX />
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {["All", ...STATUS_OPTIONS].map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setStatusFilter(option)}
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${
+                statusFilter === option
+                  ? "bg-black text-white"
+                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="bg-white rounded-2xl shadow overflow-hidden">
 
         {loading ? (
@@ -40,9 +147,13 @@ const AdminOrders = () => {
           <p className="text-center text-gray-500 py-24">
             No orders yet.
           </p>
+        ) : filteredOrders.length === 0 ? (
+          <p className="text-center text-gray-500 py-24">
+            No orders match your search.
+          </p>
         ) : (
           <div className="divide-y divide-gray-100">
-            {orders.map((order) => {
+            {filteredOrders.map((order) => {
               const isOpen = expandedId === order.id;
               const addr = order.shippingAddress || {};
               const customerName =
@@ -52,9 +163,10 @@ const AdminOrders = () => {
 
               return (
                 <div key={order.id}>
+                  <div className="flex flex-wrap items-center gap-4 pr-6 hover:bg-gray-50 transition">
                   <button
                     onClick={() => toggleExpand(order.id)}
-                    className="w-full flex flex-wrap items-center justify-between gap-4 px-6 py-5 hover:bg-gray-50 transition text-left"
+                    className="flex-1 flex flex-wrap items-center justify-between gap-4 pl-6 py-5 text-left"
                   >
                     <div className="min-w-[110px]">
                       <p className="text-xs text-gray-400">Order ID</p>
@@ -90,12 +202,37 @@ const AdminOrders = () => {
                       </p>
                     </div>
 
-                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        STATUS_STYLES[order.status] ||
+                        "bg-gray-100 text-gray-600"
+                      }`}
+                    >
                       {order.status}
                     </span>
 
                     {isOpen ? <FiChevronUp /> : <FiChevronDown />}
                   </button>
+
+                  <select
+                    value={order.status}
+                    disabled={
+                      busyId === order.id || order.status === "Cancelled"
+                    }
+                    onChange={(e) => changeStatus(order, e.target.value)}
+                    aria-label={`Update status of order ${order.id}`}
+                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium outline-none focus:border-gray-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {!STATUS_OPTIONS.includes(order.status) && (
+                      <option value={order.status}>{order.status}</option>
+                    )}
+                    {STATUS_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  </div>
 
                   {isOpen && (
                     <div className="bg-gray-50 px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-6">

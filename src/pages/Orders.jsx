@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import api, { getImageUrl } from "../services/api";
 import { useAuth } from "../hooks/useAuth";
 
-const CANCELLABLE_STATUSES = ["Confirmed"];
+const CANCELLABLE_STATUSES = ["Pending", "Confirmed"];
 
 const cancellationBadge = (order) => {
   const status = order.cancellation?.status;
