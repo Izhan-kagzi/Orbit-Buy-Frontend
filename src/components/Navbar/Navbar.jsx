@@ -293,15 +293,20 @@ const DesktopDropdown = ({ label, items }) => (
         z-50
       "
     >
-      <div
-        className="
-          bg-white
-          rounded-2xl
-          shadow-2xl
-          border border-gray-100
-          overflow-hidden
-        "
-      >
+      
+<div
+  className="
+    bg-white
+    rounded-2xl
+    shadow-2xl
+    border border-gray-100
+    overflow-hidden
+    max-h-[80vh]
+    overflow-y-auto
+    overscroll-contain
+  "
+>
+
         {/* TOP ACCENT */}
         <div
           className="
