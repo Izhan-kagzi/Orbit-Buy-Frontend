@@ -11,6 +11,7 @@ import {
   FiUser,
   FiChevronDown,
   FiLogOut,
+  FiHeadphones,
   FiGrid,
   FiMapPin,
   FiClock,
@@ -221,6 +222,12 @@ const aboutMenu = [
     path: "/contact",
     icon: FiPhoneCall,
     desc: "Get in touch with us",
+  },
+   {
+    name: "Customer Care",
+    path: "/customer-care",
+    icon: FiHeadphones,
+    desc: "Have a Complain",
   },
   {
     name: "FAQs",

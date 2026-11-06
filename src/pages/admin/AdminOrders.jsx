@@ -3,6 +3,7 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiMapPin,
+  FiRadio,
   FiSearch,
   FiUser,
   FiX,
@@ -72,6 +73,25 @@ const AdminOrders = () => {
       toast.success(`Order #${order.id} marked ${status}.`);
     } catch (error) {
       toast.error(error.message || "Couldn't update the order status.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  // Delivered orders keep their customer-facing live tracker open until
+  // an admin/manager closes it here.
+  const closeLive = async (order) => {
+    setBusyId(order.id);
+    try {
+      const res = await api.put(`/orders/${order.id}/live/close`);
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === order.id ? { ...o, ...res.order } : o
+        )
+      );
+      toast.success(`Live tracking closed for #${order.id}.`);
+    } catch (error) {
+      toast.error(error.message || "Couldn't close live tracking.");
     } finally {
       setBusyId(null);
     }
@@ -211,8 +231,25 @@ const AdminOrders = () => {
                       {order.status}
                     </span>
 
+                    {order.live?.active && (
+                      <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                        <FiRadio /> Live
+                      </span>
+                    )}
+
                     {isOpen ? <FiChevronUp /> : <FiChevronDown />}
                   </button>
+
+                  {order.live?.active && order.status === "Delivered" && (
+                    <button
+                      type="button"
+                      disabled={busyId === order.id}
+                      onClick={() => closeLive(order)}
+                      className="rounded-lg bg-black px-3 py-2 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-60"
+                    >
+                      Close live tracking
+                    </button>
+                  )}
 
                   <select
                     value={order.status}
