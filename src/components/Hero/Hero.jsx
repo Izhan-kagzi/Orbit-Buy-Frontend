@@ -180,7 +180,7 @@ const Hero = () => {
         */
 
         autoplay={{
-          delay: 5000,
+          delay: 8000,
           disableOnInteraction: false,
           pauseOnMouseEnter: false,
         }}

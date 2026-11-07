@@ -35,7 +35,7 @@ const heroData = [
   {
     id: 2,
     type: "video",
-    media: "/hero/herovideo4.mp4",
+    media: "/hero/herovideo3.mp4",
     primaryButton: "Shop the Collection",
     primaryLink: "/new-arrivals",
     secondaryButton: "Explore All",
@@ -44,32 +44,22 @@ const heroData = [
   {
     id: 3,
     type: "video",
-    media: "/hero/herovideo3.mp4",
+    media: "/hero/herovideo4.mp4",
+    primaryButton: "Shop Now",
+    primaryLink: "/",
+    secondaryButton: "New Arrivals",
+    secondaryLink: "/new-arrivals",
+  },
+  {
+    id: 4,
+    type: "video",
+    media: "/hero/herovideo5.mp4",
     primaryButton: "Shop Now",
     primaryLink: "/",
     secondaryButton: "New Arrivals",
     secondaryLink: "/new-arrivals",
   },
 
-  {
-    id: 4,
-    type: "video",
-    media: "/hero/herovideo1.mp4",
-    primaryButton: "Shop Men",
-    primaryLink: "/mens-shirts",
-    secondaryButton: "Explore Collection",
-    secondaryLink: "/mens-jeans",
-  },
-
-  {
-    id: 5,
-    type: "video",
-    media: "/hero/herovideo5.mp4",
-    primaryButton: "Shop Women",
-    primaryLink: "/women-dresses",
-    secondaryButton: "Party Wear",
-    secondaryLink: "/women-partywear",
-  },
 ];
 
 export default heroData;
