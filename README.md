@@ -231,8 +231,7 @@ Pages are loaded dynamically where appropriate instead of loading the complete a
 
 ## Database
 
-- JSON-based database (`db.json`)
-
+- MongoDB Atlas
 
 ## Payments
 
