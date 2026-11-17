@@ -22,23 +22,7 @@ const categoriesData = [
     button: "Explore Women's Collection",
   },
 
-  {
-    id: 3,
-    title: "New Arrivals",
-    subtitle: "Discover the latest styles, fresh silhouettes and seasonal trends.",
-    image: newArrival,
-    link: "/new-arrivals",
-    button: "Discover New Arrivals",
-  },
-
-  {
-    id: 4,
-    title: "Best Sellers",
-    subtitle: "Shop the styles our customers love, chosen for quality and appeal.",
-    image: bestSeller,
-    link: "/best-sellers",
-    button: "Shop Best Sellers",
-  },
+  
 ];
 
 export default categoriesData;

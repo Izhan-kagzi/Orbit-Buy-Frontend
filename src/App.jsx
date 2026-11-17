@@ -159,9 +159,7 @@ const WomenShrugs = lazy(
   () => import("./pages/WomenShrugs")
 );
 
-const WomenCardigans = lazy(
-  () => import("./pages/WomenCardigans")
-);
+
 
 /* ============================================================
    SHOPPING
@@ -472,10 +470,7 @@ function App() {
                   element={<WomenShrugs />}
                 />
 
-                <Route
-                  path="/women-cardigans"
-                  element={<WomenCardigans />}
-                />
+               
 
                 {/* ==================================================
                     SHOP

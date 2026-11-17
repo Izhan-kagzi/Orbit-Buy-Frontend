@@ -1,297 +1,292 @@
-import { Link } from "react-router-dom";
-import categoriesData from "./categoriesData";
-import FadeIn from "../Motion/FadeIn";
+import { useEffect, useState } from "react";
+import {
+  FiArrowRight,
+  FiChevronLeft,
+  FiChevronRight,
+} from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
-const Categories = () => {
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+
+import ProductCard from "../NewArrivals/ProductCard";
+import api, { getImageUrl } from "../../services/api";
+
+const collectionConfig = [
+  {
+    id: "men",
+    title: "Men's Collection",
+    subtitle:
+      "Discover refined shirts, T-shirts, denim, jackets and modern essentials designed for your everyday style.",
+    category: "Men",
+    link: "/mens-shirts",
+    label: "FOR HIM",
+    prevClass: "men-collection-prev",
+    nextClass: "men-collection-next",
+  },
+  {
+    id: "women",
+    title: "Women's Collection",
+    subtitle:
+      "Explore elegant dresses, shirts, denim, skirts and contemporary styles that redefine everyday fashion.",
+    category: "Women",
+    link: "/women-dresses",
+    label: "FOR HER",
+    prevClass: "women-collection-prev",
+    nextClass: "women-collection-next",
+  },
+];
+
+const CollectionSlider = ({ collection }) => {
+  const navigate = useNavigate();
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+
+        const res = await api.get(
+          `/products?category=${collection.category}&limit=50`
+        );
+
+        if (!mounted) return;
+
+        const data = res?.products || res?.data?.products || [];
+
+        const formattedProducts = Array.isArray(data)
+          ? data.map((product) => ({
+              ...product,
+              image: product?.image
+                ? getImageUrl(product.image)
+                : "",
+            }))
+          : [];
+
+        setProducts(formattedProducts);
+      } catch (error) {
+        console.error(
+          `${collection.title} loading error:`,
+          error
+        );
+
+        if (mounted) setProducts([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchProducts();
+
+    return () => {
+      mounted = false;
+    };
+  }, [collection.category, collection.title]);
+
   return (
     <section
-      className="bg-gray-50 py-20 md:py-24"
-      aria-labelledby="categories-heading"
+      className="bg-white py-20 md:py-24 overflow-hidden"
+      aria-labelledby={`${collection.id}-heading`}
     >
       <div className="max-w-7xl mx-auto px-6">
 
-        {/* =====================================================
-            SECTION HEADER
-        ====================================================== */}
-        <FadeIn className="text-center mb-14 md:mb-16">
+        {/* SECTION HEADER */}
 
-          <span className="inline-block text-xs md:text-sm font-semibold uppercase tracking-[0.35em] text-brand-primary">
-            Curated For You
-          </span>
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-7">
 
-          <h2
-            id="categories-heading"
-            className="
-              mt-4
-              text-4xl
-              md:text-5xl
-              lg:text-6xl
-              font-black
-              tracking-tight
-              text-gray-900
-            "
-          >
-            Explore Our Collections
-          </h2>
+          <div className="max-w-2xl">
 
-          <p
-            className="
-              max-w-2xl
-              mx-auto
-              mt-5
-              text-sm
-              md:text-base
-              leading-7
-              text-gray-500
-            "
-          >
-            Discover thoughtfully curated fashion collections designed
-            to elevate your everyday style.
-          </p>
+            <span className="inline-block text-xs md:text-sm font-semibold uppercase tracking-[0.3em] text-brand-primary">
+              {collection.label}
+            </span>
 
-        </FadeIn>
-
-        {/* =====================================================
-            CATEGORY CARDS
-        ====================================================== */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-7">
-
-          {categoriesData.map((category, index) => (
-
-            <FadeIn
-              key={category.id}
-              delay={index * 0.08}
-              className="h-full"
+            <h2
+              id={`${collection.id}-heading`}
+              className="mt-4 text-4xl md:text-5xl font-black tracking-tight text-gray-900"
             >
+              {collection.title}
+            </h2>
 
-              <article
-                className="
-                  group
-                  relative
-                  h-full
-                  min-h-[560px]
-                  overflow-hidden
-                  rounded-[28px]
-                  bg-gray-900
-                  shadow-[0_15px_45px_rgba(0,0,0,0.10)]
-                  hover:shadow-[0_25px_65px_rgba(0,0,0,0.20)]
-                  transition-all
-                  duration-700
-                  hover:-translate-y-2
-                "
-              >
+            <p className="mt-5 text-sm md:text-base leading-7 text-gray-500">
+              {collection.subtitle}
+            </p>
 
-                {/* =================================================
-                    FULL CARD LINK
-                ================================================== */}
-                <Link
-                  to={category.link}
-                  className="absolute inset-0 z-20"
-                  aria-label={`Explore ${category.title}`}
-                >
-                  <span className="sr-only">
-                    Explore {category.title}
-                  </span>
-                </Link>
+          </div>
 
-                {/* =================================================
-                    IMAGE
-                ================================================== */}
-                <div className="absolute inset-0 overflow-hidden">
+          {/* NAVIGATION */}
 
-                  <img
-                    src={category.image}
-                    alt={`${category.title} - Orbit Buy`}
-                    loading="lazy"
-                    decoding="async"
-                    className="
-                      absolute
-                      inset-0
-                      w-full
-                      h-full
-                      object-cover
-                      scale-100
-                      group-hover:scale-110
-                      transition-transform
-                      duration-[1200ms]
-                      ease-out
-                    "
-                  />
+          <div className="flex items-center gap-3 shrink-0">
 
-                  {/* Dark luxury gradient */}
-                  <div
-                    className="
-                      absolute
-                      inset-0
-                      bg-gradient-to-t
-                      from-black/85
-                      via-black/25
-                      to-black/5
-                    "
-                  />
+            <button
+              type="button"
+              className={`
+                ${collection.prevClass}
+                w-12 h-12 rounded-full border border-gray-200
+                bg-white flex items-center justify-center
+                shadow-sm hover:bg-brand-primary hover:text-white
+                hover:border-brand-primary transition-all duration-300
+              `}
+              aria-label={`Previous ${collection.title} products`}
+            >
+              <FiChevronLeft className="text-xl" />
+            </button>
 
-                  {/* Hover overlay */}
-                  <div
-                    className="
-                      absolute
-                      inset-0
-                      bg-black/0
-                      group-hover:bg-black/15
-                      transition-colors
-                      duration-700
-                    "
-                  />
+            <button
+              type="button"
+              className={`
+                ${collection.nextClass}
+                w-12 h-12 rounded-full border border-gray-200
+                bg-white flex items-center justify-center
+                shadow-sm hover:bg-brand-primary hover:text-white
+                hover:border-brand-primary transition-all duration-300
+              `}
+              aria-label={`Next ${collection.title} products`}
+            >
+              <FiChevronRight className="text-xl" />
+            </button>
 
-                </div>
+            <button
+              type="button"
+              onClick={() => navigate(collection.link)}
+              className="
+                group flex items-center gap-3
+                border border-brand-primary
+                px-6 md:px-7 py-3 rounded-full
+                font-semibold text-sm md:text-base
+                hover:bg-brand-primary hover:text-white
+                transition-all duration-300
+              "
+            >
+              View All
 
-                {/* =================================================
-                    TOP BADGE
-                ================================================== */}
-                <div className="absolute top-5 left-5 z-10">
+              <FiArrowRight className="group-hover:translate-x-1 transition-transform duration-300" />
+            </button>
 
-                  <span
-                    className="
-                      inline-flex
-                      items-center
-                      rounded-full
-                      border
-                      border-white/30
-                      bg-black/20
-                      px-4
-                      py-2
-                      text-[10px]
-                      font-semibold
-                      uppercase
-                      tracking-[0.2em]
-                      text-white
-                      backdrop-blur-md
-                    "
-                  >
-                    {index === 0 && "For Him"}
-                    {index === 1 && "For Her"}
-                    {index === 2 && "Just In"}
-                    {index === 3 && "Trending"}
-                  </span>
-
-                </div>
-
-                {/* =================================================
-                    CONTENT
-                ================================================== */}
-                <div
-                  className="
-                    absolute
-                    inset-x-0
-                    bottom-0
-                    z-10
-                    p-6
-                    md:p-7
-                  "
-                >
-
-                  {/* Small line */}
-                  <div
-                    className="
-                      mb-4
-                      h-[1px]
-                      w-10
-                      bg-white/70
-                      group-hover:w-16
-                      transition-all
-                      duration-500
-                    "
-                  />
-
-                  {/* Title */}
-                  <h3
-                    className="
-                      text-2xl
-                      md:text-3xl
-                      font-bold
-                      tracking-tight
-                      text-white
-                    "
-                  >
-                    {category.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p
-                    className="
-                      mt-3
-                      max-w-[280px]
-                      text-sm
-                      leading-6
-                      text-white/75
-                    "
-                  >
-                    {category.subtitle}
-                  </p>
-
-                  {/* =================================================
-                      CTA
-                  ================================================== */}
-                  <div
-                    className="
-                      mt-6
-                      inline-flex
-                      items-center
-                      gap-3
-                      text-sm
-                      font-semibold
-                      text-white
-                    "
-                  >
-
-                    <span
-                      className="
-                        border-b
-                        border-white/60
-                        pb-1
-                        group-hover:border-white
-                        transition-colors
-                        duration-300
-                      "
-                    >
-                      {category.button}
-                    </span>
-
-                    <span
-                      className="
-                        flex
-                        h-8
-                        w-8
-                        items-center
-                        justify-center
-                        rounded-full
-                        border
-                        border-white/40
-                        bg-white/10
-                        backdrop-blur-sm
-                        group-hover:bg-white
-                        group-hover:text-gray-900
-                        group-hover:translate-x-1
-                        transition-all
-                        duration-500
-                      "
-                    >
-                      →
-                    </span>
-
-                  </div>
-
-                </div>
-
-              </article>
-
-            </FadeIn>
-
-          ))}
+          </div>
 
         </div>
 
+        {/* PRODUCTS */}
+
+        {loading ? (
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-14">
+            {[1, 2, 3, 4].map((item) => (
+              <div
+                key={item}
+                className="animate-pulse"
+              >
+                <div className="aspect-[3/4] rounded-2xl bg-gray-100" />
+                <div className="h-4 bg-gray-100 rounded mt-4 w-3/4" />
+                <div className="h-4 bg-gray-100 rounded mt-3 w-1/2" />
+              </div>
+            ))}
+          </div>
+
+        ) : products.length > 0 ? (
+
+          <div className="mt-14">
+
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              navigation={{
+                prevEl: `.${collection.prevClass}`,
+                nextEl: `.${collection.nextClass}`,
+              }}
+              pagination={{
+                clickable: true,
+                dynamicBullets: true,
+              }}
+              autoplay={{
+                delay: 3500,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true,
+              }}
+              loop={products.length > 4}
+              speed={700}
+              spaceBetween={28}
+              slidesPerView={1}
+              breakpoints={{
+                480: {
+                  slidesPerView: 2,
+                  spaceBetween: 20,
+                },
+                768: {
+                  slidesPerView: 3,
+                  spaceBetween: 24,
+                },
+                1280: {
+                  slidesPerView: 4,
+                  spaceBetween: 28,
+                },
+              }}
+              className="!pb-14"
+            >
+
+              {products.map((product, index) => (
+                <SwiperSlide
+                  key={
+                    product?._id ||
+                    product?.id ||
+                    `${collection.id}-${index}`
+                  }
+                  className="!h-auto"
+                >
+                  <ProductCard product={product} />
+                </SwiperSlide>
+              ))}
+
+            </Swiper>
+
+          </div>
+
+        ) : (
+
+          <div className="py-20 text-center">
+
+            <h3 className="text-2xl md:text-3xl font-bold text-gray-900">
+              No Products Found
+            </h3>
+
+            <p className="text-gray-500 mt-4">
+              There are currently no products available in this collection.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => navigate(collection.link)}
+              className="mt-6 px-7 py-3 rounded-full bg-brand-primary text-white font-semibold hover:opacity-90 transition"
+            >
+              Explore Collection
+            </button>
+
+          </div>
+
+        )}
+
       </div>
     </section>
+  );
+};
+
+const Categories = () => {
+  return (
+    <>
+      {collectionConfig.map((collection) => (
+        <CollectionSlider
+          key={collection.id}
+          collection={collection}
+        />
+      ))}
+    </>
   );
 };
 

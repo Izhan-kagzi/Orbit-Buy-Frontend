@@ -1,235 +1,400 @@
+
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+} from "framer-motion";
+import {
+  FiArrowUpRight,
+  FiArrowRight,
+  FiShoppingBag,
+} from "react-icons/fi";
+
 import FadeIn from "../Motion/FadeIn";
 
-/* ------------------------------------------------------------------
-   DATA
-   `for` drives the filter tabs, `style` is the one-line description.
------------------------------------------------------------------- */
+// ============================================================
+// BRAND DATA
+// ============================================================
+
 const BRANDS = [
-  { name: "Zara", for: ["Women", "Men"], style: "Contemporary" },
+  { name: "Zara", for: ["Women", "Men"], style: "Contemporary fashion" },
   { name: "H&M", for: ["Women", "Men"], style: "Everyday essentials" },
-  { name: "Adidas", for: ["Women", "Men", "Sport"], style: "Performance and lifestyle" },
-  { name: "Jack & Jones", for: ["Men"], style: "Modern tailoring" },
+  { name: "Adidas", for: ["Women", "Men", "Sport"], style: "Performance & lifestyle" },
+  { name: "Jack & Jones", for: ["Men"], style: "Modern menswear" },
   { name: "Diesel", for: ["Men", "Women"], style: "Denim culture" },
   { name: "Calvin Klein", for: ["Men", "Women"], style: "Minimal luxury" },
   { name: "D&G", for: ["Women", "Men"], style: "Italian luxury" },
   { name: "Versace", for: ["Women", "Men"], style: "Italian glamour" },
   { name: "Forever 21", for: ["Women"], style: "Youth fashion" },
-  { name: "PrettyLittleThing", for: ["Women"], style: "Statement style" },
+  { name: "PrettyLittleThing", for: ["Women"], style: "Statement fashion" },
   { name: "Shein", for: ["Women", "Men"], style: "Trend forward" },
-  { name: "Revolve", for: ["Women"], style: "Contemporary" },
+  { name: "Revolve", for: ["Women"], style: "Contemporary style" },
   { name: "Wrangler", for: ["Men", "Women"], style: "Denim heritage" },
   { name: "Hugo Boss", for: ["Men"], style: "Luxury tailoring" },
 ];
 
 const FILTERS = ["All", "Women", "Men", "Sport"];
 
+// ============================================================
+// SHOP BY BRAND
+// ============================================================
+
 const ShopByBrand = () => {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
 
   const [filter, setFilter] = useState("All");
-  const [activeName, setActiveName] = useState(BRANDS[0].name);
+  const [activeBrand, setActiveBrand] = useState(null);
 
-  const visible = useMemo(
-    () =>
-      filter === "All" ? BRANDS : BRANDS.filter((b) => b.for.includes(filter)),
-    [filter]
-  );
+  // FILTER BRANDS
 
-  // If the active brand is filtered out, fall back to the first visible one.
-  const active = visible.find((b) => b.name === activeName) || visible[0];
+  const visibleBrands = useMemo(() => {
+    return filter === "All"
+      ? BRANDS
+      : BRANDS.filter((brand) => brand.for.includes(filter));
+  }, [filter]);
+
+  // NAVIGATE TO BRAND
 
   const goToBrand = (name) => {
     navigate(`/shop?brand=${encodeURIComponent(name)}`);
   };
 
+  // ============================================================
+  // RENDER
+  // ============================================================
+
   return (
-    <section className="relative overflow-hidden bg-brand-tan py-20 text-brand-dark md:py-28">
-      {/* Soft depth, nothing more */}
-      <div className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-white/25 blur-[120px]" />
-      <div className="pointer-events-none absolute -bottom-40 -right-24 h-[420px] w-[420px] rounded-full bg-brand-dark/10 blur-[130px]" />
+    <section className="relative overflow-hidden bg-[#061B35] py-20 md:py-28 text-white">
+
+      {/* ========================================================
+          BACKGROUND EFFECTS
+      ======================================================== */}
+
+      <div className="pointer-events-none absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-[#D9C3A3]/10 blur-[150px]" />
+
+      <div className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-blue-400/10 blur-[150px]" />
+
+      <div className="pointer-events-none absolute top-1/2 left-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#12365B]/20 blur-[150px]" />
+
 
       <div className="relative mx-auto max-w-7xl px-6">
-        {/* ---------------------------------------------------------
-            HEADER
-        --------------------------------------------------------- */}
+
+        {/* ========================================================
+            SECTION HEADER
+        ======================================================== */}
+
         <FadeIn>
-          <div className="mb-10 flex flex-col gap-8 md:mb-14 md:flex-row md:items-end md:justify-between">
-            <h2 className="font-display text-5xl font-black leading-[0.95] tracking-tight sm:text-6xl md:text-7xl">
-              Pick a label,
-              <br />
-              start shopping.
-            </h2>
 
-            <div className="max-w-sm">
-              <p className="text-base leading-7 text-brand-dark/70">
-                {BRANDS.length} brands in one store. Choose one to see its
-                latest pieces.
-              </p>
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+
+            <div>
+
+              <div className="flex items-center gap-3 mb-6">
+
+                <span className="h-[1px] w-10 bg-[#D9C3A3]" />
+
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-[#D9C3A3]">
+                  The Brand Edit
+                </span>
+
+              </div>
+
+              <h2 className="font-display text-4xl sm:text-5xl md:text-7xl font-black leading-[1.05] tracking-tight">
+
+                The Brands Behind
+
+                <br />
+
+                <span className="text-[#D9C3A3] italic">
+                  Your Style.
+                </span>
+
+              </h2>
+
             </div>
+
+
+            <div className="max-w-md">
+
+              <p className="text-sm md:text-base leading-7 text-white/60">
+                Discover iconic labels, explore signature aesthetics,
+                and find the names that define your personal style.
+              </p>
+
+              <div className="mt-6 flex items-center gap-3 text-sm font-semibold text-white/80">
+
+                <span className="text-3xl font-black text-[#D9C3A3]">
+                  {BRANDS.length.toString().padStart(2, "0")}
+                </span>
+
+                Curated fashion brands
+
+              </div>
+
+            </div>
+
           </div>
 
-          {/* Filter tabs */}
-          <div
-            className="flex flex-wrap items-center gap-2"
-            role="group"
-            aria-label="Filter brands"
-          >
-            {FILTERS.map((f) => {
-              const selected = filter === f;
-              return (
-                <button
-                  key={f}
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => setFilter(f)}
-                  className={`rounded-full border px-5 py-2 text-sm font-semibold transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 focus-visible:ring-offset-brand-tan ${
-                    selected
-                      ? "border-brand-dark bg-brand-dark text-brand-tan"
-                      : "border-brand-dark/25 text-brand-dark/75 hover:border-brand-dark hover:text-brand-dark"
-                  }`}
-                >
-                  {f}
-                </button>
-              );
-            })}
-
-            <span className="ml-auto text-sm text-brand-dark/60" aria-live="polite">
-              Showing {visible.length} {visible.length === 1 ? "brand" : "brands"}
-            </span>
-          </div>
         </FadeIn>
 
-        {/* ---------------------------------------------------------
-            INDEX + PREVIEW
-        --------------------------------------------------------- */}
-        <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:gap-14">
-          {/* Brand index */}
-          <ul className="divide-y divide-brand-dark/15 border-y border-brand-dark/15 lg:col-span-7">
-            {visible.map((brand) => {
-              const isActive = active && brand.name === active.name;
+
+        {/* ========================================================
+            FILTER TABS
+        ======================================================== */}
+
+        <FadeIn delay={0.1}>
+
+          <div className="mt-14 flex flex-wrap items-center justify-between gap-5 border-b border-white/10 pb-6">
+
+            <div className="flex flex-wrap gap-2">
+
+              {FILTERS.map((item) => (
+
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    setFilter(item);
+                    setActiveBrand(null);
+                  }}
+                  aria-pressed={filter === item}
+                  className={`
+                    rounded-full px-6 py-2.5
+                    text-sm font-semibold
+                    transition-all duration-300
+                    focus-visible:outline-none
+                    focus-visible:ring-2
+                    focus-visible:ring-[#D9C3A3]
+                    ${
+                      filter === item
+                        ? "bg-[#D9C3A3] text-[#061B35] shadow-lg shadow-[#D9C3A3]/10"
+                        : "border border-white/15 text-white/60 hover:border-[#D9C3A3] hover:text-[#D9C3A3]"
+                    }
+                  `}
+                >
+                  {item}
+                </button>
+
+              ))}
+
+            </div>
+
+
+            <span className="text-xs tracking-wider text-white/40">
+              SHOWING {visibleBrands.length} BRANDS
+            </span>
+
+          </div>
+
+        </FadeIn>
+
+
+        {/* ========================================================
+            BRAND GRID
+        ======================================================== */}
+
+        <motion.div
+          layout
+          className="mt-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5"
+        >
+
+          <AnimatePresence mode="popLayout">
+
+            {visibleBrands.map((brand, index) => {
+
+              const selected = activeBrand === brand.name;
 
               return (
-                <li key={brand.name}>
-                  <button
-                    type="button"
-                    onClick={() => goToBrand(brand.name)}
-                    onMouseEnter={() => setActiveName(brand.name)}
-                    onFocus={() => setActiveName(brand.name)}
-                    className="group flex w-full items-center justify-between gap-6 py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 focus-visible:ring-offset-brand-tan md:py-6"
-                  >
-                    <span className="min-w-0">
-                      <span
-                        className={`block break-words font-display text-4xl font-black leading-none tracking-tight transition-all duration-300 sm:text-5xl md:text-6xl ${
-                          isActive
-                            ? "text-brand-dark lg:translate-x-3"
-                            : "text-brand-dark/80 lg:text-brand-dark/35"
-                        }`}
-                      >
-                        {brand.name}
-                      </span>
 
-                      {/* On small screens the preview panel is hidden, so show the style here */}
-                      <span className="mt-2 block text-sm text-brand-dark/60 lg:hidden">
-                        {brand.style}
-                      </span>
+                <motion.article
+                  layout
+                  key={brand.name}
+
+                  initial={
+                    reduceMotion
+                      ? false
+                      : { opacity: 0, y: 20 }
+                  }
+
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+
+                  exit={
+                    reduceMotion
+                      ? { opacity: 0 }
+                      : { opacity: 0, scale: 0.94 }
+                  }
+
+                  transition={{
+                    duration: 0.35,
+                    delay: reduceMotion ? 0 : index * 0.025,
+                  }}
+
+                  onMouseEnter={() => setActiveBrand(brand.name)}
+                  onMouseLeave={() => setActiveBrand(null)}
+
+                  className={`
+                    group relative flex min-h-[210px] md:min-h-[250px]
+                    flex-col justify-between overflow-hidden
+                    rounded-2xl border p-5 md:p-7
+                    transition-all duration-500 cursor-pointer
+                    ${
+                      selected
+                        ? "border-[#D9C3A3]/60 bg-[#12365B]"
+                        : "border-white/10 bg-[#0B2747] hover:border-[#D9C3A3]/50 hover:bg-[#103255]"
+                    }
+                  `}
+                >
+
+                  {/* CARD GLOW */}
+
+                  <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#D9C3A3]/0 blur-3xl transition-all duration-700 group-hover:bg-[#D9C3A3]/15" />
+
+
+                  {/* CARD TOP */}
+
+                  <div className="relative flex items-center justify-between">
+
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/35">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
 
-                    <span
-                      aria-hidden="true"
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-lg transition-all duration-300 ${
-                        isActive
-                          ? "border-brand-dark bg-brand-dark text-brand-tan"
-                          : "border-brand-dark/25 text-brand-dark/50"
-                      }`}
+                    <span className="
+                      flex h-9 w-9 items-center justify-center
+                      rounded-full border border-white/15
+                      text-white/50 text-lg
+                      transition-all duration-300
+                      group-hover:border-[#D9C3A3]
+                      group-hover:bg-[#D9C3A3]
+                      group-hover:text-[#061B35]
+                      group-hover:rotate-45
+                    ">
+                      <FiArrowUpRight />
+                    </span>
+
+                  </div>
+
+
+                  {/* BRAND INFORMATION */}
+
+                  <div className="relative mt-10">
+
+                    <h3
+                      className={`
+                        break-words font-display font-black
+                        text-2xl sm:text-3xl md:text-4xl
+                        tracking-tight leading-tight
+                        transition-colors duration-300
+                        ${
+                          selected
+                            ? "text-[#D9C3A3]"
+                            : "text-white group-hover:text-[#D9C3A3]"
+                        }
+                      `}
                     >
-                      ↗
+                      {brand.name}
+                    </h3>
+
+                    <p className="mt-3 text-xs md:text-sm text-white/45">
+                      {brand.style}
+                    </p>
+
+                  </div>
+
+
+                  {/* CARD FOOTER */}
+
+                  <div className="relative mt-7 flex items-center justify-between gap-2">
+
+                    <span className="text-[9px] md:text-[10px] uppercase tracking-[0.15em] text-white/35">
+                      {brand.for.join(" / ")}
                     </span>
-                  </button>
-                </li>
+
+                    <button
+                      type="button"
+                      onClick={() => goToBrand(brand.name)}
+                      aria-label={`Shop ${brand.name}`}
+                      className="
+                        flex items-center gap-2
+                        text-xs font-bold text-[#D9C3A3]
+                        transition-all duration-300
+                        group-hover:gap-3
+                      "
+                    >
+                      Shop Now
+                      <FiArrowRight />
+
+                    </button>
+
+                  </div>
+
+                </motion.article>
+
               );
+
             })}
-          </ul>
 
-          {/* Preview panel (desktop) */}
-          <div className="hidden lg:col-span-5 lg:block">
-            <div className="sticky top-28">
-              <div className="relative flex min-h-[460px] flex-col justify-between overflow-hidden rounded-[2rem] bg-brand-dark p-10 text-white">
-                {/* Monogram */}
-                <AnimatePresence mode="wait">
-                  {active && (
-                    <motion.span
-                      key={`mono-${active.name}`}
-                      aria-hidden="true"
-                      initial={reduceMotion ? false : { opacity: 0, scale: 0.94 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 1.04 }}
-                      transition={{ duration: 0.3 }}
-                      className="pointer-events-none absolute -bottom-16 -right-6 select-none font-display text-[18rem] font-black leading-none text-brand-tan/10"
-                    >
-                      {active.name.charAt(0)}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+          </AnimatePresence>
 
-                <p className="relative text-sm text-white/50">
-                  {active ? `Selected: ${active.for.join(", ")}` : ""}
-                </p>
+        </motion.div>
 
-                <div className="relative">
-                  <AnimatePresence mode="wait">
-                    {active && (
-                      <motion.div
-                        key={active.name}
-                        initial={reduceMotion ? false : { opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
-                        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                      >
-                        <h3 className="break-words font-display text-5xl font-black leading-[0.95] tracking-tight xl:text-6xl">
-                          {active.name}
-                        </h3>
 
-                        <p className="mt-4 text-lg text-white/70">
-                          {active.style}
-                        </p>
+        {/* ========================================================
+            BOTTOM CTA
+        ======================================================== */}
 
-                        <button
-                          type="button"
-                          onClick={() => goToBrand(active.name)}
-                          className="mt-8 inline-flex items-center gap-3 rounded-full bg-brand-tan px-7 py-3.5 text-sm font-bold text-brand-dark transition-transform duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-tan focus-visible:ring-offset-2 focus-visible:ring-offset-brand-dark"
-                        >
-                          Shop {active.name}
-                          <span aria-hidden="true">→</span>
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
+        <FadeIn delay={0.2}>
+
+          <div className="mt-16 flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-t border-white/10 pt-10">
+
+            <div>
+
+              <h3 className="text-xl md:text-2xl font-bold text-white">
+                Your next favourite brand awaits.
+              </h3>
+
+              <p className="mt-2 text-sm text-white/45">
+                Explore the complete Orbit Buy collection.
+              </p>
+
             </div>
+
+
+            <button
+              type="button"
+              onClick={() => navigate("/shop")}
+              className="
+                group inline-flex items-center justify-center gap-3
+                rounded-full bg-[#D9C3A3] px-8 py-4
+                text-sm font-bold text-[#061B35]
+                transition-all duration-300
+                hover:-translate-y-1 hover:bg-white
+                hover:shadow-xl hover:shadow-[#D9C3A3]/10
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-white
+              "
+            >
+
+              <FiShoppingBag />
+
+              Explore All Brands
+
+              <FiArrowRight className="transition-transform group-hover:translate-x-1" />
+
+            </button>
+
           </div>
-        </div>
 
-        {/* ---------------------------------------------------------
-            FOOTER ACTION
-        --------------------------------------------------------- */}
-        <div className="mt-14 flex flex-col items-start justify-between gap-5 sm:flex-row sm:items-center">
-          <p className="text-lg font-semibold">Not sure which brand?</p>
+        </FadeIn>
 
-          <button
-            type="button"
-            onClick={() => navigate("/shop")}
-            className="inline-flex items-center gap-3 rounded-full border border-brand-dark px-7 py-3.5 text-sm font-bold transition-colors duration-300 hover:bg-brand-dark hover:text-brand-tan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-dark focus-visible:ring-offset-2 focus-visible:ring-offset-brand-tan"
-          >
-            Browse all products
-            <span aria-hidden="true">→</span>
-          </button>
-        </div>
       </div>
+
     </section>
   );
 };

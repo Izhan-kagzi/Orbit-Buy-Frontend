@@ -277,6 +277,30 @@ const Footer = () => {
                 Jackets
               </Link>
             </li>
+            <li>
+              <Link
+                to="/mens-formals"
+                className="hover:text-brand-tan transition"
+              >
+                Formals
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/mens-sweatshirts"
+                className="hover:text-brand-tan transition"
+              >
+                Sweatshirts
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/mens-shackets"
+                className="hover:text-brand-tan transition"
+              >
+                Shackets
+              </Link>
+            </li>
 
           </ul>
 
@@ -364,6 +388,22 @@ const Footer = () => {
                 Jumpsuits
               </Link>
             </li>
+            <li>
+              <Link
+                to="/women-formals"
+                className="hover:text-brand-tan transition"
+              >
+                Formals
+              </Link>
+            </li>
+             <li>
+              <Link
+                to="/women-shrugs"
+                className="hover:text-brand-tan transition"
+              >
+                Shrugs
+              </Link>
+            </li>
 
           </ul>
 
@@ -404,6 +444,14 @@ const Footer = () => {
                 className="hover:text-brand-tan transition"
               >
                 Privacy Policy
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/customer-care"
+                className="hover:text-brand-tan transition"
+              >
+                Customer Care
               </Link>
             </li>
 
@@ -455,7 +503,7 @@ const Footer = () => {
               <FiPhone className="text-brand-tan mt-1 shrink-0" />
 
               <span>
-                +91 9878*******
+                +91 **********
               </span>
 
             </div>
@@ -471,7 +519,7 @@ const Footer = () => {
             </div>
 
             <a
-              href="https://wa.me/919879361093"
+              href="https://wa.me/918401211918"
               target="_blank"
               rel="noreferrer"
               className="

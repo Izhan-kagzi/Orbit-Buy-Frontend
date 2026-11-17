@@ -155,13 +155,7 @@ const womensMenu = [
     "https://i.pinimg.com/1200x/33/28/72/332872c99472028bc80e56052ad345d6.jpg",
   desc: "Easy layering with effortless style",
 },
-{
-  name: "Cardigans",
-  path: "/women-cardigans",
-  image:
-    "https://i.pinimg.com/1200x/97/12/59/97125973d962c94a8dc0ce5f5b1a89e7.jpg",
-  desc: "Soft knit layers for every season",
-},
+
 ];
 /* ============================================================
    Shop MENU

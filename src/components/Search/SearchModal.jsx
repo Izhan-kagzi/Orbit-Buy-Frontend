@@ -20,7 +20,7 @@ const POPULAR_SEARCHES = [
   "Women Formal",
   "Skirt",
   "Shrug",
-  "Cardigans",
+ 
 ];
 
 const SearchModal = ({ isOpen, onClose }) => {
