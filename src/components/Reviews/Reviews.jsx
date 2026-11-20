@@ -1,178 +1,221 @@
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules";
-
-import "swiper/css";
-import "swiper/css/pagination";
-
-import { FiStar, FiArrowUpRight } from "react-icons/fi";
-
+import { useCallback, useEffect, useState } from "react";
+import { FiChevronUp, FiChevronDown, FiPlay, FiPause, FiStar } from "react-icons/fi";
 import reviews from "./reviewData";
 
+const getInitials = (name = "") =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
 const Reviews = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+
+  const showNext = useCallback(() => {
+    setActiveIndex((current) => (current + 1) % reviews.length);
+  }, []);
+
+  const showPrevious = useCallback(() => {
+    setActiveIndex((current) => (current - 1 + reviews.length) % reviews.length);
+  }, []);
+
+  useEffect(() => {
+    if (!isPlaying || reviews.length < 2) return undefined;
+    const timer = window.setInterval(showNext, 5000);
+    return () => window.clearInterval(timer);
+  }, [isPlaying, showNext]);
+
+  const visibleReviews = [-2, -1, 0, 1, 2].map((offset) => {
+    const index = (activeIndex + offset + reviews.length) % reviews.length;
+    return { review: reviews[index], index, offset };
+  });
+
+  const activeReview = reviews[activeIndex];
+
   return (
     <section
       id="reviews"
-      className="relative overflow-hidden bg-white py-24 md:py-28 lg:py-32 scroll-mt-24"
+      aria-labelledby="reviews-heading"
+      className="relative scroll-mt-24 overflow-hidden bg-[#eef0f7] py-20 sm:py-24 lg:py-28"
     >
-      {/* BACKGROUND DECORATION */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-brand-primary/[0.035] blur-3xl" />
-        <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-blue-100/30 blur-3xl" />
-        <div className="absolute right-0 top-1/3 h-80 w-80 rounded-full bg-slate-100/80 blur-3xl" />
-      </div>
+      <div className="pointer-events-none absolute -left-40 top-20 h-80 w-80 rounded-full bg-blue-200/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-32 bottom-0 h-96 w-96 rounded-full bg-indigo-200/20 blur-3xl" />
 
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-        {/* SECTION HEADER */}
-        <div className="mx-auto mb-16 max-w-3xl text-center md:mb-20">
-          <div className="mb-5 inline-flex items-center gap-3">
-            <span className="h-px w-10 bg-brand-primary/40" />
+      <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+         <div className="mb-5 inline-flex items-center gap-3 text-center">
+            <span className="h-px w-10  bg-brand-primary/40"  />
             <p className="text-[11px] font-bold uppercase tracking-[5px] text-brand-primary">
               Client Stories
             </p>
             <span className="h-px w-10 bg-brand-primary/40" />
           </div>
-
-          <h2 className="font-serif text-4xl leading-tight text-brand-dark sm:text-5xl md:text-6xl">
+          <h2 className="font-serif text-4xl leading-tight text-brand-dark sm:text-5xl md:text-6xl text-center">
             Loved by those who
             <span className="block italic text-brand-primary">
               wear Orbit Buy.
             </span>
           </h2>
 
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-gray-500 sm:text-base sm:leading-8">
-            Discover why customers choose Orbit Buy for refined styles,
-            effortless shopping, and fashion designed for every moment.
-          </p>
+          
+
+        <div className="orbit-review-panel relative grid min-h-[430px] overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_18px_55px_rgba(24,39,75,0.09)] md:min-h-[430px] md:grid-cols-[minmax(270px,0.82fr)_1.45fr]">
+          {/* Customer arc */}
+          <div className="relative flex min-h-[245px] items-center justify-center overflow-hidden px-5 py-8 md:min-h-0 md:justify-start md:pl-8 md:py-10">
+            <div className="orbit-review-rail" aria-hidden="true" />
+            <div className="relative z-10 flex w-full flex-col items-center gap-3 md:items-stretch md:gap-2">
+              {visibleReviews.map(({ review, index, offset }) => {
+                const isActive = offset === 0;
+                return (
+                  <button
+                    key={`${review.id}-${offset}`}
+                    type="button"
+                    onClick={() => setActiveIndex(index)}
+                    aria-label={`Show review by ${review.name}`}
+                    aria-pressed={isActive}
+                    className={`orbit-review-person group flex w-full items-center gap-4 rounded-full text-left transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#09335a] focus-visible:ring-offset-4 ${
+                      isActive
+                        ? "is-active md:translate-x-3"
+                        : "opacity-55 hover:opacity-90"
+                    }`}
+                  >
+                    <span
+                      className={`orbit-review-avatar relative flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold transition-all duration-500 ${
+                        isActive
+                          ? "h-[66px] w-[66px] bg-[#09335a] text-xl text-white shadow-[0_8px_22px_rgba(207,67,139,0.22)]"
+                          : "h-[46px] w-[46px] bg-[#eef0f7] text-[13px] text-[#17213b]"
+                      }`}
+                    >
+                      {getInitials(review.name)}
+                    </span>
+                    <span className="hidden min-w-0 flex-col md:flex">
+                      <span className={`truncate text-sm ${isActive ? "text-[#101a32]" : "text-slate-500"}`}>
+                        {review.name}
+                      </span>
+                      <span className="mt-1 flex items-center gap-1 text-xs text-slate-400">
+                        <FiStar className="fill-amber-400 text-amber-400" size={11} />
+                        {review.rating.toFixed(1)} · {review.role || "Verified Customer"}
+                      </span>
+                    </span>
+                    {isActive && (
+                      <span className="ml-auto hidden h-2 w-2 rounded-full bg-[#09335a] md:block" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Active testimonial */}
+          <div className="flex flex-col justify-center px-7 pb-8 pt-2 sm:px-10 md:px-12 md:py-12 lg:px-14">
+            <div className="mb-6 flex items-center gap-2 text-sm text-slate-500">
+              <span className="font-semibold text-[#101a32]">
+                {activeReview.rating.toFixed(1)} out of 5
+              </span>
+              <span className="text-slate-300">·</span>
+              <span>{reviews.length} reviews</span>
+            </div>
+
+            <div className="mb-7 flex gap-1" aria-label={`${activeReview.rating} out of 5 stars`}>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <FiStar
+                  key={index}
+                  size={15}
+                  className={index < activeReview.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}
+                />
+              ))}
+            </div>
+
+            <blockquote
+              key={activeReview.id}
+              className="orbit-review-quote text-[23px] font-medium leading-[1.38] tracking-[-0.035em] text-[#17213b] sm:text-[27px] lg:text-[30px]"
+            >
+              “{activeReview.review}”
+            </blockquote>
+
+            <div className="mt-9 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[#17213b]">{activeReview.name}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {activeReview.role || "Verified Orbit Buy Customer"}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-end">
+                <button
+                  type="button"
+                  onClick={showPrevious}
+                  aria-label="Previous review"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-[#17213b] transition hover:border-[] hover:bg-[] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#09335a]"
+                >
+                  <FiChevronUp size={17} />
+                </button>
+                <button
+                  type="button"
+                  onClick={showNext}
+                  aria-label="Next review"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-[#17213b] transition hover:border-[] hover:bg-[] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#09335a]"
+                >
+                  <FiChevronDown size={17} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPlaying((playing) => !playing)}
+                  aria-label={isPlaying ? "Pause automatic reviews" : "Play automatic reviews"}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-[#17213b] transition hover:border-[#09335a] hover:bg-[#09335a] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#09335a]"
+                >
+                  {isPlaying ? <FiPause size={15} /> : <FiPlay size={15} />}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* REVIEWS SLIDER */}
-        <Swiper
-          modules={[Autoplay, Pagination]}
-          spaceBetween={24}
-          slidesPerView={1}
-          loop={reviews.length > 3}
-          speed={800}
-          autoplay={{
-            delay: 4200,
-            disableOnInteraction: false,
-            pauseOnMouseEnter: true,
-          }}
-          pagination={{
-            clickable: true,
-            el: ".orbit-reviews-pagination",
-          }}
-          breakpoints={{
-            640: {
-              slidesPerView: 1,
-              spaceBetween: 24,
-            },
-            768: {
-              slidesPerView: 2,
-              spaceBetween: 24,
-            },
-            1024: {
-              slidesPerView: 3,
-              spaceBetween: 28,
-            },
-          }}
-          className="!overflow-visible"
-        >
-          {reviews.map((review) => (
-            <SwiperSlide key={review.id} className="!h-auto">
-              <article className="group relative h-full overflow-hidden rounded-[28px] border border-gray-200/80 bg-white p-7 shadow-[0_12px_45px_rgba(9,51,90,0.06)] transition-all duration-500 hover:-translate-y-2 hover:border-brand-primary/20 hover:shadow-[0_24px_65px_rgba(9,51,90,0.12)] sm:p-8">
-                {/* Top decorative line */}
-                <div className="absolute left-0 top-0 h-[3px] w-0 bg-brand-primary transition-all duration-500 group-hover:w-full" />
-
-                {/* Soft card glow */}
-                <div className="pointer-events-none absolute -right-20 -top-20 h-44 w-44 rounded-full bg-brand-primary/[0.035] blur-3xl transition-all duration-500 group-hover:bg-brand-primary/[0.07]" />
-
-                {/* QUOTE + RATING */}
-                <div className="relative flex items-start justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-primary/[0.07] text-2xl font-serif text-brand-primary">
-                    “
-                  </div>
-
-                  <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50/70 px-3 py-2">
-                    {[...Array(5)].map((_, i) => (
-                      <FiStar
-                        key={i}
-                        size={13}
-                        strokeWidth={1.8}
-                        className={
-                          i < review.rating
-                            ? "fill-amber-400 text-amber-400"
-                            : "text-gray-300"
-                        }
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* REVIEW TEXT */}
-                <div className="relative mt-7">
-                  <p className="text-[15px] leading-8 text-gray-600">
-                    “{review.review}”
-                  </p>
-                </div>
-
-                {/* Divider */}
-                <div className="my-7 h-px bg-gradient-to-r from-gray-200 via-gray-100 to-transparent" />
-
-                {/* CUSTOMER INFO */}
-                <div className="relative flex items-center justify-between gap-4">
-                  <div className="flex min-w-0 items-center gap-4">
-                    {/* Avatar */}
-                    <div className="relative shrink-0">
-                      <div className="absolute -inset-1 rounded-full bg-brand-primary/10 opacity-0 blur-sm transition duration-500 group-hover:opacity-100" />
-
-                      <img
-                        src={review.image}
-                        alt={`${review.name} - Orbit Buy customer`}
-                        loading="lazy"
-                        className="relative h-12 w-12 rounded-full border-2 border-white object-cover shadow-md"
-                      />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold text-brand-dark">
-                        {review.name}
-                      </p>
-
-                      <p className="mt-1 text-xs font-medium uppercase tracking-[1.5px] text-gray-400">
-                        {review.role || "Verified Customer"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Arrow */}
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 text-gray-400 transition-all duration-300 group-hover:border-brand-primary group-hover:bg-brand-primary group-hover:text-white">
-                    <FiArrowUpRight size={16} />
-                  </div>
-                </div>
-              </article>
-            </SwiperSlide>
+        <div className="mt-5 flex justify-center gap-1.5 md:hidden" aria-label="Select a review">
+          {reviews.map((review, index) => (
+            <button
+              key={review.id}
+              type="button"
+              onClick={() => setActiveIndex(index)}
+              aria-label={`Go to review ${index + 1}`}
+              aria-current={activeIndex === index ? "true" : undefined}
+              className={`h-1.5 rounded-full transition-all ${activeIndex === index ? "w-6 bg-[#09335a]" : "w-1.5 bg-slate-300"}`}
+            />
           ))}
-        </Swiper>
-
-        {/* CUSTOM PAGINATION */}
-        <div className="orbit-reviews-pagination mt-12 flex justify-center" />
+        </div>
       </div>
 
-      {/* SWIPER PAGINATION STYLES */}
       <style>{`
-        .orbit-reviews-pagination .swiper-pagination-bullet {
-          width: 7px;
-          height: 7px;
-          margin: 0 5px !important;
-          opacity: 1;
-          background: #d1d5db;
-          transition: all 0.35s ease;
+        .orbit-review-rail {
+          position: absolute;
+          left: 51px;
+          top: 9%;
+          bottom: 9%;
+          width: 2px;
+          background-image: radial-gradient(circle, #b9c1d5 1px, transparent 1.5px);
+          background-size: 2px 9px;
+          background-repeat: repeat-y;
+          opacity: .9;
         }
-
-        .orbit-reviews-pagination .swiper-pagination-bullet-active {
-          width: 28px;
-          border-radius: 999px;
-          background: #09335a;
+        .orbit-review-person { min-height: 56px; }
+        .orbit-review-person.is-active { min-height: 76px; }
+        .orbit-review-quote { animation: orbitReviewFade .45s ease both; }
+        @keyframes orbitReviewFade {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 767px) {
+          .orbit-review-rail { display: none; }
+          .orbit-review-person { width: auto; min-height: 0; }
+          .orbit-review-person.is-active { transform: scale(1.08); }
+          .orbit-review-avatar { border: 2px solid white; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .orbit-review-quote { animation: none; }
+          .orbit-review-person, .orbit-review-avatar { transition: none; }
         }
       `}</style>
     </section>

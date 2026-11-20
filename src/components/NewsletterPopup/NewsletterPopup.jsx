@@ -611,6 +611,14 @@ const NewsletterPopup = () => {
                 newsletter to get the latest products, exclusive offers and
                 fashion updates.
               </p>
+              <a
+    href="https://izhankagzi.vercel.app/"
+    target="_blank"
+    rel="noopener noreferrer"
+    class="hover:text-blue-600 transition duration-300 text-center"
+  >
+    Design and Developed by Izhan Kagzi
+  </a>
 
               {/* =================================================
                   SUCCESS STATE
